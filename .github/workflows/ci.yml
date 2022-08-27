@@ -12,7 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
+      - name: Setup DynamoDB Local
+        uses: rrainn/dynamodb-action@v2.0.1
+        with:
+          port: 8000
+          cors: '*'
       - name: Setup .NET Core SDKs
         uses: actions/setup-dotnet@v2
         with:

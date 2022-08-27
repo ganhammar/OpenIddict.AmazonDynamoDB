@@ -11,10 +11,8 @@ public class OpenIddictDynamoDbBuilderTests
         // Arrange
         var services = (IServiceCollection) null!;
 
-        // Act
+        // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() => new OpenIddictDynamoDbBuilder(services));
-
-        // Assert
         Assert.Equal("services", exception.ParamName);
     }
 }

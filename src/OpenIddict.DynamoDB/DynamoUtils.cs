@@ -11,8 +11,10 @@ public class DynamoUtils
         do
         {
             active = true;
-            var response = await client.DescribeTableAsync(
-                new DescribeTableRequest { TableName = tableName });
+            var response = await client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = tableName,
+            });
 
             if (!Equals(response.Table.TableStatus, TableStatus.ACTIVE) ||
                 !response.Table.GlobalSecondaryIndexes.TrueForAll(g => Equals(g.IndexStatus, IndexStatus.ACTIVE)))

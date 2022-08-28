@@ -30,12 +30,10 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
     {
-        var client = new AmazonDynamoDBClient();
-        var request = new DescribeTableRequest
+        var description = await _client.DescribeTableAsync(new DescribeTableRequest
         {
             TableName = Constants.DefaultApplicationTableName
-        };
-        var description = await _client.DescribeTableAsync(request);
+        });
 
         return description.Table.ItemCount;
     }

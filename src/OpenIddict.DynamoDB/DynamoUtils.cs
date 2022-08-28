@@ -22,9 +22,12 @@ public class DynamoUtils
                 active = false;
             }
 
-            Console.WriteLine($"Waiting for table {tableName} to become active...");
+            if (!active)
+            {
+                Console.WriteLine($"Waiting for table {tableName} to become active...");
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
         } while (!active);
     }
 }

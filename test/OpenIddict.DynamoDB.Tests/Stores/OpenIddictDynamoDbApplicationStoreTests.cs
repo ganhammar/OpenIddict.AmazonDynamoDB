@@ -47,6 +47,22 @@ public class OpenIddictDynamoDbApplicationStoreTests
     }
 
     [Fact]
+    public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
+                await applicationStore.CountAsync(x => x.Where(y => y.DisplayName == "Test"), CancellationToken.None));
+        }
+    }
+
+    [Fact]
     public async Task Should_ThrowException_When_TryingToCreateApplicationThatIsNull()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
@@ -58,7 +74,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await applicationStore.CreateAsync((OpenIddictDynamoDbApplication)null!, CancellationToken.None));
+                await applicationStore.CreateAsync(default!, CancellationToken.None));
             Assert.Equal("application", exception.ParamName);
         }
     }
@@ -100,7 +116,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await applicationStore.DeleteAsync((OpenIddictDynamoDbApplication)null!, CancellationToken.None));
+                await applicationStore.DeleteAsync(default!, CancellationToken.None));
             Assert.Equal("application", exception.ParamName);
         }
     }
@@ -480,7 +496,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await applicationStore.UpdateAsync((OpenIddictDynamoDbApplication)null!, CancellationToken.None));
+                await applicationStore.UpdateAsync(default!, CancellationToken.None));
             Assert.Equal("application", exception.ParamName);
         }
     }
@@ -583,6 +599,271 @@ public class OpenIddictDynamoDbApplicationStoreTests
             Assert.Equal(updatedApplication!.RedirectUris!.First(), redirectUri);
             Assert.Single(updatedApplication.RedirectUris);
             Assert.Single(updatedApplication.PostLogoutRedirectUris);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
+                await applicationStore.GetAsync<int, int>(default!, default, CancellationToken.None));
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetClientIdAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetClientIdAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnClientId_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                ClientId = Guid.NewGuid().ToString(),
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var clientId = await applicationStore.GetClientIdAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(clientId);
+            Assert.Equal(application.ClientId, clientId);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetClientSecretAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetClientSecretAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnClientSecret_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                ClientSecret = Guid.NewGuid().ToString(),
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var clientSecret = await applicationStore.GetClientSecretAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(clientSecret);
+            Assert.Equal(application.ClientSecret, clientSecret);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetClientTypeAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetClientTypeAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnClientType_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                Type = Guid.NewGuid().ToString(),
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var clientType = await applicationStore.GetClientTypeAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(clientType);
+            Assert.Equal(application.Type, clientType);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetConsentTypeAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetConsentTypeAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnConsentType_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                ConsentType = Guid.NewGuid().ToString(),
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var consentType = await applicationStore.GetConsentTypeAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(consentType);
+            Assert.Equal(application.ConsentType, consentType);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetDisplayNameAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetDisplayNameAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnDisplayName_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                DisplayName = Guid.NewGuid().ToString(),
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var displayName = await applicationStore.GetDisplayNameAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(displayName);
+            Assert.Equal(application.DisplayName, displayName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetIdAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetIdAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnId_When_ApplicationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var id = await applicationStore.GetIdAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(id);
+            Assert.Equal(application.Id, id);
         }
     }
 }

@@ -35,5 +35,5 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: tests/src/GraphQL.EntityFrameworkCore.Helpers.Tests/TestResults/coverage.net6.0.info
+          files: test/OpenIddict.DynamoDB.Tests/TestResults/coverage.info
           fail_ci_if_error: false

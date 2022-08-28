@@ -284,7 +284,19 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDisplayNamesAsync(TApplication application, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        if (application.DisplayNames is not { Count: > 0 })
+        {
+            return new(ImmutableDictionary.Create<CultureInfo, string>());
+        }
+
+        return new(application.DisplayNames.ToImmutableDictionary(
+            pair => CultureInfo.GetCultureInfo(pair.Key),
+            pair => pair.Value));
     }
 
     public ValueTask<string?> GetIdAsync(TApplication application, CancellationToken cancellationToken)

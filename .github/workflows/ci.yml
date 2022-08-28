@@ -30,4 +30,10 @@ jobs:
           dotnet build --no-restore
       - name: Test
         run: |
-          dotnet test --no-build
+          dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+      - name: Publish Code Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: tests/src/GraphQL.EntityFrameworkCore.Helpers.Tests/TestResults/coverage.net6.0.info
+          fail_ci_if_error: false

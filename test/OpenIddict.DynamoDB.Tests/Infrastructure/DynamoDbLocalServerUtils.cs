@@ -1,4 +1,5 @@
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
 
 namespace OpenIddict.DynamoDB.Tests;
@@ -33,7 +34,10 @@ internal static class DynamoDbLocalServerUtils
             var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
             tables.TableNames.ForEach(tableName =>
             {
-                Client.DeleteTableAsync(tableName).GetAwaiter().GetResult();
+                try
+                {
+                    Client.DeleteTableAsync(tableName).GetAwaiter().GetResult();
+                } catch (ResourceNotFoundException) { }
             });
 
             Client.Dispose();

@@ -30,4 +30,43 @@ public class DynamoUtils
             }
         } while (!active);
     }
+
+    public static async Task UpdateSecondaryIndexes(IAmazonDynamoDB client, string tableName, List<GlobalSecondaryIndex> globalSecondaryIndexes)
+    {
+        var response = await client.DescribeTableAsync(new DescribeTableRequest { TableName = tableName });
+        var table = response.Table;
+
+        var indexesToAdd = globalSecondaryIndexes
+            .Where(g => !table.GlobalSecondaryIndexes
+                .Exists(gd => gd.IndexName.Equals(g.IndexName)));
+        var indexUpdates = indexesToAdd
+            .Select(index => new GlobalSecondaryIndexUpdate
+            {
+                Create = new CreateGlobalSecondaryIndexAction
+                {
+                    IndexName = index.IndexName,
+                    KeySchema = index.KeySchema,
+                    ProvisionedThroughput = index.ProvisionedThroughput,
+                    Projection = index.Projection
+                }
+            })
+            .ToList();
+
+        if (indexUpdates.Count > 0)
+        {
+            await UpdateTableAsync(client, tableName, indexUpdates);
+        }
+    }
+
+    private static async Task UpdateTableAsync(IAmazonDynamoDB client, string tableName,
+        List<GlobalSecondaryIndexUpdate> indexUpdates)
+    {
+        await client.UpdateTableAsync(new UpdateTableRequest
+        {
+            TableName = tableName,
+            GlobalSecondaryIndexUpdates = indexUpdates
+        });
+
+        await DynamoUtils.WaitForActiveTableAsync(client, tableName);
+    }
 }

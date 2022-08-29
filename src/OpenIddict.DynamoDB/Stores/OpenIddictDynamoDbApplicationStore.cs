@@ -32,7 +32,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     {
         var description = await _client.DescribeTableAsync(new DescribeTableRequest
         {
-            TableName = Constants.DefaultApplicationTableName
+            TableName = Constants.DefaultApplicationTableName,
         });
 
         return description.Table.ItemCount;
@@ -115,9 +115,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
             {
                 ExpressionStatement = "ClientId = :clientId",
                 ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
-                    {
-                        {":clientId", identifier},
-                    }
+                {
+                    { ":clientId", identifier },
+                }
             },
             Limit = 1
         });
@@ -341,7 +341,25 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TApplication application, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        if (string.IsNullOrEmpty(application.Properties))
+        {
+            return new(ImmutableDictionary.Create<string, JsonElement>());
+        }
+
+        using var document = JsonDocument.Parse(application.Properties);
+        var properties = ImmutableDictionary.CreateBuilder<string, JsonElement>();
+
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            properties[property.Name] = property.Value.Clone();
+        }
+
+        return new(properties.ToImmutable());
     }
 
     public ValueTask<ImmutableArray<string>> GetRedirectUrisAsync(TApplication application, CancellationToken cancellationToken)
@@ -380,7 +398,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         {
             return new(Activator.CreateInstance<TApplication>());
         }
-
         catch (MemberAccessException exception)
         {
             return new(Task.FromException<TApplication>(
@@ -735,7 +752,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
         else
         {
-            await UpdateSecondaryIndexes(client, applicationTableName, applicationGlobalSecondaryIndexes);
+            await DynamoUtils.UpdateSecondaryIndexes(client, applicationTableName, applicationGlobalSecondaryIndexes);
         }
 
         if (!tableNames.TableNames.Contains(applicationRedirectTableName))
@@ -745,34 +762,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
         else
         {
-            await UpdateSecondaryIndexes(client, applicationRedirectTableName, applicationRedirectGlobalSecondaryIndexes);
-        }
-    }
-
-    private async Task UpdateSecondaryIndexes(IAmazonDynamoDB client, string tableName, List<GlobalSecondaryIndex> globalSecondaryIndexes)
-    {
-        var response = await client.DescribeTableAsync(new DescribeTableRequest { TableName = tableName });
-        var table = response.Table;
-
-        var indexesToAdd = globalSecondaryIndexes
-            .Where(g => !table.GlobalSecondaryIndexes
-                .Exists(gd => gd.IndexName.Equals(g.IndexName)));
-        var indexUpdates = indexesToAdd
-            .Select(index => new GlobalSecondaryIndexUpdate
-            {
-                Create = new CreateGlobalSecondaryIndexAction
-                {
-                    IndexName = index.IndexName,
-                    KeySchema = index.KeySchema,
-                    ProvisionedThroughput = index.ProvisionedThroughput,
-                    Projection = index.Projection
-                }
-            })
-            .ToList();
-
-        if (indexUpdates.Count > 0)
-        {
-            await UpdateTableAsync(client, tableName, indexUpdates);
+            await DynamoUtils.UpdateSecondaryIndexes(client, applicationRedirectTableName, applicationRedirectGlobalSecondaryIndexes);
         }
     }
 
@@ -860,18 +850,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         {
             throw new Exception($"Couldn't create table {tableName}");
         }
-
-        await DynamoUtils.WaitForActiveTableAsync(client, tableName);
-    }
-
-    private async Task UpdateTableAsync(IAmazonDynamoDB client, string tableName,
-        List<GlobalSecondaryIndexUpdate> indexUpdates)
-    {
-        await client.UpdateTableAsync(new UpdateTableRequest
-        {
-            TableName = tableName,
-            GlobalSecondaryIndexUpdates = indexUpdates
-        });
 
         await DynamoUtils.WaitForActiveTableAsync(client, tableName);
     }

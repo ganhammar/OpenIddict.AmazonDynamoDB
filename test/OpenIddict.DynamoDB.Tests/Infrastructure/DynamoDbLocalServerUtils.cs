@@ -43,9 +43,9 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
-            var (numberOfItems, keys) = await GetTableInformation(tableName);
-            var allItems = new List<Dictionary<string, AttributeValue>>();
-            Dictionary<string, AttributeValue>? exclusiveStartKey = default;
+            // var (numberOfItems, keys) = await GetTableInformation(tableName);
+            // var allItems = new List<Dictionary<string, AttributeValue>>();
+            // Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
             // while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
             // {

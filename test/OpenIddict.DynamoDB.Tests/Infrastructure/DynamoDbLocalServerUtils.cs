@@ -92,6 +92,7 @@ internal static class DynamoDbLocalServerUtils
 
                 await Client.BatchWriteItemAsync(request);
             }
+            Console.WriteLine("Done deleting data in {0}", tableName);
         }
 
         public async Task<(long, IEnumerable<KeyDefinition>)> GetTableInformation(string tableName)

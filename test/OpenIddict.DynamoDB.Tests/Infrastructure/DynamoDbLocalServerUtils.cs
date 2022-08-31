@@ -48,7 +48,7 @@ internal static class DynamoDbLocalServerUtils
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            while (numberOfItems > allItems.Count)
+            while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
             {
                 var data = await Client.ScanAsync(new ScanRequest
                 {

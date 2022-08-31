@@ -1056,4 +1056,138 @@ public class OpenIddictDynamoDbApplicationStoreTests
             Assert.Equal(displayName, application.DisplayName);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetPermissionsAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetPermissionsAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPermissions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var permissions = await applicationStore.GetPermissionsAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(permissions);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnPermissions_When_ApplicationHasPermissions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                Permissions = new List<string>
+                {
+                    "Get",
+                    "Set",
+                    "And Other Things",
+                },
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var permissions = await applicationStore.GetPermissionsAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, permissions.Length);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetPostLogoutRedirectUrisAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetPostLogoutRedirectUrisAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPostLogoutRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var postLogoutRedirectUris = await applicationStore.GetPostLogoutRedirectUrisAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(postLogoutRedirectUris);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnPostLogoutRedirectUris_When_ApplicationHasPostLogoutRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                PostLogoutRedirectUris = new List<string>
+                {
+                    "https://test.io/logout",
+                    "https://test.io/logout/even/more",
+                    "https://test.io/logout/login/noop/logout",
+                },
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var postLogoutRedirectUris = await applicationStore.GetPostLogoutRedirectUrisAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, postLogoutRedirectUris.Length);
+        }
+    }
 }

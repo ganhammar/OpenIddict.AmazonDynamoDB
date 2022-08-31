@@ -34,7 +34,7 @@ internal static class DynamoDbLocalServerUtils
             var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
             tables.TableNames.ForEach(tableName =>
             {
-                DeleteTableData(tableName).GetAwaiter().GetResult();
+                // DeleteTableData(tableName).GetAwaiter().GetResult();
             });
 
             Client.Dispose();
@@ -76,20 +76,20 @@ internal static class DynamoDbLocalServerUtils
                 })
                 .ToList();
 
-            // var batches = ToChunks(writeRequests, 25);
+            var batches = ToChunks(writeRequests, 25);
 
-            // foreach (var batch in batches)
-            // {
-            //     var request = new BatchWriteItemRequest
-            //     {
-            //         RequestItems = new Dictionary<string, List<WriteRequest>>
-            //         {
-            //             { tableName, batch.ToList() },
-            //         },
-            //     };
+            foreach (var batch in batches)
+            {
+                var request = new BatchWriteItemRequest
+                {
+                    RequestItems = new Dictionary<string, List<WriteRequest>>
+                    {
+                        { tableName, batch.ToList() },
+                    },
+                };
 
-            //     await Client.BatchWriteItemAsync(request);
-            // }
+                await Client.BatchWriteItemAsync(request);
+            }
         }
 
         public async Task<(long, IEnumerable<KeyDefinition>)> GetTableInformation(string tableName)

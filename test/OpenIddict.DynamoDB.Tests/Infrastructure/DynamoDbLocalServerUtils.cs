@@ -47,17 +47,17 @@ internal static class DynamoDbLocalServerUtils
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
-            {
-                var data = await Client.ScanAsync(new ScanRequest
-                {
-                    TableName = tableName,
-                    AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
-                    ExclusiveStartKey = exclusiveStartKey,
-                });
-                allItems.AddRange(data.Items);
-                exclusiveStartKey = data.LastEvaluatedKey;
-            }
+            // while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
+            // {
+            //     var data = await Client.ScanAsync(new ScanRequest
+            //     {
+            //         TableName = tableName,
+            //         AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
+            //         ExclusiveStartKey = exclusiveStartKey,
+            //     });
+            //     allItems.AddRange(data.Items);
+            //     exclusiveStartKey = data.LastEvaluatedKey;
+            // }
 
             // if (allItems.Any() == false)
             // {

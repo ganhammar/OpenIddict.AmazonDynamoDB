@@ -43,7 +43,6 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
-            Console.WriteLine("Delete data in {0}", tableName);
             var (numberOfItems, keys) = await GetTableInformation(tableName);
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
@@ -62,7 +61,6 @@ internal static class DynamoDbLocalServerUtils
                 iterations++;
             }
 
-            Console.WriteLine("Found {0} items, ran {1} iterations", allItems.Count(), iterations);
             if (allItems.Any() == false)
             {
                 return;
@@ -78,21 +76,20 @@ internal static class DynamoDbLocalServerUtils
                 })
                 .ToList();
 
-            var batches = ToChunks(writeRequests, 25);
+            // var batches = ToChunks(writeRequests, 25);
 
-            foreach (var batch in batches)
-            {
-                var request = new BatchWriteItemRequest
-                {
-                    RequestItems = new Dictionary<string, List<WriteRequest>>
-                    {
-                        { tableName, batch.ToList() },
-                    },
-                };
+            // foreach (var batch in batches)
+            // {
+            //     var request = new BatchWriteItemRequest
+            //     {
+            //         RequestItems = new Dictionary<string, List<WriteRequest>>
+            //         {
+            //             { tableName, batch.ToList() },
+            //         },
+            //     };
 
-                await Client.BatchWriteItemAsync(request);
-            }
-            Console.WriteLine("Done deleting data in {0}", tableName);
+            //     await Client.BatchWriteItemAsync(request);
+            // }
         }
 
         public async Task<(long, IEnumerable<KeyDefinition>)> GetTableInformation(string tableName)

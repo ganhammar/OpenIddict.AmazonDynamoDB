@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
@@ -43,64 +44,70 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
-            // var (numberOfItems, keys) = await GetTableInformation(tableName);
-            // var allItems = new List<Dictionary<string, AttributeValue>>();
-            // Dictionary<string, AttributeValue>? exclusiveStartKey = default;
+            var (numberOfItems, keys) = await GetTableInformation(tableName);
+            var allItems = new List<Dictionary<string, AttributeValue>>();
+            Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            // while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
-            // {
-            //     var data = await Client.ScanAsync(new ScanRequest
-            //     {
-            //         TableName = tableName,
-            //         AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
-            //         ExclusiveStartKey = exclusiveStartKey,
-            //     });
-            //     allItems.AddRange(data.Items);
-            //     exclusiveStartKey = data.LastEvaluatedKey;
-            // }
+            while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
+            {
+                var data = await Client.ScanAsync(new ScanRequest
+                {
+                    TableName = tableName,
+                    AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
+                    ExclusiveStartKey = exclusiveStartKey,
+                });
+                allItems.AddRange(data.Items);
+                exclusiveStartKey = data.LastEvaluatedKey;
+            }
 
-            // if (allItems.Any() == false)
-            // {
-            //     return;
-            // }
+            if (allItems.Any() == false)
+            {
+                return;
+            }
 
-            // var writeRequests = allItems
-            //     .Select(x => new WriteRequest
-            //     {
-            //         DeleteRequest = new DeleteRequest
-            //         {
-            //             Key = x,
-            //         },
-            //     })
-            //     .ToList();
+            var writeRequests = allItems
+                .Select(x => new WriteRequest
+                {
+                    DeleteRequest = new DeleteRequest
+                    {
+                        Key = x,
+                    },
+                })
+                .ToList();
 
-            // var batches = ToChunks(writeRequests, 25);
+            var batches = ToChunks(writeRequests, 25);
 
-            // foreach (var batch in batches)
-            // {
-            //     var request = new BatchWriteItemRequest
-            //     {
-            //         RequestItems = new Dictionary<string, List<WriteRequest>>
-            //         {
-            //             { tableName, batch.ToList() },
-            //         },
-            //     };
+            foreach (var batch in batches)
+            {
+                var request = new BatchWriteItemRequest
+                {
+                    RequestItems = new Dictionary<string, List<WriteRequest>>
+                    {
+                        { tableName, batch.ToList() },
+                    },
+                };
 
-            //     await Client.BatchWriteItemAsync(request);
-            // }
+                await Client.BatchWriteItemAsync(request);
+            }
         }
 
+        private ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new ConcurrentDictionary<string, DescribeTableResponse>();
         public async Task<(long, IEnumerable<KeyDefinition>)> GetTableInformation(string tableName)
         {
-            var response = await Client.DescribeTableAsync(new DescribeTableRequest
+            if (TableDefinitions.ContainsKey(tableName) == false)
             {
-                TableName = tableName,
-            });
+                TableDefinitions.TryAdd(tableName, await Client.DescribeTableAsync(new DescribeTableRequest
+                {
+                    TableName = tableName,
+                }));
+            }
 
-            return (response.Table.ItemCount, response.Table.KeySchema.Select(x => new KeyDefinition
+            var tableDefinition = TableDefinitions.GetValueOrDefault(tableName)!;
+
+            return (tableDefinition.Table.ItemCount, tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {
                 AttributeName = x.AttributeName,
-                AttributeType = response.Table.AttributeDefinitions
+                AttributeType = tableDefinition.Table.AttributeDefinitions
                     .First(y => y.AttributeName == x.AttributeName)
                     .AttributeType,
                 KeyType = x.KeyType,

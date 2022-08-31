@@ -30,7 +30,7 @@ jobs:
           dotnet build --no-restore
       - name: Test
         run: |
-          dotnet test --no-build --verbosity detailed /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+          dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
       - name: Publish Code Coverage
         uses: codecov/codecov-action@v3
         with:

@@ -1257,4 +1257,71 @@ public class OpenIddictDynamoDbApplicationStoreTests
             Assert.Equal(3, redirectUris.Length);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetRequirementsAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetRequirementsAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRequirements()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var requirements = await applicationStore.GetRequirementsAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(requirements);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnRequirements_When_ApplicationHasRequirements()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                Requirements = new List<string>
+                {
+                    "Do",
+                    "Dont",
+                    "Doer",
+                },
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var requirements = await applicationStore.GetRequirementsAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, requirements.Length);
+        }
+    }
 }

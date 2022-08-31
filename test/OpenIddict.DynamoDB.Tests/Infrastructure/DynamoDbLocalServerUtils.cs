@@ -48,7 +48,8 @@ internal static class DynamoDbLocalServerUtils
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
+            var iterations = 0;
+            while ((exclusiveStartKey == default || exclusiveStartKey.Count > 0) && iterations < 10)
             {
                 var data = await Client.ScanAsync(new ScanRequest
                 {
@@ -58,9 +59,10 @@ internal static class DynamoDbLocalServerUtils
                 });
                 allItems.AddRange(data.Items);
                 exclusiveStartKey = data.LastEvaluatedKey;
+                iterations++;
             }
 
-            Console.WriteLine("Found {0} items", allItems.Count());
+            Console.WriteLine("Found {0} items, ran {1} iterations", allItems.Count(), iterations);
             if (allItems.Any() == false)
             {
                 return;

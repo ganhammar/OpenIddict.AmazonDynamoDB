@@ -1190,4 +1190,71 @@ public class OpenIddictDynamoDbApplicationStoreTests
             Assert.Equal(3, postLogoutRedirectUris.Length);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetRedirectUrisAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetRedirectUrisAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var postLogoutRedirectUris = await applicationStore.GetRedirectUrisAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(postLogoutRedirectUris);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnRedirectUris_When_ApplicationHasRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                RedirectUris = new List<string>
+                {
+                    "https://test.io/login",
+                    "https://test.io/login/even/more",
+                    "https://test.io/login/logout/noop/login",
+                },
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var redirectUris = await applicationStore.GetRedirectUrisAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, redirectUris.Length);
+        }
+    }
 }

@@ -8,6 +8,7 @@ namespace OpenIddict.DynamoDB.Tests;
 internal static class DynamoDbLocalServerUtils
 {
     public static DisposableDatabase CreateDatabase() => new DisposableDatabase();
+    private static ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new();
 
     public class DisposableDatabase : IDisposable
     {
@@ -44,10 +45,12 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
+            Console.WriteLine("Truncating {0}", tableName);
             var keys = await GetKeyDefinitions(tableName);
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
+            Console.WriteLine("Listing items for {0}", tableName);
             while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
             {
                 var data = await Client.ScanAsync(new ScanRequest
@@ -60,6 +63,7 @@ internal static class DynamoDbLocalServerUtils
                 exclusiveStartKey = data.LastEvaluatedKey;
             }
 
+            Console.WriteLine("Table {0} has {1} items", tableName, allItems.Count);
             if (allItems.Any() == false)
             {
                 return;
@@ -77,6 +81,7 @@ internal static class DynamoDbLocalServerUtils
 
             var batches = ToChunks(writeRequests, 25);
 
+            Console.WriteLine("Deleting data in {0}", tableName);
             foreach (var batch in batches)
             {
                 var request = new BatchWriteItemRequest
@@ -89,11 +94,22 @@ internal static class DynamoDbLocalServerUtils
 
                 await Client.BatchWriteItemAsync(request);
             }
+            Console.WriteLine("All done with {0}", tableName);
         }
 
         public async Task<IEnumerable<KeyDefinition>> GetKeyDefinitions(string tableName)
         {
-            var tableDefinition = await DynamoUtils.GetTableDefinition(Client, tableName);
+            Console.WriteLine("Getting key definitions for {0}", tableName);
+            if (TableDefinitions.ContainsKey(tableName) == false)
+            {
+                TableDefinitions.TryAdd(tableName, await Client.DescribeTableAsync(new DescribeTableRequest
+                {
+                    TableName = tableName,
+                }));
+            }
+
+            var tableDefinition = TableDefinitions.GetValueOrDefault(tableName)!;
+            Console.WriteLine("Got table definition for {0}", tableName);
 
             return tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {

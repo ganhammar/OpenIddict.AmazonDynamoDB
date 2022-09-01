@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
@@ -5,16 +6,27 @@ namespace OpenIddict.DynamoDB;
 
 public class DynamoUtils
 {
+    private static ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new();
+    public static async Task<DescribeTableResponse> GetTableDefinition(IAmazonDynamoDB client, string tableName)
+    {
+        if (TableDefinitions.ContainsKey(tableName) == false)
+        {
+            TableDefinitions.TryAdd(tableName, await client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = tableName,
+            }));
+        }
+
+        return TableDefinitions.GetValueOrDefault(tableName)!;
+    }
+
     public static async Task WaitForActiveTableAsync(IAmazonDynamoDB client, string tableName)
     {
         bool active;
         do
         {
             active = true;
-            var response = await client.DescribeTableAsync(new DescribeTableRequest
-            {
-                TableName = tableName,
-            });
+            var response = await GetTableDefinition(client, tableName);
 
             if (!Equals(response.Table.TableStatus, TableStatus.ACTIVE) ||
                 !response.Table.GlobalSecondaryIndexes.TrueForAll(g => Equals(g.IndexStatus, IndexStatus.ACTIVE)))

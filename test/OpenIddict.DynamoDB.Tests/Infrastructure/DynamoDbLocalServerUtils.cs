@@ -8,7 +8,6 @@ namespace OpenIddict.DynamoDB.Tests;
 internal static class DynamoDbLocalServerUtils
 {
     public static DisposableDatabase CreateDatabase() => new DisposableDatabase();
-    private static ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new();
 
     public class DisposableDatabase : IDisposable
     {
@@ -94,15 +93,7 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task<IEnumerable<KeyDefinition>> GetKeyDefinitions(string tableName)
         {
-            if (TableDefinitions.ContainsKey(tableName) == false)
-            {
-                TableDefinitions.TryAdd(tableName, await Client.DescribeTableAsync(new DescribeTableRequest
-                {
-                    TableName = tableName,
-                }));
-            }
-
-            var tableDefinition = TableDefinitions.GetValueOrDefault(tableName)!;
+            var tableDefinition = await DynamoUtils.GetTableDefinition(Client, tableName);
 
             return tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {

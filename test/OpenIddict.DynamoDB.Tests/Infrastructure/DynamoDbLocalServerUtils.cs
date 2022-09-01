@@ -34,10 +34,10 @@ internal static class DynamoDbLocalServerUtils
             }
 
             var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
-            tables.TableNames.ForEach(tableName =>
+            foreach (var tableName in tables.TableNames)
             {
                 DeleteTableData(tableName).GetAwaiter().GetResult();
-            });
+            }
 
             Client.Dispose();
             _disposed = true;

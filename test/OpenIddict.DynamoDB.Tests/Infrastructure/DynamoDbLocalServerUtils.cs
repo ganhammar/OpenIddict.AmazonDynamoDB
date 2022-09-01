@@ -8,6 +8,7 @@ namespace OpenIddict.DynamoDB.Tests;
 internal static class DynamoDbLocalServerUtils
 {
     public static DisposableDatabase CreateDatabase() => new DisposableDatabase();
+    private static ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new();
 
     public class DisposableDatabase : IDisposable
     {
@@ -44,10 +45,7 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
-            Console.WriteLine("Getting table information for {0}", tableName);
-            var (numberOfItems, keys) = await GetTableInformation(tableName);
-            Console.WriteLine("Got table information for {0}", tableName);
-            return;
+            var keys = await GetKeyDefinitions(tableName);
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
@@ -94,8 +92,7 @@ internal static class DynamoDbLocalServerUtils
             }
         }
 
-        private ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new ConcurrentDictionary<string, DescribeTableResponse>();
-        public async Task<(long, IEnumerable<KeyDefinition>)> GetTableInformation(string tableName)
+        public async Task<IEnumerable<KeyDefinition>> GetKeyDefinitions(string tableName)
         {
             if (TableDefinitions.ContainsKey(tableName) == false)
             {
@@ -107,14 +104,14 @@ internal static class DynamoDbLocalServerUtils
 
             var tableDefinition = TableDefinitions.GetValueOrDefault(tableName)!;
 
-            return (tableDefinition.Table.ItemCount, tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
+            return tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {
                 AttributeName = x.AttributeName,
                 AttributeType = tableDefinition.Table.AttributeDefinitions
                     .First(y => y.AttributeName == x.AttributeName)
                     .AttributeType,
                 KeyType = x.KeyType,
-            }));
+            });
         }
 
         private IEnumerable<IEnumerable<T>> ToChunks<T>(List<T> fullList, int batchSize)

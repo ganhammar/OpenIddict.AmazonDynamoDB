@@ -34,16 +34,15 @@ internal static class DynamoDbLocalServerUtils
             var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
             foreach (var tableName in tables.TableNames)
             {
-                DeleteTableData(tableName).GetAwaiter().GetResult();
+                TruncateTable(tableName).GetAwaiter().GetResult();
             }
 
             Client.Dispose();
             _disposed = true;
         }
 
-        public async Task DeleteTableData(string tableName)
+        public async Task TruncateTable(string tableName)
         {
-            Console.WriteLine("Truncating table {0}", tableName);
             var (numberOfItems, keys) = await GetKeyDefinitions(tableName);
 
             if (numberOfItems == 0)
@@ -54,22 +53,18 @@ internal static class DynamoDbLocalServerUtils
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            Console.WriteLine("Fetching data for table {0}", tableName);
             while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
             {
-                Console.WriteLine("Starting scan for items in table {0}", tableName);
                 var data = await Client.ScanAsync(new ScanRequest
                 {
                     TableName = tableName,
                     AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
                     ExclusiveStartKey = exclusiveStartKey,
                 });
-                Console.WriteLine("End scan for items in table {0}", tableName);
                 allItems.AddRange(data.Items);
                 exclusiveStartKey = data.LastEvaluatedKey;
             }
 
-            Console.WriteLine("Items fetched for table {0}", tableName);
             if (allItems.Any() == false)
             {
                 return;
@@ -87,7 +82,6 @@ internal static class DynamoDbLocalServerUtils
 
             var batches = ToChunks(writeRequests, 25);
 
-            Console.WriteLine("Starting to delete items in table {0}", tableName);
             foreach (var batch in batches)
             {
                 var request = new BatchWriteItemRequest
@@ -100,18 +94,15 @@ internal static class DynamoDbLocalServerUtils
 
                 await Client.BatchWriteItemAsync(request);
             }
-            Console.WriteLine("Done with table {0}", tableName);
         }
 
         public async Task<(long, IEnumerable<KeyDefinition>)> GetKeyDefinitions(string tableName)
         {
-            Console.WriteLine("Fetching table information about {0}", tableName);
             var tableDefinition = await Client.DescribeTableAsync(new DescribeTableRequest
             {
                 TableName = tableName,
             });
 
-            Console.WriteLine("Got table information about {0} contains {1} items", tableName, tableDefinition.Table.ItemCount);
             return (tableDefinition.Table.ItemCount, tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {
                 AttributeName = x.AttributeName,

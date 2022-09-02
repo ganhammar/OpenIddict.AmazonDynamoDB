@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
@@ -8,7 +7,6 @@ namespace OpenIddict.DynamoDB.Tests;
 internal static class DynamoDbLocalServerUtils
 {
     public static DisposableDatabase CreateDatabase() => new DisposableDatabase();
-    private static ConcurrentDictionary<string, DescribeTableResponse> TableDefinitions = new();
 
     public class DisposableDatabase : IDisposable
     {
@@ -45,29 +43,33 @@ internal static class DynamoDbLocalServerUtils
 
         public async Task DeleteTableData(string tableName)
         {
-            Console.WriteLine("Truncating {0}", tableName);
-            var keys = await GetKeyDefinitions(tableName);
+            Console.WriteLine("Truncating table {0}", tableName);
+            var (numberOfItems, keys) = await GetKeyDefinitions(tableName);
+
+            if (numberOfItems == 0)
+            {
+                return;
+            }
+
             var allItems = new List<Dictionary<string, AttributeValue>>();
             Dictionary<string, AttributeValue>? exclusiveStartKey = default;
 
-            Console.WriteLine("Listing items for {0}", tableName);
-            var iterations = 0;
-            while ((exclusiveStartKey == default || exclusiveStartKey.Count > 0) && iterations < 5)
+            Console.WriteLine("Fetching data for table {0}", tableName);
+            while (exclusiveStartKey == default || exclusiveStartKey.Count > 0)
             {
-                Console.WriteLine("Starting iteration of items for {0}, current iteration {1}", tableName, iterations);
+                Console.WriteLine("Starting scan for items in table {0}", tableName);
                 var data = await Client.ScanAsync(new ScanRequest
                 {
                     TableName = tableName,
                     AttributesToGet = keys.Select(x => x.AttributeName).ToList(),
                     ExclusiveStartKey = exclusiveStartKey,
                 });
+                Console.WriteLine("End scan for items in table {0}", tableName);
                 allItems.AddRange(data.Items);
                 exclusiveStartKey = data.LastEvaluatedKey;
-                iterations += 1;
-                Console.WriteLine("End of iteration of items for {0}, current iteration {1}", tableName, iterations);
             }
 
-            Console.WriteLine("Table {0} has {1} items", tableName, allItems.Count);
+            Console.WriteLine("Items fetched for table {0}", tableName);
             if (allItems.Any() == false)
             {
                 return;
@@ -85,7 +87,7 @@ internal static class DynamoDbLocalServerUtils
 
             var batches = ToChunks(writeRequests, 25);
 
-            Console.WriteLine("Deleting data in {0}", tableName);
+            Console.WriteLine("Starting to delete items in table {0}", tableName);
             foreach (var batch in batches)
             {
                 var request = new BatchWriteItemRequest
@@ -98,31 +100,26 @@ internal static class DynamoDbLocalServerUtils
 
                 await Client.BatchWriteItemAsync(request);
             }
-            Console.WriteLine("All done with {0}", tableName);
+            Console.WriteLine("Done with table {0}", tableName);
         }
 
-        public async Task<IEnumerable<KeyDefinition>> GetKeyDefinitions(string tableName)
+        public async Task<(long, IEnumerable<KeyDefinition>)> GetKeyDefinitions(string tableName)
         {
-            Console.WriteLine("Getting key definitions for {0}", tableName);
-            if (TableDefinitions.ContainsKey(tableName) == false)
+            Console.WriteLine("Fetching table information about {0}", tableName);
+            var tableDefinition = await Client.DescribeTableAsync(new DescribeTableRequest
             {
-                TableDefinitions.TryAdd(tableName, await Client.DescribeTableAsync(new DescribeTableRequest
-                {
-                    TableName = tableName,
-                }));
-            }
+                TableName = tableName,
+            });
 
-            var tableDefinition = TableDefinitions.GetValueOrDefault(tableName)!;
-            Console.WriteLine("Got table definition for {0}", tableName);
-
-            return tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
+            Console.WriteLine("Got table information about {0} contains {1} items", tableName, tableDefinition.Table.ItemCount);
+            return (tableDefinition.Table.ItemCount, tableDefinition.Table.KeySchema.Select(x => new KeyDefinition
             {
                 AttributeName = x.AttributeName,
                 AttributeType = tableDefinition.Table.AttributeDefinitions
                     .First(y => y.AttributeName == x.AttributeName)
                     .AttributeType,
                 KeyType = x.KeyType,
-            });
+            }));
         }
 
         private IEnumerable<IEnumerable<T>> ToChunks<T>(List<T> fullList, int batchSize)

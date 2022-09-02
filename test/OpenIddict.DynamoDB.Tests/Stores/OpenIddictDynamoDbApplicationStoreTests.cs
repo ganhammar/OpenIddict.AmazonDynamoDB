@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using System.Globalization;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 
@@ -1323,6 +1325,217 @@ public class OpenIddictDynamoDbApplicationStoreTests
 
             // Assert
             Assert.Equal(3, requirements.Length);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetDisplayNamesAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetDisplayNamesAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyDisplayNames()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var displayNames = await applicationStore.GetDisplayNamesAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(displayNames);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnDisplayNames_When_ApplicationHasDisplayNames()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                DisplayNames = new Dictionary<string, string>
+                {
+                    { "sv-SE", "Testar" },
+                    { "es-ES", "Testado" },
+                    { "en-US", "Testing" },
+                },
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var displayNames = await applicationStore.GetDisplayNamesAsync(application, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, displayNames.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetDisplayNamesAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetDisplayNamesAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyDictionaryAsDisplayNames()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetDisplayNamesAsync(
+                application,
+                new Dictionary<CultureInfo, string>().ToImmutableDictionary(x => x.Key, x => x.Value),
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.DisplayNames);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetDisplayNames_When_SettingDisplayNames()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var displayNames = new Dictionary<CultureInfo, string>
+            {
+                { new CultureInfo("sv-SE"), "Testar" },
+                { new CultureInfo("es-ES"), "Testado" },
+                { new CultureInfo("en-US"), "Testing" },
+            };
+            await applicationStore.SetDisplayNamesAsync(
+                application,
+                displayNames.ToImmutableDictionary(x => x.Key, x => x.Value),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.DisplayNames);
+            Assert.Equal(3, application.DisplayNames!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetPermissionsAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetPermissionsAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsPermissions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetPermissionsAsync(
+                application,
+                default,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.Permissions);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetPermissions_When_SettingPermissions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var permissions = new List<string>
+            {
+                "Get",
+                "Set",
+                "And Other Things",
+            };
+            await applicationStore.SetPermissionsAsync(
+                application,
+                permissions.ToImmutableArray(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.Permissions);
+            Assert.Equal(3, application.Permissions!.Count);
         }
     }
 }

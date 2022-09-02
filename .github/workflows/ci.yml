@@ -13,10 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup DynamoDB Local
-        uses: addnab/docker-run-action@v3
-        with:
-          image: amazon/dynamodb-local
-          options: -p 8000:8000
+        run: |
+          docker run -p 8000:8000 amazon/dynamodb-local
       - name: Setup .NET Core SDKs
         uses: actions/setup-dotnet@v2
         with:

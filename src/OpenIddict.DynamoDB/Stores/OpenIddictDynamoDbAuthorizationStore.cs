@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -369,9 +370,36 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         }
     }
 
+    public ConcurrentDictionary<int, string?> ListCursors { get; set; } = new ConcurrentDictionary<int, string?>();
     public IAsyncEnumerable<TAuthorization> ListAsync(int? count, int? offset, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        string? initalToken = default;
+        if (offset.HasValue)
+        {
+            ListCursors.TryGetValue(offset.Value, out initalToken);
+
+            if (initalToken == default)
+            {
+                throw new NotSupportedException("Pagination support is very limited (see documentation)");
+            }
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var (token, items) = await DynamoDbUtils.Paginate<TAuthorization>(_client, count, initalToken, cancellationToken);
+
+            if (count.HasValue)
+            {
+                ListCursors.TryAdd(count.Value + (offset ?? 0), token);
+            }
+
+            foreach (var item in items)
+            {
+                yield return item;
+            }
+        }
     }
 
     public IAsyncEnumerable<TResult> ListAsync<TState, TResult>(Func<IQueryable<TAuthorization>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)

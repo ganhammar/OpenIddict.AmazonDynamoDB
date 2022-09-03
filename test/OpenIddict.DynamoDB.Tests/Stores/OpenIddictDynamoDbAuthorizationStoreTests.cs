@@ -688,4 +688,80 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             Assert.Equal(3, properties.Count);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetCreationDateAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetCreationDateAsync(default!, default, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetCreationDate_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+
+            // Act
+            var creationDate = DateTimeOffset.Now;
+            await authorizationStore.SetCreationDateAsync(authorization, creationDate, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(creationDate.UtcDateTime, authorization.CreationDate);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetApplicationIdAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetApplicationIdAsync(default!, default, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetApplicationId_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+
+            // Act
+            var applicationId = Guid.NewGuid().ToString();
+            await authorizationStore.SetApplicationIdAsync(authorization, applicationId, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(applicationId, authorization.ApplicationId);
+        }
+    }
 }

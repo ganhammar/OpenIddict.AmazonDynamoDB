@@ -764,4 +764,358 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             Assert.Equal(applicationId, authorization.ApplicationId);
         }
     }
+
+    [Fact]
+    public async Task Should_ReturnNewApplication_When_CallingInstantiate()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act
+            var authorization = await authorizationStore.InstantiateAsync(CancellationToken.None);
+
+            // Assert
+            Assert.IsType<OpenIddictDynamoDbAuthorization>(authorization);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetTypeAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetTypeAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnType_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Type = "SomeType",
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var type = await authorizationStore.GetTypeAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(type);
+            Assert.Equal(authorization.Type, type);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetSubjectAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetSubjectAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnSubject_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Subject = "SomeSubject",
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var subject = await authorizationStore.GetSubjectAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(subject);
+            Assert.Equal(authorization.Subject, subject);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetStatusAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetStatusAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnStatus_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Status = "SomeStatus",
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var subject = await authorizationStore.GetStatusAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(subject);
+            Assert.Equal(authorization.Status, subject);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetIdAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetIdAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnId_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Id = Guid.NewGuid().ToString(),
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var id = await authorizationStore.GetIdAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(id);
+            Assert.Equal(authorization.Id, id);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetCreationDateAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetCreationDateAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnCreationDate_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                CreationDate = DateTime.Now,
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var creationDate = await authorizationStore.GetCreationDateAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(creationDate);
+            Assert.Equal(authorization.CreationDate, creationDate);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetApplicationIdAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetApplicationIdAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnApplicationId_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                ApplicationId = Guid.NewGuid().ToString(),
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var applicationId = await authorizationStore.GetApplicationIdAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(applicationId);
+            Assert.Equal(authorization.ApplicationId, applicationId);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
+                await authorizationStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetScopesAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetScopesAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_AuthorizationDoesntHaveAnyScopes()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var postLogoutScopes = await authorizationStore.GetScopesAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.Empty(postLogoutScopes);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnScopes_When_AuthorizationHasScopes()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Scopes = new List<string>
+                {
+                    "get",
+                    "set",
+                    "delete",
+                },
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var redirectUris = await authorizationStore.GetScopesAsync(authorization, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(3, redirectUris.Length);
+        }
+    }
 }

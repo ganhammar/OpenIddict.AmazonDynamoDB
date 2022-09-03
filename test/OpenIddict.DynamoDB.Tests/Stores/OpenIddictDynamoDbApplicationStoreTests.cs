@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 
@@ -60,7 +61,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await Assert.ThrowsAsync<NotSupportedException>(async () =>
                 await applicationStore.CountAsync(x => x.Where(y => y.DisplayName == "Test"), CancellationToken.None));
         }
     }
@@ -616,7 +617,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await Assert.ThrowsAsync<NotSupportedException>(async () =>
                 await applicationStore.GetAsync<int, int>(default!, default, CancellationToken.None));
         }
     }
@@ -1536,6 +1537,395 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Assert
             Assert.NotNull(application.Permissions);
             Assert.Equal(3, application.Permissions!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetPostLogoutRedirectUrisAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetPostLogoutRedirectUrisAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsPostLogoutRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetPostLogoutRedirectUrisAsync(
+                application,
+                default,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.PostLogoutRedirectUris);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetPostLogoutRedirectUris_When_SettingPostLogoutRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var postLogoutRedirectUris = new List<string>
+            {
+                "https://test.io/logout",
+                "https://test.io/logout/even/more",
+                "https://test.io/logout/login/noop/logout",
+            };
+            await applicationStore.SetPostLogoutRedirectUrisAsync(
+                application,
+                postLogoutRedirectUris.ToImmutableArray(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.PostLogoutRedirectUris);
+            Assert.Equal(3, application.PostLogoutRedirectUris!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetRedirectUrisAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetRedirectUrisAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetRedirectUrisAsync(
+                application,
+                default,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.RedirectUris);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetRedirectUris_When_SettingRedirectUris()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var redirectUris = new List<string>
+            {
+                "https://test.io/login",
+                "https://test.io/login/even/more",
+                "https://test.io/login/logout/noop/login",
+            };
+            await applicationStore.SetRedirectUrisAsync(
+                application,
+                redirectUris.ToImmutableArray(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.RedirectUris);
+            Assert.Equal(3, application.RedirectUris!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetRequirementsAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetRequirementsAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsRequirements()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetRequirementsAsync(
+                application,
+                default,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.Requirements);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetRequirements_When_SettingRequirements()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var requirements = new List<string>
+            {
+                "Do",
+                "Dont",
+                "Doer",
+            };
+            await applicationStore.SetRequirementsAsync(
+                application,
+                requirements.ToImmutableArray(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.Requirements);
+            Assert.Equal(3, application.Requirements!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetPropertiesAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsProperties()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            await applicationStore.SetPropertiesAsync(
+                application,
+                default!,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(application.Properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetProperties_When_SettingProperties()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var properties = new Dictionary<string, JsonElement>
+            {
+                { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+                { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+                { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+            };
+            await applicationStore.SetPropertiesAsync(
+                application,
+                properties.ToImmutableDictionary(x => x.Key, x => x.Value),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(application.Properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetPropertiesAndApplicationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await applicationStore.GetPropertiesAsync(default!, CancellationToken.None));
+            Assert.Equal("application", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication();
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var properties = await applicationStore.GetPropertiesAsync(
+                application,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Empty(properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+            var application = new OpenIddictDynamoDbApplication
+            {
+                Properties = "{ \"Test\": { \"Something\": true }, \"Testing\": { \"Something\": true }, \"Testicles\": { \"Something\": true } }",
+            };
+            await applicationStore.CreateAsync(application, CancellationToken.None);
+
+            // Act
+            var properties = await applicationStore.GetPropertiesAsync(
+                application,
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(properties);
+            Assert.Equal(3, properties.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnNewApplication_When_CallingInstantiate()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act
+            var application = await applicationStore.InstantiateAsync(CancellationToken.None);
+
+            // Assert
+            Assert.IsType<OpenIddictDynamoDbApplication>(application);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            Assert.Throws<NotSupportedException>(() =>
+                applicationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
         }
     }
 }

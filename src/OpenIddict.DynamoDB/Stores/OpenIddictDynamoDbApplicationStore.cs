@@ -405,10 +405,36 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
     }
 
-    public ConcurrentDictionary<int, string> ListCursors { get; set; } = new ConcurrentDictionary<int, string>();
+    public ConcurrentDictionary<int, string?> ListCursors { get; set; } = new ConcurrentDictionary<int, string?>();
     public IAsyncEnumerable<TApplication> ListAsync(int? count, int? offset, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        string? initalToken = default;
+        if (offset.HasValue)
+        {
+            ListCursors.TryGetValue(offset.Value, out initalToken);
+
+            if (initalToken == default)
+            {
+                throw new NotSupportedException("Pagination support is very limited (see documentation)");
+            }
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var (token, items) = await DynamoDbUtils.Paginate<TApplication>(_client, count, initalToken, cancellationToken);
+
+            if (count.HasValue)
+            {
+                ListCursors.TryAdd(count.Value + (offset ?? 0), token);
+            }
+
+            foreach (var item in items)
+            {
+                yield return item;
+            }
+        }
     }
 
     public IAsyncEnumerable<TResult> ListAsync<TState, TResult>(Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)
@@ -752,7 +778,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
         else
         {
-            await DynamoUtils.UpdateSecondaryIndexes(client, applicationTableName, applicationGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(client, applicationTableName, applicationGlobalSecondaryIndexes);
         }
 
         if (!tableNames.TableNames.Contains(applicationRedirectTableName))
@@ -762,7 +788,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
         else
         {
-            await DynamoUtils.UpdateSecondaryIndexes(client, applicationRedirectTableName, applicationRedirectGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(client, applicationRedirectTableName, applicationRedirectGlobalSecondaryIndexes);
         }
     }
 
@@ -802,7 +828,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
             throw new Exception($"Couldn't create table {tableName}");
         }
 
-        await DynamoUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
     }
 
     private async Task CreateApplicationRedirectTableAsync(IAmazonDynamoDB client, string tableName,
@@ -851,6 +877,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
             throw new Exception($"Couldn't create table {tableName}");
         }
 
-        await DynamoUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
     }
 }

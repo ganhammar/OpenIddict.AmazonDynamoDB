@@ -600,7 +600,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         }
         else
         {
-            await DynamoUtils.UpdateSecondaryIndexes(client, authorizationTableName, authorizationGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(client, authorizationTableName, authorizationGlobalSecondaryIndexes);
         }
     }
 
@@ -645,6 +645,6 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             throw new Exception($"Couldn't create table {tableName}");
         }
 
-        await DynamoUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
     }
 }

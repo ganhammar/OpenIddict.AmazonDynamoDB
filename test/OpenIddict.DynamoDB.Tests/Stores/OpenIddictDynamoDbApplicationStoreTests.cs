@@ -1928,4 +1928,129 @@ public class OpenIddictDynamoDbApplicationStoreTests
                 applicationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
         }
     }
+
+    [Fact]
+    public async Task Should_ReturnList_When_ListingApplications()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            var applicationCount = 10;
+            foreach (var index in Enumerable.Range(0, applicationCount))
+            {
+                await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication
+                {
+                    DisplayName = index.ToString(),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var applications = applicationStore.ListAsync(default, default, CancellationToken.None);
+
+            // Assert
+            var matchedApplications = new List<OpenIddictDynamoDbApplication>();
+            await foreach (var application in applications)
+            {
+                matchedApplications.Add(application);
+            }
+            Assert.Equal(applicationCount, matchedApplications.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnFirstFive_When_ListingApplicationsWithCount()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication
+                {
+                    DisplayName = index.ToString(),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var expectedCount = 5;
+            var applications = applicationStore.ListAsync(expectedCount, default, CancellationToken.None);
+
+            // Assert
+            var matchedApplications = new List<OpenIddictDynamoDbApplication>();
+            await foreach (var application in applications)
+            {
+                matchedApplications.Add(application);
+            }
+            Assert.Equal(expectedCount, matchedApplications.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnLastFive_When_ListingApplicationsWithCountAndOffset()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication
+                {
+                    DisplayName = index.ToString(),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var expectedCount = 5;
+
+            // Need to fetch first page to be able to fetch second
+            var first = applicationStore.ListAsync(expectedCount, default, CancellationToken.None);
+            var firstApplications = new List<OpenIddictDynamoDbApplication>();
+            await foreach (var application in first)
+            {
+                firstApplications.Add(application);
+            }
+
+            var applications = applicationStore.ListAsync(expectedCount, expectedCount, CancellationToken.None);
+
+            // Assert
+            var matchedApplications = new List<OpenIddictDynamoDbApplication>();
+            await foreach (var application in applications)
+            {
+                matchedApplications.Add(application);
+            }
+            Assert.Equal(expectedCount, matchedApplications.Count);
+            Assert.Empty(firstApplications.Select(x => x.Id).Intersect(matchedApplications.Select(x => x.Id)));
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
+                database.Client);
+            await applicationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            Assert.Throws<NotSupportedException>(() =>
+                applicationStore.ListAsync(5, 5, CancellationToken.None));
+        }
+    }
 }

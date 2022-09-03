@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 
@@ -360,6 +362,330 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             var databaseAuthorization = await context.LoadAsync<OpenIddictDynamoDbAuthorization>(authorization.Id);
             Assert.NotNull(databaseAuthorization);
             Assert.Equal(databaseAuthorization.Subject, authorization.Subject);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetTypeAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetTypeAsync(default!, default, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetType_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+
+            // Act
+            var type = "SomeType";
+            await authorizationStore.SetTypeAsync(authorization, type, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(type, authorization.Type);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetSubjectAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetSubjectAsync(default!, default, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetSubject_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+
+            // Act
+            var subject = "SomeSubject";
+            await authorizationStore.SetSubjectAsync(authorization, subject, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(subject, authorization.Subject);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetStatusAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetStatusAsync(default!, default, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetStatus_When_AuthorizationIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+
+            // Act
+            var status = "SomeStatus";
+            await authorizationStore.SetStatusAsync(authorization, status, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(status, authorization.Status);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetScopesAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetScopesAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsScopes()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            await authorizationStore.SetScopesAsync(
+                authorization,
+                default,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(authorization.Scopes);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetScopes_When_SettingScopes()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var redirectUris = new List<string>
+            {
+                "something",
+                "other",
+                "some_more",
+            };
+            await authorizationStore.SetScopesAsync(
+                authorization,
+                redirectUris.ToImmutableArray(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(authorization.Scopes);
+            Assert.Equal(3, authorization.Scopes!.Count);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetPropertiesAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetNull_When_SetEmptyListAsProperties()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            await authorizationStore.SetPropertiesAsync(
+                authorization,
+                default!,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Null(authorization.Properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetProperties_When_SettingProperties()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var properties = new Dictionary<string, JsonElement>
+            {
+                { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+                { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+                { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+            };
+            await authorizationStore.SetPropertiesAsync(
+                authorization,
+                properties.ToImmutableDictionary(x => x.Key, x => x.Value),
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(authorization.Properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToGetPropertiesAndAuthorizationIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await authorizationStore.GetPropertiesAsync(default!, CancellationToken.None));
+            Assert.Equal("authorization", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization();
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var properties = await authorizationStore.GetPropertiesAsync(
+                authorization,
+                CancellationToken.None);
+
+            // Assert
+            Assert.Empty(properties);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            var authorization = new OpenIddictDynamoDbAuthorization
+            {
+                Properties = "{ \"Test\": { \"Something\": true }, \"Testing\": { \"Something\": true }, \"Testicles\": { \"Something\": true } }",
+            };
+            await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+
+            // Act
+            var properties = await authorizationStore.GetPropertiesAsync(
+                authorization,
+                CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(properties);
+            Assert.Equal(3, properties.Count);
         }
     }
 }

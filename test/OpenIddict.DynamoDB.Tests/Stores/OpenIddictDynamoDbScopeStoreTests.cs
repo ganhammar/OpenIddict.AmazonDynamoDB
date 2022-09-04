@@ -3,6 +3,7 @@ using Xunit;
 
 namespace OpenIddict.DynamoDB.Tests;
 
+[Collection("Sequential")]
 public class OpenIddictDynamoDbScopeStoreTests
 {
     [Fact]

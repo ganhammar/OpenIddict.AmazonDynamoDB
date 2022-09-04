@@ -14,6 +14,7 @@ public class OpenIddictDynamoDbScope
     public virtual string? DisplayName { get; set; }
     public virtual Dictionary<string, string>? DisplayNames { get; set; }
         = new Dictionary<string, string>();
+    [DynamoDBProperty("ScopeName")]
     public virtual string? Name { get; set; }
     public virtual string? Properties { get; set; }
     public virtual List<string>? Resources { get; set; } = new List<string>();

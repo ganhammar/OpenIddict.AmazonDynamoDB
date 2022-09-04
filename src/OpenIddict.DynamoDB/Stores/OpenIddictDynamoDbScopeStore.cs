@@ -1,10 +1,12 @@
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 using OpenIddict.Abstractions;
@@ -62,19 +64,69 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         await _context.DeleteAsync(scope, cancellationToken);
     }
 
-    public ValueTask<TScope?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
+    public async ValueTask<TScope?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (identifier == null)
+        {
+            throw new ArgumentNullException(nameof(identifier));
+        }
+
+        return await _context.LoadAsync<TScope>(identifier, cancellationToken);
     }
 
-    public ValueTask<TScope?> FindByNameAsync(string name, CancellationToken cancellationToken)
+    public async ValueTask<TScope?> FindByNameAsync(string name, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (name == null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
+        var search = _context.FromQueryAsync<TScope>(new QueryOperationConfig
+        {
+            IndexName = "Name-index",
+            KeyExpression = new Expression
+            {
+                ExpressionStatement = "ScopeName = :name",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":name", name },
+                }
+            },
+            Limit = 1
+        });
+        var scopes = await search.GetRemainingAsync(cancellationToken);
+        return scopes?.FirstOrDefault();
     }
 
     public IAsyncEnumerable<TScope> FindByNamesAsync(ImmutableArray<string> names, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (names == null)
+        {
+            throw new ArgumentNullException(nameof(names));
+        }
+
+        if (names is { Length: > 100 })
+        {
+            throw new NotSupportedException("Cannot fetch more than 100 scopes at a time");
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var batch = _context.ScanAsync<TScope>(
+                new[]
+                {
+                    new ScanCondition("Name", ScanOperator.In, names.ToArray()),
+                });
+
+            var scopes = await batch.GetRemainingAsync(cancellationToken);
+
+            foreach (var scope in scopes)
+            {
+                yield return scope;
+            }
+        }
     }
 
     public IAsyncEnumerable<TScope> FindByResourceAsync(string resource, CancellationToken cancellationToken)
@@ -212,6 +264,19 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         };
         var scopeGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
+            new GlobalSecondaryIndex
+            {
+                IndexName = "Name-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("ScopeName", KeyType.HASH),
+                },
+                ProvisionedThroughput = defaultProvisionThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
         };
 
         var tableNames = await client.ListTablesAsync();
@@ -247,6 +312,11 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
                 new AttributeDefinition
                 {
                     AttributeName = "Id",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                new AttributeDefinition
+                {
+                    AttributeName = "ScopeName",
                     AttributeType = ScalarAttributeType.S,
                 },
             },

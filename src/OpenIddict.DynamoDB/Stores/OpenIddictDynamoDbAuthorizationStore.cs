@@ -179,9 +179,29 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, string type, ImmutableArray<string> scopes, CancellationToken cancellationToken)
     {
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+
+        if (status == null)
+        {
+            throw new ArgumentNullException(nameof(status));
+        }
+
         if (type == null)
         {
             throw new ArgumentNullException(nameof(type));
+        }
+
+        if (scopes == null)
+        {
+            throw new ArgumentNullException(nameof(scopes));
         }
 
         return ExecuteAsync(cancellationToken);

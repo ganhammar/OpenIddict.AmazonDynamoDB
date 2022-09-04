@@ -1118,4 +1118,286 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             Assert.Equal(3, redirectUris.Length);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindAuthorizationAndSubjectIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync(default!, "test", CancellationToken.None));
+            Assert.Equal("subject", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindAuthorizationAndClientIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", default!, CancellationToken.None));
+            Assert.Equal("client", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyList_When_FindingAuthorizationsWithNoMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act
+            var authorizations = authorizationStore.FindAsync("test", "test", CancellationToken.None);
+
+            // Assert
+            var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
+            await foreach (var authorization in authorizations)
+            {
+                matchedAuthorizations.Add(authorization);
+            }
+            Assert.Empty(matchedAuthorizations);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    Subject = index.ToString(),
+                    ApplicationId = index.ToString(),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var authorizations = authorizationStore.FindAsync("5", "5", CancellationToken.None);
+
+            // Assert
+            var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
+            await foreach (var authorization in authorizations)
+            {
+                matchedAuthorizations.Add(authorization);
+            }
+            Assert.Single(matchedAuthorizations);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndSubjectIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync(default!, "test", "test", CancellationToken.None));
+            Assert.Equal("subject", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndClientIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", default!, "test", CancellationToken.None));
+            Assert.Equal("client", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindAuthorizationAndStatusIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", "test", default!, CancellationToken.None));
+            Assert.Equal("status", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithStatusMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            var status = "some-status";
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    Subject = index.ToString(),
+                    ApplicationId = index.ToString(),
+                    Status = status,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var authorizations = authorizationStore.FindAsync("5", "5", status, CancellationToken.None);
+
+            // Assert
+            var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
+            await foreach (var authorization in authorizations)
+            {
+                matchedAuthorizations.Add(authorization);
+            }
+            Assert.Single(matchedAuthorizations);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndSubjectIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync(default!, "test", "test", "test", CancellationToken.None));
+            Assert.Equal("subject", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndClientIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", default!, "test", "test", CancellationToken.None));
+            Assert.Equal("client", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndStatusIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", "test", default!, "test", CancellationToken.None));
+            Assert.Equal("status", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndTypeIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                authorizationStore.FindAsync("test", "test", "test", default!, CancellationToken.None));
+            Assert.Equal("type", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithTypeMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            var status = "some-status";
+            var type = "some-type";
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    Subject = index.ToString(),
+                    ApplicationId = index.ToString(),
+                    Status = status,
+                    Type = type,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            var authorizations = authorizationStore.FindAsync("5", "5", status, type, CancellationToken.None);
+
+            // Assert
+            var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
+            await foreach (var authorization in authorizations)
+            {
+                matchedAuthorizations.Add(authorization);
+            }
+            Assert.Single(matchedAuthorizations);
+        }
+    }
 }

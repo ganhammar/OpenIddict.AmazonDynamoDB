@@ -519,7 +519,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         application.DisplayNames = names.ToDictionary(x => x.Key.ToString(), x => x.Value);
 
         return default;
-
     }
 
     public ValueTask SetPermissionsAsync(TApplication application, ImmutableArray<string> permissions, CancellationToken cancellationToken)

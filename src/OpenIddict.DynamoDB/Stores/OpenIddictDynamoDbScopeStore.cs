@@ -1,7 +1,10 @@
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -141,52 +144,159 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public ValueTask<string?> GetDescriptionAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        return new(scope.Description);
     }
 
     public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDescriptionsAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (scope.Descriptions is not { Count: > 0 })
+        {
+            return new(ImmutableDictionary.Create<CultureInfo, string>());
+        }
+
+        return new(scope.Descriptions.ToImmutableDictionary(
+            pair => CultureInfo.GetCultureInfo(pair.Key),
+            pair => pair.Value));
     }
 
     public ValueTask<string?> GetDisplayNameAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        return new(scope.DisplayName);
     }
 
     public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDisplayNamesAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (scope.DisplayNames is not { Count: > 0 })
+        {
+            return new(ImmutableDictionary.Create<CultureInfo, string>());
+        }
+
+        return new(scope.DisplayNames.ToImmutableDictionary(
+            pair => CultureInfo.GetCultureInfo(pair.Key),
+            pair => pair.Value));
     }
 
     public ValueTask<string?> GetIdAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        return new(scope.Id);
     }
 
     public ValueTask<string?> GetNameAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        return new(scope.Name);
     }
 
     public ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (string.IsNullOrEmpty(scope.Properties))
+        {
+            return new(ImmutableDictionary.Create<string, JsonElement>());
+        }
+
+        using var document = JsonDocument.Parse(scope.Properties);
+        var properties = ImmutableDictionary.CreateBuilder<string, JsonElement>();
+
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            properties[property.Name] = property.Value.Clone();
+        }
+
+        return new(properties.ToImmutable());
     }
 
     public ValueTask<ImmutableArray<string>> GetResourcesAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (scope.Resources is not { Count: > 0 })
+        {
+            return new(ImmutableArray.Create<string>());
+        }
+
+        return new(scope.Resources.ToImmutableArray());
     }
 
     public ValueTask<TScope> InstantiateAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return new(Activator.CreateInstance<TScope>());
+        }
+        catch (MemberAccessException exception)
+        {
+            return new(Task.FromException<TScope>(
+                new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0246), exception)));
+        }
     }
 
+    public ConcurrentDictionary<int, string?> ListCursors { get; set; } = new ConcurrentDictionary<int, string?>();
     public IAsyncEnumerable<TScope> ListAsync(int? count, int? offset, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        string? initalToken = default;
+        if (offset.HasValue)
+        {
+            ListCursors.TryGetValue(offset.Value, out initalToken);
+
+            if (initalToken == default)
+            {
+                throw new NotSupportedException("Pagination support is very limited (see documentation)");
+            }
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var (token, items) = await DynamoDbUtils.Paginate<TScope>(_client, count, initalToken, cancellationToken);
+
+            if (count.HasValue)
+            {
+                ListCursors.TryAdd(count.Value + (offset ?? 0), token);
+            }
+
+            foreach (var item in items)
+            {
+                yield return item;
+            }
+        }
     }
 
     public IAsyncEnumerable<TResult> ListAsync<TState, TResult>(Func<IQueryable<TScope>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)
@@ -196,42 +306,151 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public ValueTask SetDescriptionAsync(TScope scope, string? description, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (description == null)
+        {
+            throw new ArgumentNullException(nameof(description));
+        }
+
+        scope.Description = description;
+
+        return default;
     }
 
     public ValueTask SetDescriptionsAsync(TScope scope, ImmutableDictionary<CultureInfo, string> descriptions, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (descriptions is not { Count: > 0 })
+        {
+            scope.Descriptions = null;
+
+            return default;
+        }
+
+        scope.Descriptions = descriptions.ToDictionary(x => x.Key.ToString(), x => x.Value);
+
+        return default;
     }
 
     public ValueTask SetDisplayNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (name == null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
+        scope.DisplayName = name;
+
+        return default;
     }
 
     public ValueTask SetDisplayNamesAsync(TScope scope, ImmutableDictionary<CultureInfo, string> names, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (names is not { Count: > 0 })
+        {
+            scope.DisplayNames = null;
+
+            return default;
+        }
+
+        scope.DisplayNames = names.ToDictionary(x => x.Key.ToString(), x => x.Value);
+
+        return default;
     }
 
     public ValueTask SetNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (name == null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
+        scope.Name = name;
+
+        return default;
     }
 
     public ValueTask SetPropertiesAsync(TScope scope, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (properties is not { Count: > 0 })
+        {
+            scope.Properties = null;
+
+            return default;
+        }
+
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Indented = false
+        });
+
+        writer.WriteStartObject();
+
+        foreach (var property in properties)
+        {
+            writer.WritePropertyName(property.Key);
+            property.Value.WriteTo(writer);
+        }
+
+        writer.WriteEndObject();
+        writer.Flush();
+
+        scope.Properties = Encoding.UTF8.GetString(stream.ToArray());
+
+        return default;
     }
 
     public ValueTask SetResourcesAsync(TScope scope, ImmutableArray<string> resources, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope is null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        if (resources is not { Length: > 0 })
+        {
+            scope.Resources = null;
+
+            return default;
+        }
+
+        scope.Resources = resources.ToList();
+
+        return default;
     }
 
-    public ValueTask UpdateAsync(TScope scope, CancellationToken cancellationToken)
+    public async ValueTask UpdateAsync(TScope scope, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (scope == null)
+        {
+            throw new ArgumentNullException(nameof(scope));
+        }
+
+        // Ensure no one else is updating
+        var databaseApplication = await _context.LoadAsync<TScope>(scope.Id, cancellationToken);
+        if (databaseApplication == default || databaseApplication.ConcurrencyToken != scope.ConcurrencyToken)
+        {
+            throw new ArgumentException("Given scope is invalid", nameof(scope));
+        }
+
+        scope.ConcurrencyToken = Guid.NewGuid().ToString();
+
+        await _context.SaveAsync(scope, cancellationToken);
     }
 
     public Task EnsureInitializedAsync(

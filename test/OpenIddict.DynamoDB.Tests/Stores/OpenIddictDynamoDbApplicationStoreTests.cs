@@ -1429,7 +1429,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Act
             await applicationStore.SetDisplayNamesAsync(
                 application,
-                new Dictionary<CultureInfo, string>().ToImmutableDictionary(x => x.Key, x => x.Value),
+                ImmutableDictionary.Create<CultureInfo, string>(),
                 CancellationToken.None);
 
             // Assert

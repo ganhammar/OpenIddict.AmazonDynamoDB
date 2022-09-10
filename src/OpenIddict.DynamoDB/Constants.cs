@@ -6,4 +6,5 @@ public class Constants
     public const string DefaultApplicationRedirectTableName = "application_redirects";
     public const string DefaultAuthorizationTableName = "authorizations";
     public const string DefaultScopeTableName = "scopes";
+    public const string DefaultTokenTableName = "tokens";
 }

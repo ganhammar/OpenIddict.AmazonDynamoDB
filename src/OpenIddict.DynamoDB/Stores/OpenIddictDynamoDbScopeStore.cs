@@ -502,7 +502,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
         if (!tableNames.TableNames.Contains(scopeTableName))
         {
-            await CreateAuthorizationTableAsync(
+            await CreateScopeTableAsync(
                 client, scopeTableName, defaultProvisionThroughput, scopeGlobalSecondaryIndexes);
         }
         else
@@ -511,7 +511,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         }
     }
 
-    private async Task CreateAuthorizationTableAsync(IAmazonDynamoDB client, string tableName,
+    private async Task CreateScopeTableAsync(IAmazonDynamoDB client, string tableName,
         ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest

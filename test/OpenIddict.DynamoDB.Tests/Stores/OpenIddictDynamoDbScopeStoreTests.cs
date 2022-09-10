@@ -930,7 +930,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await scopeStore.SetDescriptionAsync(default!, default, CancellationToken.None));
-            Assert.Equal("description", exception.ParamName);
+            Assert.Equal("scope", exception.ParamName);
         }
     }
 
@@ -968,7 +968,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await scopeStore.SetDisplayNameAsync(default!, default, CancellationToken.None));
-            Assert.Equal("name", exception.ParamName);
+            Assert.Equal("scope", exception.ParamName);
         }
     }
 
@@ -1006,7 +1006,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await scopeStore.SetNameAsync(default!, default, CancellationToken.None));
-            Assert.Equal("name", exception.ParamName);
+            Assert.Equal("scope", exception.ParamName);
         }
     }
 

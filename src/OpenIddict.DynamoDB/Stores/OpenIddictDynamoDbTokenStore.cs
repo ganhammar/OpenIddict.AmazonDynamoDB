@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -298,62 +300,178 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.ApplicationId = identifier;
+
+        return default;
     }
 
     public ValueTask SetAuthorizationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.AuthorizationId = identifier;
+
+        return default;
     }
 
     public ValueTask SetCreationDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.CreationDate = date?.UtcDateTime;
+
+        return default;
     }
 
     public ValueTask SetExpirationDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.ExpirationDate = date?.UtcDateTime;
+
+        return default;
     }
 
     public ValueTask SetPayloadAsync(TToken token, string? payload, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.Payload = payload;
+
+        return default;
     }
 
     public ValueTask SetPropertiesAsync(TToken token, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        if (properties is not { Count: > 0 })
+        {
+            token.Properties = null;
+
+            return default;
+        }
+
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Indented = false
+        });
+
+        writer.WriteStartObject();
+
+        foreach (var property in properties)
+        {
+            writer.WritePropertyName(property.Key);
+            property.Value.WriteTo(writer);
+        }
+
+        writer.WriteEndObject();
+        writer.Flush();
+
+        token.Properties = Encoding.UTF8.GetString(stream.ToArray());
+
+        return default;
     }
 
     public ValueTask SetRedemptionDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.RedemptionDate = date?.UtcDateTime;
+
+        return default;
     }
 
     public ValueTask SetReferenceIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.ReferenceId = identifier;
+
+        return default;
     }
 
     public ValueTask SetStatusAsync(TToken token, string? status, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.Status = status;
+
+        return default;
     }
 
     public ValueTask SetSubjectAsync(TToken token, string? subject, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.Subject = subject;
+
+        return default;
     }
 
     public ValueTask SetTypeAsync(TToken token, string? type, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token is null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        token.Type = type;
+
+        return default;
     }
 
-    public ValueTask UpdateAsync(TToken token, CancellationToken cancellationToken)
+    public async ValueTask UpdateAsync(TToken token, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (token == null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        // Ensure no one else is updating
+        var databaseApplication = await _context.LoadAsync<TToken>(token.Id, cancellationToken);
+        if (databaseApplication == default || databaseApplication.ConcurrencyToken != token.ConcurrencyToken)
+        {
+            throw new ArgumentException("Given token is invalid", nameof(token));
+        }
+
+        token.ConcurrencyToken = Guid.NewGuid().ToString();
+
+        await _context.SaveAsync(token, cancellationToken);
     }
 
     public Task EnsureInitializedAsync(

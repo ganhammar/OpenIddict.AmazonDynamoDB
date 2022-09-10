@@ -306,9 +306,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public ValueTask SetDescriptionAsync(TScope scope, string? description, CancellationToken cancellationToken)
     {
-        if (description == null)
+        if (scope is null)
         {
-            throw new ArgumentNullException(nameof(description));
+            throw new ArgumentNullException(nameof(scope));
         }
 
         scope.Description = description;
@@ -337,9 +337,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public ValueTask SetDisplayNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
     {
-        if (name == null)
+        if (scope is null)
         {
-            throw new ArgumentNullException(nameof(name));
+            throw new ArgumentNullException(nameof(scope));
         }
 
         scope.DisplayName = name;
@@ -368,9 +368,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public ValueTask SetNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
     {
-        if (name == null)
+        if (scope is null)
         {
-            throw new ArgumentNullException(nameof(name));
+            throw new ArgumentNullException(nameof(scope));
         }
 
         scope.Name = name;

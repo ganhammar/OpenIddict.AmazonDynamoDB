@@ -19,4 +19,9 @@ public class OpenIddictDynamoDbToken
     public virtual string? Status { get; set; }
     public virtual string? Subject { get; set; }
     public virtual string? Type { get; set; }
+    public string? SearchKey
+    {
+        get => $"{ApplicationId}#{Status}#{Type}";
+        set { }
+    }
 }

@@ -66,32 +66,22 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         await _context.DeleteAsync(authorization, cancellationToken);
     }
 
-    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, CancellationToken cancellationToken)
+    private IAsyncEnumerable<TAuthorization> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
         return ExecuteAsync(cancellationToken);
 
         async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
             {
-                IndexName = "ApplicationId-Subject-index",
+                IndexName = "Subject-SearchKey-index",
                 KeyExpression = new Expression
                 {
-                    ExpressionStatement = "Subject = :subject and ApplicationId = :applicationId",
+                    ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
                     ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
                     {
                         { ":subject", subject },
-                        { ":applicationId", client },
+                        { ":searchKey", searchKey },
                     }
                 },
                 Limit = 1,
@@ -104,6 +94,21 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
                 yield return authorization;
             }
         }
+    }
+
+    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, CancellationToken cancellationToken)
+    {
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+
+        return FindBySubjectAndSearchKey(subject, client, cancellationToken);
     }
 
     public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
@@ -123,20 +128,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             throw new ArgumentNullException(nameof(status));
         }
 
-        return ExecuteAsync(cancellationToken);
-
-        async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            var authorizations = FindAsync(subject, client, cancellationToken);
-            
-            await foreach (var authorization in authorizations)
-            {
-                if (authorization.Status == status)
-                {
-                    yield return authorization;
-                }
-            }
-        }
+        return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
     }
 
     public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
@@ -161,20 +153,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             throw new ArgumentNullException(nameof(type));
         }
 
-        return ExecuteAsync(cancellationToken);
-
-        async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            var authorizations = FindAsync(subject, client, cancellationToken);
-            
-            await foreach (var authorization in authorizations)
-            {
-                if (authorization.Status == status && authorization.Type == type)
-                {
-                    yield return authorization;
-                }
-            }
-        }
+        return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
     }
 
     public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, string type, ImmutableArray<string> scopes, CancellationToken cancellationToken)
@@ -208,12 +187,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
         async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var authorizations = FindAsync(subject, client, cancellationToken);
+            var authorizations = FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
             
             await foreach (var authorization in authorizations)
             {
-                if (authorization.Status == status && authorization.Type == type
-                    && Enumerable.All(scopes, scope => authorization.Scopes!.Contains(scope)))
+                if (Enumerable.All(scopes, scope => authorization.Scopes!.Contains(scope)))
                 {
                     yield return authorization;
                 }
@@ -650,11 +628,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             },
             new GlobalSecondaryIndex
             {
-                IndexName = "ApplicationId-Subject-index",
+                IndexName = "Subject-SearchKey-index",
                 KeySchema = new List<KeySchemaElement>
                 {
-                    new KeySchemaElement("ApplicationId", KeyType.HASH),
-                    new KeySchemaElement("Subject", KeyType.RANGE),
+                    new KeySchemaElement("Subject", KeyType.HASH),
+                    new KeySchemaElement("SearchKey", KeyType.RANGE),
                 },
                 ProvisionedThroughput = defaultProvisionThroughput,
                 Projection = new Projection
@@ -707,6 +685,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
                 new AttributeDefinition
                 {
                     AttributeName = "Subject",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                new AttributeDefinition
+                {
+                    AttributeName = "SearchKey",
                     AttributeType = ScalarAttributeType.S,
                 },
             },

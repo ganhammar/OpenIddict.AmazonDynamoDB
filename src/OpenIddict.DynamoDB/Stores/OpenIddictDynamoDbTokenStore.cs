@@ -8,6 +8,7 @@ using System.Text.Json;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 using OpenIddict.Abstractions;
@@ -65,19 +66,94 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         await _context.DeleteAsync(token, cancellationToken);
     }
 
+    private IAsyncEnumerable<TToken> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+            {
+                IndexName = "Subject-SearchKey-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":subject", subject },
+                        { ":searchKey", searchKey },
+                    }
+                },
+                Limit = 1,
+            });
+
+            var tokens = await search.GetRemainingAsync(cancellationToken);
+
+            foreach (var token in tokens)
+            {
+                yield return token;
+            }
+        }
+    }
+
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+
+        return FindBySubjectAndSearchKey(subject, client, cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+
+        if (status == null)
+        {
+            throw new ArgumentNullException(nameof(status));
+        }
+
+        return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+
+        if (status == null)
+        {
+            throw new ArgumentNullException(nameof(status));
+        }
+
+        if (type == null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -90,9 +166,14 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         throw new NotImplementedException();
     }
 
-    public ValueTask<TToken?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
+    public async ValueTask<TToken?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (identifier == null)
+        {
+            throw new ArgumentNullException(nameof(identifier));
+        }
+
+        return await _context.LoadAsync<TToken>(identifier, cancellationToken);
     }
 
     public ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
@@ -504,6 +585,20 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         };
         var tokenGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
+            new GlobalSecondaryIndex
+            {
+                IndexName = "Subject-SearchKey-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("Subject", KeyType.HASH),
+                    new KeySchemaElement("SearchKey", KeyType.RANGE),
+                },
+                ProvisionedThroughput = defaultProvisionThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
         };
 
         var tableNames = await client.ListTablesAsync();
@@ -539,6 +634,31 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                 new AttributeDefinition
                 {
                     AttributeName = "Id",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                // new AttributeDefinition
+                // {
+                //     AttributeName = "ApplicationId",
+                //     AttributeType = ScalarAttributeType.S,
+                // },
+                new AttributeDefinition
+                {
+                    AttributeName = "Subject",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                // new AttributeDefinition
+                // {
+                //     AttributeName = "AuthorizationId",
+                //     AttributeType = ScalarAttributeType.S,
+                // },
+                // new AttributeDefinition
+                // {
+                //     AttributeName = "ReferenceId",
+                //     AttributeType = ScalarAttributeType.S,
+                // },
+                new AttributeDefinition
+                {
+                    AttributeName = "SearchKey",
                     AttributeType = ScalarAttributeType.S,
                 },
             },

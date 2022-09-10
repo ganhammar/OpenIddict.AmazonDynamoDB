@@ -1735,7 +1735,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     }
 
     [Fact]
-    public async Task Should_ReturnAuthorization_When_FindingAuthorizationsBySubjectWithNoMatch()
+    public async Task Should_ReturnAuthorization_When_FindingAuthorizationsByIdWithMatch()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {

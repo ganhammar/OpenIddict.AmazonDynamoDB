@@ -932,6 +932,50 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     [Fact]
+    public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+            var token = new OpenIddictDynamoDbToken();
+            await tokenStore.CreateAsync(token, CancellationToken.None);
+
+            // Act & Assert
+            token.ConcurrencyToken = Guid.NewGuid().ToString();
+            var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+                await tokenStore.UpdateAsync(token, CancellationToken.None));
+            Assert.Equal("token", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_UpdateToken_When_TokenIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+            var token = new OpenIddictDynamoDbToken();
+            await tokenStore.CreateAsync(token, CancellationToken.None);
+
+            // Act
+            token.Subject = "testing-to-update";
+            await tokenStore.UpdateAsync(token, CancellationToken.None);
+
+            // Assert
+            var databaseToken = await context.LoadAsync<OpenIddictDynamoDbToken>(token.Id);
+            Assert.NotNull(databaseToken);
+            Assert.Equal(databaseToken.Subject, token.Subject);
+        }
+    }
+
+    [Fact]
     public async Task Should_ThrowException_When_TryingToSetApplicationIdAndTokenIsNull()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
@@ -1270,6 +1314,44 @@ public class OpenIddictDynamoDbTokenStoreTests
 
             // Assert
             Assert.Equal(value, token.Type);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToSetReferenceIdAndTokenIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await tokenStore.SetReferenceIdAsync(default!, default, CancellationToken.None));
+            Assert.Equal("token", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetReferenceId_When_TokenIsValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+            var token = new OpenIddictDynamoDbToken();
+
+            // Act
+            var value = Guid.NewGuid().ToString();
+            await tokenStore.SetReferenceIdAsync(token, value, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(value, token.ReferenceId);
         }
     }
 }

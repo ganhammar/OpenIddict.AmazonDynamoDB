@@ -158,12 +158,70 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public IAsyncEnumerable<TToken> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (identifier == null)
+        {
+            throw new ArgumentNullException(nameof(identifier));
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+            {
+                IndexName = "ApplicationId-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "ApplicationId = :applicationId",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":applicationId", identifier },
+                    }
+                },
+                Limit = 1,
+            });
+
+            var tokens = await search.GetRemainingAsync(cancellationToken);
+
+            foreach (var token in tokens)
+            {
+                yield return token;
+            }
+        }
     }
 
     public IAsyncEnumerable<TToken> FindByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (identifier == null)
+        {
+            throw new ArgumentNullException(nameof(identifier));
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+            {
+                IndexName = "AuthorizationId-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "AuthorizationId = :authorizationId",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":authorizationId", identifier },
+                    }
+                },
+                Limit = 1,
+            });
+
+            var tokens = await search.GetRemainingAsync(cancellationToken);
+
+            foreach (var token in tokens)
+            {
+                yield return token;
+            }
+        }
     }
 
     public async ValueTask<TToken?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
@@ -176,14 +234,62 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         return await _context.LoadAsync<TToken>(identifier, cancellationToken);
     }
 
-    public ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
+    public async ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (identifier == null)
+        {
+            throw new ArgumentNullException(nameof(identifier));
+        }
+
+        var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+        {
+            IndexName = "ReferenceId-index",
+            KeyExpression = new Expression
+            {
+                ExpressionStatement = "ReferenceId = :referenceId",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":referenceId", identifier },
+                }
+            },
+            Limit = 1
+        });
+        var tokens = await search.GetRemainingAsync(cancellationToken);
+        return tokens?.FirstOrDefault();
     }
 
     public IAsyncEnumerable<TToken> FindBySubjectAsync(string subject, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (subject == null)
+        {
+            throw new ArgumentNullException(nameof(subject));
+        }
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+            {
+                IndexName = "Subject-SearchKey-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "Subject = :subject",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":subject", subject },
+                    }
+                },
+                Limit = 1,
+            });
+
+            var tokens = await search.GetRemainingAsync(cancellationToken);
+
+            foreach (var token in tokens)
+            {
+                yield return token;
+            }
+        }
     }
 
     public ValueTask<string?> GetApplicationIdAsync(TToken token, CancellationToken cancellationToken)
@@ -599,6 +705,45 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                     ProjectionType = ProjectionType.ALL,
                 },
             },
+            new GlobalSecondaryIndex
+            {
+                IndexName = "ApplicationId-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("ApplicationId", KeyType.HASH),
+                },
+                ProvisionedThroughput = defaultProvisionThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
+            new GlobalSecondaryIndex
+            {
+                IndexName = "AuthorizationId-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("AuthorizationId", KeyType.HASH),
+                },
+                ProvisionedThroughput = defaultProvisionThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
+            new GlobalSecondaryIndex
+            {
+                IndexName = "ReferenceId-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("ReferenceId", KeyType.HASH),
+                },
+                ProvisionedThroughput = defaultProvisionThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
         };
 
         var tableNames = await client.ListTablesAsync();
@@ -636,26 +781,26 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                     AttributeName = "Id",
                     AttributeType = ScalarAttributeType.S,
                 },
-                // new AttributeDefinition
-                // {
-                //     AttributeName = "ApplicationId",
-                //     AttributeType = ScalarAttributeType.S,
-                // },
+                new AttributeDefinition
+                {
+                    AttributeName = "ApplicationId",
+                    AttributeType = ScalarAttributeType.S,
+                },
                 new AttributeDefinition
                 {
                     AttributeName = "Subject",
                     AttributeType = ScalarAttributeType.S,
                 },
-                // new AttributeDefinition
-                // {
-                //     AttributeName = "AuthorizationId",
-                //     AttributeType = ScalarAttributeType.S,
-                // },
-                // new AttributeDefinition
-                // {
-                //     AttributeName = "ReferenceId",
-                //     AttributeType = ScalarAttributeType.S,
-                // },
+                new AttributeDefinition
+                {
+                    AttributeName = "AuthorizationId",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                new AttributeDefinition
+                {
+                    AttributeName = "ReferenceId",
+                    AttributeType = ScalarAttributeType.S,
+                },
                 new AttributeDefinition
                 {
                     AttributeName = "SearchKey",

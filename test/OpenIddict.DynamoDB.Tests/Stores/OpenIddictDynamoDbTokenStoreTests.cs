@@ -1756,4 +1756,191 @@ public class OpenIddictDynamoDbTokenStoreTests
             Assert.Equal(id, token!.Id);
         }
     }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindTokenByApplicationIdAndIdentifierIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                tokenStore.FindByApplicationIdAsync(default!, CancellationToken.None));
+            Assert.Equal("identifier", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnToken_When_FindingTokensByApplicationIdWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            var id = Guid.NewGuid().ToString();
+            await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+            {
+                ApplicationId = id,
+            }, CancellationToken.None);
+
+            // Act
+            var tokens = tokenStore.FindByApplicationIdAsync(id, CancellationToken.None);
+
+            // Assert
+            var matchedTokens = new List<OpenIddictDynamoDbToken>();
+            await foreach (var token in tokens)
+            {
+                matchedTokens.Add(token);
+            }
+            Assert.Single(matchedTokens);
+            Assert.Equal(id, matchedTokens[0].ApplicationId);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindTokenBySubjectAndIdentifierIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                tokenStore.FindBySubjectAsync(default!, CancellationToken.None));
+            Assert.Equal("subject", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnToken_When_FindingTokensBySubjectWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            var subject = "some-subject";
+            await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+            {
+                Subject = subject,
+            }, CancellationToken.None);
+
+            // Act
+            var tokens = tokenStore.FindBySubjectAsync(subject, CancellationToken.None);
+
+            // Assert
+            var matchedTokens = new List<OpenIddictDynamoDbToken>();
+            await foreach (var token in tokens)
+            {
+                matchedTokens.Add(token);
+            }
+            Assert.Single(matchedTokens);
+            Assert.Equal(subject, matchedTokens[0].Subject);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindTokenByAuthorizationIdAndIdentifierIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                tokenStore.FindByAuthorizationIdAsync(default!, CancellationToken.None));
+            Assert.Equal("identifier", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnToken_When_FindingTokensByAuthorizationIdWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            var authorizationId = Guid.NewGuid().ToString();
+            await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+            {
+                AuthorizationId = authorizationId,
+            }, CancellationToken.None);
+
+            // Act
+            var tokens = tokenStore.FindByAuthorizationIdAsync(authorizationId, CancellationToken.None);
+
+            // Assert
+            var matchedTokens = new List<OpenIddictDynamoDbToken>();
+            await foreach (var token in tokens)
+            {
+                matchedTokens.Add(token);
+            }
+            Assert.Single(matchedTokens);
+            Assert.Equal(authorizationId, matchedTokens[0].AuthorizationId);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToFindTokenByReferenceIdAndIdentifierIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await tokenStore.FindByReferenceIdAsync(default!, CancellationToken.None));
+            Assert.Equal("identifier", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnToken_When_FindingTokensByReferenceIdWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            var referenceId = Guid.NewGuid().ToString();
+            await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+            {
+                ReferenceId = referenceId,
+            }, CancellationToken.None);
+
+            // Act
+            var token = await tokenStore.FindByReferenceIdAsync(referenceId, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(token);
+            Assert.Equal(referenceId, token!.ReferenceId);
+        }
+    }
 }

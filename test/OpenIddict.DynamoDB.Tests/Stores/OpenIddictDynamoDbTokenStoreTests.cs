@@ -1,7 +1,9 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using Xunit;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.DynamoDB.Tests;
 
@@ -1985,6 +1987,178 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Assert
             Assert.NotNull(token);
             Assert.Equal(referenceId, token!.ReferenceId);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ThrowException_When_TryingToPruneTokensAndThresholdIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await tokenStore.PruneAsync(default!, CancellationToken.None));
+            Assert.Equal("threshold", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteAllTokens_When_AllTokensHasExpired()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultTokenTableName,
+            });
+            Assert.Equal(0, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_NotDeleteAnyTokens_When_TheyAreOldButNotExpired()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            var numberOfTokens = 10;
+            foreach (var index in Enumerable.Range(0, numberOfTokens))
+            {
+                var authorization = new OpenIddictDynamoDbAuthorization
+                {
+                    Status = Statuses.Valid,
+                };
+                await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                    ExpirationDate = DateTime.UtcNow.AddHours(1),
+                    AuthorizationId = authorization.Id,
+                    Status = Statuses.Valid,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultTokenTableName,
+            });
+            Assert.Equal(numberOfTokens, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteAllTokens_When_TheyHaveNoValidAuthorizations()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                var authorization = new OpenIddictDynamoDbAuthorization
+                {
+                    Status = Statuses.Inactive,
+                };
+                await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                    ExpirationDate = DateTime.UtcNow.AddHours(1),
+                    AuthorizationId = authorization.Id,
+                    Status = Statuses.Valid,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultTokenTableName,
+            });
+            Assert.Equal(0, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteSomeTokens_When_SomeAreOutsideOfTheThresholdRange()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                var authorization = new OpenIddictDynamoDbAuthorization
+                {
+                    Status = Statuses.Inactive,
+                };
+                await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-index),
+                    ExpirationDate = DateTime.UtcNow.AddHours(1),
+                    AuthorizationId = authorization.Id,
+                    Status = Statuses.Valid,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-5), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultTokenTableName,
+            });
+            Assert.Equal(5, response.Table.ItemCount);
         }
     }
 }

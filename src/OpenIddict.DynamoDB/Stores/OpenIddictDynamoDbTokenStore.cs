@@ -12,6 +12,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 using OpenIddict.Abstractions;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.DynamoDB;
 
@@ -480,9 +481,62 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         throw new NotSupportedException();
     }
 
-    public ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+    public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        if (threshold == null)
+        {
+            throw new ArgumentNullException(nameof(threshold));
+        }
+
+        // Get all tokens which is older than threshold
+        var filter = new ScanFilter();
+        filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
+        {
+            new AttributeValue(threshold.UtcDateTime.ToString("o")),
+        });
+        var search = _context.FromScanAsync<TToken>(new ScanOperationConfig
+        {
+            Filter = filter,
+        });
+        var tokens = await search.GetRemainingAsync(cancellationToken);
+        var remainingTokens = new List<TToken>();
+
+        var batchDelete = _context.CreateBatchWrite<TToken>();
+
+        // Add tokens which is not Inactive/Valid or where ExpirationDate has passed to delete batch
+        foreach (var token in tokens)
+        {
+            if (new[] { Statuses.Inactive, Statuses.Valid }.Contains(token.Status) == false
+                || token.ExpirationDate < DateTime.UtcNow)
+            {
+                batchDelete.AddDeleteItem(token);
+            }
+            else
+            {
+                remainingTokens.Add(token);
+            }
+        }
+
+        // Get all authorizations connected to the remaining tokens
+        var authorizations = _context.CreateBatchGet<OpenIddictDynamoDbAuthorization>();
+        var authorizationIds = remainingTokens
+            .Select(x => x.AuthorizationId)
+            .Where(x => x != default)
+            .Distinct();
+        foreach (var authorizationId in authorizationIds)
+        {
+            authorizations.AddKey(authorizationId);
+        }
+        await authorizations.ExecuteAsync(cancellationToken);
+
+        // Add tokens which has invalid authorizations to delete batch
+        foreach (var authorization in authorizations.Results.Where(x => x.Status != Statuses.Valid))
+        {
+            batchDelete.AddDeleteItems(remainingTokens
+                .Where(x => x.AuthorizationId == authorization.Id));
+        }
+
+        await batchDelete.ExecuteAsync(cancellationToken);
     }
 
     public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)

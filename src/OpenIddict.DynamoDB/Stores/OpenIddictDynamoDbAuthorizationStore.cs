@@ -12,6 +12,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 using OpenIddict.Abstractions;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.DynamoDB;
 
@@ -430,9 +431,61 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         throw new NotSupportedException();
     }
 
-    public ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+    public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        // Get all authorizations which is older than threshold
+        var filter = new ScanFilter();
+        filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
+        {
+            new AttributeValue(threshold.UtcDateTime.ToString("o")),
+        });
+        var search = _context.FromScanAsync<TAuthorization>(new ScanOperationConfig
+        {
+            Filter = filter,
+        });
+        var authorizations = await search.GetRemainingAsync(cancellationToken);
+        var remainingAdHocAuthorizations = new List<TAuthorization>();
+
+        var batchDelete = _context.CreateBatchWrite<TAuthorization>();
+
+        foreach (var authorization in authorizations)
+        {
+            // Add authorizations which is not Valid
+            if (authorization.Status != Statuses.Valid)
+            {
+                batchDelete.AddDeleteItem(authorization);
+            }
+            else if (authorization.Type == AuthorizationTypes.AdHoc)
+            {
+                remainingAdHocAuthorizations.Add(authorization);
+            }
+        }
+
+        // Add authorizations which is ad hoc and has no tokens
+        foreach (var authorization in remainingAdHocAuthorizations)
+        {
+            var tokensQuery = _context.FromQueryAsync<OpenIddictDynamoDbToken>(new QueryOperationConfig
+            {
+                IndexName = "AuthorizationId-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "AuthorizationId = :authorizationId",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":authorizationId", authorization.Id },
+                    }
+                },
+                Limit = 1,
+            });
+            var tokens = await tokensQuery.GetRemainingAsync();
+
+            if (tokens.Any() == false)
+            {
+                batchDelete.AddDeleteItem(authorization);
+            }
+        }
+
+        await batchDelete.ExecuteAsync(cancellationToken);
     }
 
     public ValueTask SetApplicationIdAsync(TAuthorization authorization, string? identifier, CancellationToken cancellationToken)

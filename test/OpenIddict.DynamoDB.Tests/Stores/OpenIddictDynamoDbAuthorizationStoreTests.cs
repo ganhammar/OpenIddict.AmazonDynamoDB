@@ -1,7 +1,9 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using Xunit;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.DynamoDB.Tests;
 
@@ -1757,6 +1759,181 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Assert
             Assert.NotNull(authorization);
             Assert.Equal(id, authorization!.Id);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteAllAuthorizations_When_AllHasExpired()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var tokenStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await tokenStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(0, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreOldButValid()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            var numberOfTokens = 10;
+            foreach (var index in Enumerable.Range(0, numberOfTokens))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                    Status = Statuses.Valid,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await authorizationStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(numberOfTokens, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteAllAuthorizations_When_TheyAreAdHocAndNoTokens()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                    Status = Statuses.Valid,
+                    Type = AuthorizationTypes.AdHoc,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await authorizationStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(0, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreAdHocAndHaveTokens()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+            await tokenStore.EnsureInitializedAsync();
+
+            var authorizationCount = 10;
+
+            foreach (var index in Enumerable.Range(0, authorizationCount))
+            {
+                var authorization = new OpenIddictDynamoDbAuthorization
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-5),
+                    Status = Statuses.Valid,
+                    Type = AuthorizationTypes.AdHoc,
+                };
+                await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+                await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-index),
+                    ExpirationDate = DateTime.UtcNow.AddHours(1),
+                    AuthorizationId = authorization.Id,
+                    Status = Statuses.Valid,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await authorizationStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(authorizationCount, response.Table.ItemCount);
+        }
+    }
+
+    [Fact]
+    public async Task Should_DeleteSomeAuthorizations_When_SomeAreOutsideOfTheThresholdRange()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
+                database.Client);
+            await authorizationStore.EnsureInitializedAsync();
+
+            foreach (var index in Enumerable.Range(0, 10))
+            {
+                await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+                {
+                    CreationDate = DateTime.UtcNow.AddDays(-index),
+                    Status = Statuses.Inactive,
+                }, CancellationToken.None);
+            }
+
+            // Act
+            await authorizationStore.PruneAsync(DateTime.UtcNow.AddDays(-5), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(5, response.Table.ItemCount);
         }
     }
 }

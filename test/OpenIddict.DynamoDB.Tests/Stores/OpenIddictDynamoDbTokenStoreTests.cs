@@ -2033,6 +2033,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
                 database.Client);
             await tokenStore.EnsureInitializedAsync();
+            await authorizationStore.EnsureInitializedAsync();
 
             var numberOfTokens = 10;
             foreach (var index in Enumerable.Range(0, numberOfTokens))
@@ -2075,6 +2076,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
                 database.Client);
             await tokenStore.EnsureInitializedAsync();
+            await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -2116,6 +2118,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
                 database.Client);
             await tokenStore.EnsureInitializedAsync();
+            await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
             {

@@ -1991,23 +1991,6 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     [Fact]
-    public async Task Should_ThrowException_When_TryingToPruneTokensAndThresholdIsNull()
-    {
-        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
-        {
-            // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
-            await tokenStore.EnsureInitializedAsync();
-
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await tokenStore.PruneAsync(default!, CancellationToken.None));
-            Assert.Equal("threshold", exception.ParamName);
-        }
-    }
-
-    [Fact]
     public async Task Should_DeleteAllTokens_When_AllTokensHasExpired()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())

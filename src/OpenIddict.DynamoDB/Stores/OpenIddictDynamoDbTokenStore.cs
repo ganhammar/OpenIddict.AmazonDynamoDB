@@ -483,11 +483,6 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
-        if (threshold == null)
-        {
-            throw new ArgumentNullException(nameof(threshold));
-        }
-
         // Get all tokens which is older than threshold
         var filter = new ScanFilter();
         filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>

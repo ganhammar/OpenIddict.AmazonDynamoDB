@@ -50,4 +50,26 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
         Assert.Throws<InvalidOperationException>(() =>
             resolver.Get<OpenIddictDynamoDbScope>());
     }
+
+    [Fact]
+    public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<
+                IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
+                OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
+            serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+            var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
+
+            // Act & Assert
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                resolver.Get<OpenIddictDynamoDbAuthorization>());
+
+            Assert.Equal(OpenIddictResources.GetResourceString(OpenIddictResources.ID0259), exception.Message);
+        }
+    }
 }

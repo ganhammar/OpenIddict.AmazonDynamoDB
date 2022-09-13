@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbApplicationStoreResolver : IOpenIddictApplication
         {
             if (!typeof(OpenIddictDynamoDbApplication).IsAssignableFrom(key))
             {
-                throw new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0259));
+                throw new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0257));
             }
 
             return typeof(IOpenIddictApplicationStore<>).MakeGenericType(key);

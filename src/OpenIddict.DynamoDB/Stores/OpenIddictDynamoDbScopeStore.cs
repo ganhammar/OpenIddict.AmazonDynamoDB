@@ -21,11 +21,13 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbScopeStore(IAmazonDynamoDB client)
+    public OpenIddictDynamoDbScopeStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
         _client = client;
         _context = new DynamoDBContext(_client);
+        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -453,8 +455,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         await _context.SaveAsync(scope, cancellationToken);
     }
 
-    public Task EnsureInitializedAsync(
-        string scopeTableName = Constants.DefaultScopeTableName)
+    public Task EnsureInitializedAsync()
     {
         if (_client == null)
         {
@@ -466,21 +467,17 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
             throw new ArgumentNullException(nameof(_context));
         }
 
-        if (scopeTableName != Constants.DefaultScopeTableName)
+        if (_openIddictDynamoDbOptions.ScopesTableName != Constants.DefaultScopeTableName)
         {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(scopeTableName, Constants.DefaultScopeTableName));
+            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
+                _openIddictDynamoDbOptions.ScopesTableName, Constants.DefaultScopeTableName));
         }
 
-        return EnsureInitializedAsync(_client, scopeTableName);
+        return EnsureInitializedAsync(_client);
     }
 
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client, string scopeTableName)
+    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
     {
-        var defaultProvisionThroughput = new ProvisionedThroughput
-        {
-            ReadCapacityUnits = 5,
-            WriteCapacityUnits = 5
-        };
         var scopeGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
             new GlobalSecondaryIndex
@@ -490,7 +487,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
                 {
                     new KeySchemaElement("ScopeName", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -500,24 +497,28 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
         var tableNames = await client.ListTablesAsync();
 
-        if (!tableNames.TableNames.Contains(scopeTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ScopesTableName))
         {
             await CreateScopeTableAsync(
-                client, scopeTableName, defaultProvisionThroughput, scopeGlobalSecondaryIndexes);
+                client, scopeGlobalSecondaryIndexes);
         }
         else
         {
-            await DynamoDbUtils.UpdateSecondaryIndexes(client, scopeTableName, scopeGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                client,
+                _openIddictDynamoDbOptions.ScopesTableName,
+                scopeGlobalSecondaryIndexes);
         }
     }
 
-    private async Task CreateScopeTableAsync(IAmazonDynamoDB client, string tableName,
-        ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
+    private async Task CreateScopeTableAsync(IAmazonDynamoDB client,
+        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = tableName,
-            ProvisionedThroughput = provisionedThroughput,
+            TableName = _openIddictDynamoDbOptions.ScopesTableName,
+            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -544,9 +545,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {tableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ScopesTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ScopesTableName);
     }
 }

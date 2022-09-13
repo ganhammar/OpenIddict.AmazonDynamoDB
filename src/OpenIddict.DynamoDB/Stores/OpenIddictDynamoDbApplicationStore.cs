@@ -21,11 +21,13 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbApplicationStore(IAmazonDynamoDB client)
+    public OpenIddictDynamoDbApplicationStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
         _client = client;
         _context = new DynamoDBContext(_client);
+        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -701,9 +703,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         await SaveRedirectUris(application, cancellationToken);
     }
 
-    public Task EnsureInitializedAsync(
-        string applicationTableName = Constants.DefaultApplicationTableName,
-        string applicationRedirectTableName = Constants.DefaultApplicationRedirectTableName)
+    public Task EnsureInitializedAsync()
     {
         if (_client == null)
         {
@@ -715,26 +715,25 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
             throw new ArgumentNullException(nameof(_context));
         }
 
-        if (applicationTableName != Constants.DefaultApplicationTableName)
+        if (_openIddictDynamoDbOptions.ApplicationsTableName != Constants.DefaultApplicationTableName)
         {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(applicationTableName, Constants.DefaultApplicationTableName));
+            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
+                _openIddictDynamoDbOptions.ApplicationsTableName,
+                Constants.DefaultApplicationTableName));
         }
 
-        if (applicationRedirectTableName != Constants.DefaultApplicationRedirectTableName)
+        if (_openIddictDynamoDbOptions.ApplicationRedirectTableName != Constants.DefaultApplicationRedirectTableName)
         {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(applicationRedirectTableName, Constants.DefaultApplicationRedirectTableName));
+            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
+                _openIddictDynamoDbOptions.ApplicationRedirectTableName,
+                Constants.DefaultApplicationRedirectTableName));
         }
 
-        return EnsureInitializedAsync(_client, applicationTableName, applicationRedirectTableName);
+        return EnsureInitializedAsync(_client);
     }
 
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client, string applicationTableName, string applicationRedirectTableName)
+    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
     {
-        var defaultProvisionThroughput = new ProvisionedThroughput
-        {
-            ReadCapacityUnits = 5,
-            WriteCapacityUnits = 5
-        };
         var applicationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
             new GlobalSecondaryIndex
@@ -744,7 +743,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                 {
                     new KeySchemaElement("ClientId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -760,7 +759,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -770,34 +769,39 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         var tableNames = await client.ListTablesAsync();
 
-        if (!tableNames.TableNames.Contains(applicationTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationsTableName))
         {
             await CreateApplicationTableAsync(
-                client, applicationTableName, defaultProvisionThroughput, applicationGlobalSecondaryIndexes);
+                client, applicationGlobalSecondaryIndexes);
         }
         else
         {
-            await DynamoDbUtils.UpdateSecondaryIndexes(client, applicationTableName, applicationGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                client,
+                _openIddictDynamoDbOptions.ApplicationsTableName,
+                applicationGlobalSecondaryIndexes);
         }
 
-        if (!tableNames.TableNames.Contains(applicationRedirectTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationRedirectTableName))
         {
-            await CreateApplicationRedirectTableAsync(
-                client, applicationRedirectTableName, defaultProvisionThroughput, applicationRedirectGlobalSecondaryIndexes);
+            await CreateApplicationRedirectTableAsync(client, applicationRedirectGlobalSecondaryIndexes);
         }
         else
         {
-            await DynamoDbUtils.UpdateSecondaryIndexes(client, applicationRedirectTableName, applicationRedirectGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                client,
+                _openIddictDynamoDbOptions.ApplicationRedirectTableName,
+                applicationRedirectGlobalSecondaryIndexes);
         }
     }
 
-    private async Task CreateApplicationTableAsync(IAmazonDynamoDB client, string tableName,
-        ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
+    private async Task CreateApplicationTableAsync(IAmazonDynamoDB client, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = tableName,
-            ProvisionedThroughput = provisionedThroughput,
+            TableName = _openIddictDynamoDbOptions.ApplicationsTableName,
+            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -824,19 +828,20 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {tableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationsTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationsTableName);
     }
 
-    private async Task CreateApplicationRedirectTableAsync(IAmazonDynamoDB client, string tableName,
-        ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
+    private async Task CreateApplicationRedirectTableAsync(IAmazonDynamoDB client,
+        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = tableName,
-            ProvisionedThroughput = provisionedThroughput,
+            TableName = _openIddictDynamoDbOptions.ApplicationRedirectTableName,
+            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -873,9 +878,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {tableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationRedirectTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationRedirectTableName);
     }
 }

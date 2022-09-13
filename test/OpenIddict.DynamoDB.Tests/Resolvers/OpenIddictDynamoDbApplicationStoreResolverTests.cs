@@ -19,6 +19,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
                 IOpenIddictApplicationStore<OpenIddictDynamoDbApplication>,
                 OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>>();
             serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbApplicationStoreResolver(serviceProvider);
 
@@ -62,6 +63,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
                 IOpenIddictApplicationStore<OpenIddictDynamoDbApplication>,
                 OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>>();
             serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbApplicationStoreResolver(serviceProvider);
 

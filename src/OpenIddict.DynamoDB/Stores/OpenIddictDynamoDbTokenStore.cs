@@ -21,11 +21,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbTokenStore(IAmazonDynamoDB client)
+    public OpenIddictDynamoDbTokenStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
         _client = client;
         _context = new DynamoDBContext(_client);
+        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -710,8 +712,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         await _context.SaveAsync(token, cancellationToken);
     }
 
-    public Task EnsureInitializedAsync(
-        string tokenTableName = Constants.DefaultTokenTableName)
+    public Task EnsureInitializedAsync()
     {
         if (_client == null)
         {
@@ -723,21 +724,17 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
             throw new ArgumentNullException(nameof(_context));
         }
 
-        if (tokenTableName != Constants.DefaultTokenTableName)
+        if (_openIddictDynamoDbOptions.TokensTableName != Constants.DefaultTokenTableName)
         {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(tokenTableName, Constants.DefaultTokenTableName));
+            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
+                _openIddictDynamoDbOptions.TokensTableName, Constants.DefaultTokenTableName));
         }
 
-        return EnsureInitializedAsync(_client, tokenTableName);
+        return EnsureInitializedAsync(_client);
     }
 
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client, string tokenTableName)
+    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
     {
-        var defaultProvisionThroughput = new ProvisionedThroughput
-        {
-            ReadCapacityUnits = 5,
-            WriteCapacityUnits = 5
-        };
         var tokenGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
             new GlobalSecondaryIndex
@@ -748,7 +745,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                     new KeySchemaElement("Subject", KeyType.HASH),
                     new KeySchemaElement("SearchKey", KeyType.RANGE),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -761,7 +758,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -774,7 +771,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                 {
                     new KeySchemaElement("AuthorizationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -787,7 +784,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
                 {
                     new KeySchemaElement("ReferenceId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -797,24 +794,28 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
         var tableNames = await client.ListTablesAsync();
 
-        if (!tableNames.TableNames.Contains(tokenTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.TokensTableName))
         {
             await CreateTokenTableAsync(
-                client, tokenTableName, defaultProvisionThroughput, tokenGlobalSecondaryIndexes);
+                client, tokenGlobalSecondaryIndexes);
         }
         else
         {
-            await DynamoDbUtils.UpdateSecondaryIndexes(client, tokenTableName, tokenGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                client,
+                _openIddictDynamoDbOptions.TokensTableName,
+                tokenGlobalSecondaryIndexes);
         }
     }
 
-    private async Task CreateTokenTableAsync(IAmazonDynamoDB client, string tableName,
-        ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
+    private async Task CreateTokenTableAsync(IAmazonDynamoDB client,
+        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = tableName,
-            ProvisionedThroughput = provisionedThroughput,
+            TableName = _openIddictDynamoDbOptions.TokensTableName,
+            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -861,9 +862,9 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {tableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.TokensTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.TokensTableName);
     }
 }

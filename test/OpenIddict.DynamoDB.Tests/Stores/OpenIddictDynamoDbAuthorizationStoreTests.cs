@@ -17,7 +17,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act
@@ -35,7 +35,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -55,7 +55,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -71,7 +71,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -89,7 +89,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -113,7 +113,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -131,7 +131,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -155,7 +155,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -172,7 +172,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var authorizationCount = 10;
@@ -205,7 +205,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -238,7 +238,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -280,7 +280,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -296,7 +296,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -313,7 +313,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -330,7 +330,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -351,7 +351,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -374,7 +374,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -392,7 +392,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
 
@@ -412,7 +412,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -430,7 +430,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
 
@@ -450,7 +450,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -468,7 +468,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
 
@@ -488,7 +488,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -506,7 +506,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -530,7 +530,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -560,7 +560,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -578,7 +578,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -602,7 +602,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -631,7 +631,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -649,7 +649,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -672,7 +672,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -698,7 +698,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -716,7 +716,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
 
@@ -736,7 +736,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -754,7 +754,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
 
@@ -775,7 +775,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act
@@ -793,7 +793,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -811,7 +811,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -835,7 +835,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -853,7 +853,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -877,7 +877,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -895,7 +895,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -919,7 +919,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -937,7 +937,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -961,7 +961,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -979,7 +979,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -1003,7 +1003,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1021,7 +1021,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -1045,7 +1045,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1061,7 +1061,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1079,7 +1079,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization();
             await authorizationStore.CreateAsync(authorization, CancellationToken.None);
@@ -1100,7 +1100,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             var authorization = new OpenIddictDynamoDbAuthorization
             {
@@ -1128,7 +1128,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1145,7 +1145,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1163,7 +1163,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act
@@ -1187,7 +1187,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -1219,7 +1219,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1236,7 +1236,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1253,7 +1253,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1271,7 +1271,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var status = "some-status";
@@ -1305,7 +1305,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1322,7 +1322,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1339,7 +1339,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1356,7 +1356,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1374,7 +1374,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var status = "some-status";
@@ -1410,7 +1410,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1433,7 +1433,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1456,7 +1456,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1479,7 +1479,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1502,7 +1502,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1526,7 +1526,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var status = "some-status";
@@ -1570,7 +1570,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1588,7 +1588,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act
@@ -1613,7 +1613,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var applicationId = Guid.NewGuid().ToString();
@@ -1648,7 +1648,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1666,7 +1666,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act
@@ -1691,7 +1691,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var subject = Guid.NewGuid().ToString();
@@ -1726,7 +1726,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
         {
             // Arrange
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1744,7 +1744,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var id = Guid.NewGuid().ToString();
@@ -1770,7 +1770,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -1801,7 +1801,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             var numberOfTokens = 10;
@@ -1834,7 +1834,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -1867,9 +1867,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
             await tokenStore.EnsureInitializedAsync();
 
@@ -1913,7 +1913,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await authorizationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))

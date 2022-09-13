@@ -17,7 +17,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -33,7 +33,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -49,7 +49,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -65,7 +65,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act
@@ -83,7 +83,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -103,7 +103,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -121,7 +121,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -145,7 +145,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -163,7 +163,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -184,7 +184,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -202,7 +202,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -225,7 +225,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -251,7 +251,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -271,7 +271,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -295,7 +295,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -315,7 +315,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -339,7 +339,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -359,7 +359,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -383,7 +383,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -403,7 +403,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -427,7 +427,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -447,7 +447,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -471,7 +471,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -491,7 +491,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -515,7 +515,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -535,7 +535,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -559,7 +559,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -579,7 +579,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -603,7 +603,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -623,7 +623,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -647,7 +647,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -667,7 +667,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -691,7 +691,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -711,7 +711,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken
             {
@@ -736,7 +736,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act
@@ -755,7 +755,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var tokenCount = 10;
@@ -788,7 +788,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -821,7 +821,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -863,7 +863,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -879,7 +879,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -897,7 +897,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -921,7 +921,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -950,7 +950,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -967,7 +967,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -984,7 +984,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -1005,7 +1005,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
@@ -1028,7 +1028,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1046,7 +1046,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1066,7 +1066,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1084,7 +1084,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1104,7 +1104,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1122,7 +1122,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1142,7 +1142,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1160,7 +1160,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1180,7 +1180,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1198,7 +1198,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1218,7 +1218,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1236,7 +1236,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1256,7 +1256,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1274,7 +1274,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1294,7 +1294,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1312,7 +1312,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1332,7 +1332,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1350,7 +1350,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1370,7 +1370,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1388,7 +1388,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             var token = new OpenIddictDynamoDbToken();
 
@@ -1411,7 +1411,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1432,7 +1432,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1454,7 +1454,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1472,7 +1472,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act
@@ -1496,7 +1496,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -1529,7 +1529,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var subject = Guid.NewGuid().ToString();
@@ -1566,7 +1566,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act
@@ -1590,7 +1590,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var status = "some-status";
@@ -1626,7 +1626,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var subject = Guid.NewGuid().ToString();
@@ -1665,7 +1665,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act
@@ -1689,7 +1689,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var status = "some-status";
@@ -1727,7 +1727,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var subject = Guid.NewGuid().ToString();
@@ -1767,7 +1767,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1785,7 +1785,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var id = Guid.NewGuid().ToString();
@@ -1810,7 +1810,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1828,7 +1828,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var id = Guid.NewGuid().ToString();
@@ -1858,7 +1858,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1876,7 +1876,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var subject = "some-subject";
@@ -1906,7 +1906,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1924,7 +1924,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var authorizationId = Guid.NewGuid().ToString();
@@ -1954,7 +1954,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1972,7 +1972,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             var referenceId = Guid.NewGuid().ToString();
@@ -1998,7 +1998,7 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -2029,9 +2029,9 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             await authorizationStore.EnsureInitializedAsync();
 
@@ -2072,9 +2072,9 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             await authorizationStore.EnsureInitializedAsync();
 
@@ -2114,9 +2114,9 @@ public class OpenIddictDynamoDbTokenStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                database.Client);
+                database.Client, new());
             var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                database.Client);
+                database.Client, new());
             await tokenStore.EnsureInitializedAsync();
             await authorizationStore.EnsureInitializedAsync();
 

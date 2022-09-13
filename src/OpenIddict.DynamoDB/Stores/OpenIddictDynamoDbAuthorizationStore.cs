@@ -21,11 +21,13 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbAuthorizationStore(IAmazonDynamoDB client)
+    public OpenIddictDynamoDbAuthorizationStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
         _client = client;
         _context = new DynamoDBContext(_client);
+        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -623,8 +625,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         await _context.SaveAsync(authorization, cancellationToken);
     }
 
-    public Task EnsureInitializedAsync(
-        string authorizationTableName = Constants.DefaultAuthorizationTableName)
+    public Task EnsureInitializedAsync()
     {
         if (_client == null)
         {
@@ -636,21 +637,17 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             throw new ArgumentNullException(nameof(_context));
         }
 
-        if (authorizationTableName != Constants.DefaultAuthorizationTableName)
+        if (_openIddictDynamoDbOptions.AuthorizationsTableName != Constants.DefaultAuthorizationTableName)
         {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(authorizationTableName, Constants.DefaultAuthorizationTableName));
+            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
+                _openIddictDynamoDbOptions.AuthorizationsTableName, Constants.DefaultAuthorizationTableName));
         }
 
-        return EnsureInitializedAsync(_client, authorizationTableName);
+        return EnsureInitializedAsync(_client);
     }
 
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client, string authorizationTableName)
+    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
     {
-        var defaultProvisionThroughput = new ProvisionedThroughput
-        {
-            ReadCapacityUnits = 5,
-            WriteCapacityUnits = 5
-        };
         var authorizationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
         {
             new GlobalSecondaryIndex
@@ -660,7 +657,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -673,7 +670,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
                 {
                     new KeySchemaElement("Subject", KeyType.HASH),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -687,7 +684,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
                     new KeySchemaElement("Subject", KeyType.HASH),
                     new KeySchemaElement("SearchKey", KeyType.RANGE),
                 },
-                ProvisionedThroughput = defaultProvisionThroughput,
+                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -697,24 +694,27 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
         var tableNames = await client.ListTablesAsync();
 
-        if (!tableNames.TableNames.Contains(authorizationTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.AuthorizationsTableName))
         {
-            await CreateAuthorizationTableAsync(
-                client, authorizationTableName, defaultProvisionThroughput, authorizationGlobalSecondaryIndexes);
+            await CreateAuthorizationTableAsync(client, authorizationGlobalSecondaryIndexes);
         }
         else
         {
-            await DynamoDbUtils.UpdateSecondaryIndexes(client, authorizationTableName, authorizationGlobalSecondaryIndexes);
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                client,
+                _openIddictDynamoDbOptions.AuthorizationsTableName,
+                authorizationGlobalSecondaryIndexes);
         }
     }
 
-    private async Task CreateAuthorizationTableAsync(IAmazonDynamoDB client, string tableName,
-        ProvisionedThroughput provisionedThroughput, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
+    private async Task CreateAuthorizationTableAsync(IAmazonDynamoDB client,
+        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = tableName,
-            ProvisionedThroughput = provisionedThroughput,
+            TableName = _openIddictDynamoDbOptions.AuthorizationsTableName,
+            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -751,9 +751,9 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {tableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.AuthorizationsTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, tableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.AuthorizationsTableName);
     }
 }

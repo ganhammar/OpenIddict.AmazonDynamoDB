@@ -19,6 +19,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
                 IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
                 OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
             serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
 
@@ -62,6 +63,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
                 IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
                 OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
             serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
 

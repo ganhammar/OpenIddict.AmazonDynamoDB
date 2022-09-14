@@ -2,7 +2,7 @@ using Amazon.DynamoDBv2.DataModel;
 
 namespace OpenIddict.DynamoDB;
 
-[DynamoDBTable(Constants.DefaultApplicationRedirectTableName)]
+[DynamoDBTable(Constants.DefaultApplicationRedirectsTableName)]
 public class OpenIddictDynamoDbApplicationRedirect
 {
     [DynamoDBHashKey]

@@ -697,7 +697,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
             {
                 RequestItems = new Dictionary<string, List<WriteRequest>>
                 {
-                    { Constants.DefaultApplicationRedirectTableName, writeRequests },
+                    { Constants.DefaultApplicationRedirectsTableName, writeRequests },
                 },
             };
 
@@ -727,11 +727,11 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                 Constants.DefaultApplicationTableName));
         }
 
-        if (_openIddictDynamoDbOptions.ApplicationRedirectTableName != Constants.DefaultApplicationRedirectTableName)
+        if (_openIddictDynamoDbOptions.ApplicationRedirectsTableName != Constants.DefaultApplicationRedirectsTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                _openIddictDynamoDbOptions.ApplicationRedirectTableName,
-                Constants.DefaultApplicationRedirectTableName));
+                _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
+                Constants.DefaultApplicationRedirectsTableName));
         }
 
         return EnsureInitializedAsync(_client);
@@ -787,7 +787,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                 applicationGlobalSecondaryIndexes);
         }
 
-        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationRedirectTableName))
+        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationRedirectsTableName))
         {
             await CreateApplicationRedirectTableAsync(client, applicationRedirectGlobalSecondaryIndexes);
         }
@@ -795,7 +795,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
                 client,
-                _openIddictDynamoDbOptions.ApplicationRedirectTableName,
+                _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
                 applicationRedirectGlobalSecondaryIndexes);
         }
     }
@@ -844,7 +844,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     {
         var response = await client.CreateTableAsync(new CreateTableRequest
         {
-            TableName = _openIddictDynamoDbOptions.ApplicationRedirectTableName,
+            TableName = _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
             ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
             BillingMode = _openIddictDynamoDbOptions.BillingMode,
             KeySchema = new List<KeySchemaElement>
@@ -883,9 +883,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationRedirectTableName}");
+            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationRedirectsTableName}");
         }
 
-        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationRedirectTableName);
+        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationRedirectsTableName);
     }
 }

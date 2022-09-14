@@ -6,7 +6,7 @@ namespace OpenIddict.DynamoDB;
 public class OpenIddictDynamoDbOptions
 {
     public string ApplicationsTableName { get; set; } = Constants.DefaultApplicationTableName;
-    public string ApplicationRedirectTableName { get; set; } = Constants.DefaultApplicationRedirectTableName;
+    public string ApplicationRedirectsTableName { get; set; } = Constants.DefaultApplicationRedirectsTableName;
     public string AuthorizationsTableName { get; set; } = Constants.DefaultAuthorizationTableName;
     public string ScopesTableName { get; set; } = Constants.DefaultScopeTableName;
     public string TokensTableName { get; set; } = Constants.DefaultTokenTableName;

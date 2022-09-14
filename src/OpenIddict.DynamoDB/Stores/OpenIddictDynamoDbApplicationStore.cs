@@ -23,9 +23,14 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     private IDynamoDBContext _context;
     private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbApplicationStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
+    public OpenIddictDynamoDbApplicationStore(OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
-        _client = client;
+        if (openIddictDynamoDbOptions.Database is null)
+        {
+            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
+        }
+
+        _client = openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
         _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }

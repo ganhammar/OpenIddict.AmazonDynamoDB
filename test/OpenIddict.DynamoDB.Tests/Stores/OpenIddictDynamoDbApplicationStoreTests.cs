@@ -10,13 +10,26 @@ namespace OpenIddict.DynamoDB.Tests;
 public class OpenIddictDynamoDbApplicationStoreTests
 {
     [Fact]
+    public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange, Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(new()));
+
+            Assert.Equal(nameof(OpenIddictDynamoDbOptions.Database), exception.ParamName);
+        }
+    }
+
+    [Fact]
     public async Task Should_ReturnZero_When_CountingApplicationsInEmptyDatabase()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -34,7 +47,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -57,7 +70,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -73,7 +86,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -91,7 +104,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -115,7 +128,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -133,7 +146,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -157,7 +170,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -174,7 +187,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -193,7 +206,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -217,7 +230,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -234,7 +247,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -253,7 +266,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -277,7 +290,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -294,7 +307,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -318,7 +331,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var redirectUri = "http://test.com/test/redirect";
             var application = new OpenIddictDynamoDbApplication
@@ -350,7 +363,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var redirectUri = "http://test.com/test/redirect";
             var application = new OpenIddictDynamoDbApplication
@@ -386,7 +399,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -403,7 +416,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -427,7 +440,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var redirectUri = "http://test.com/test/redirect";
             var application = new OpenIddictDynamoDbApplication
@@ -459,7 +472,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var redirectUri = "http://test.com/test/redirect";
             var application = new OpenIddictDynamoDbApplication
@@ -495,7 +508,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -512,7 +525,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -529,7 +542,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -550,7 +563,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -574,7 +587,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -613,7 +626,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -629,7 +642,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -647,7 +660,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -671,7 +684,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -689,7 +702,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -713,7 +726,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -731,7 +744,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -755,7 +768,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -773,7 +786,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -797,7 +810,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -815,7 +828,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -839,7 +852,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -857,7 +870,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -878,7 +891,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -896,7 +909,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
 
@@ -916,7 +929,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -934,7 +947,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
 
@@ -954,7 +967,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -972,7 +985,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
 
@@ -992,7 +1005,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1010,7 +1023,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
 
@@ -1030,7 +1043,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1048,7 +1061,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
 
@@ -1068,7 +1081,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1086,7 +1099,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1107,7 +1120,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1135,7 +1148,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1153,7 +1166,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1174,7 +1187,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1202,7 +1215,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1220,7 +1233,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1241,7 +1254,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1269,7 +1282,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1287,7 +1300,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1308,7 +1321,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1336,7 +1349,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1354,7 +1367,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1375,7 +1388,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1403,7 +1416,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1421,7 +1434,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1445,7 +1458,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1475,7 +1488,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1493,7 +1506,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1517,7 +1530,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1547,7 +1560,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1565,7 +1578,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1589,7 +1602,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1619,7 +1632,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1637,7 +1650,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1661,7 +1674,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1691,7 +1704,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1709,7 +1722,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1733,7 +1746,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1763,7 +1776,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1781,7 +1794,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1805,7 +1818,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1834,7 +1847,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1852,7 +1865,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication();
             await applicationStore.CreateAsync(application, CancellationToken.None);
@@ -1875,7 +1888,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
             var application = new OpenIddictDynamoDbApplication
             {
@@ -1902,7 +1915,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act
@@ -1920,7 +1933,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1937,7 +1950,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             var applicationCount = 10;
@@ -1970,7 +1983,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -2003,7 +2016,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -2045,7 +2058,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
         {
             // Arrange
             var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(
-                database.Client, new());
+                new() { Database = database.Client });
             await applicationStore.EnsureInitializedAsync();
 
             // Act & Assert

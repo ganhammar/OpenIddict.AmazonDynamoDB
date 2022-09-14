@@ -10,6 +10,7 @@ public class OpenIddictDynamoDbOptions
     public string AuthorizationsTableName { get; set; } = Constants.DefaultAuthorizationTableName;
     public string ScopesTableName { get; set; } = Constants.DefaultScopeTableName;
     public string TokensTableName { get; set; } = Constants.DefaultTokenTableName;
+    public IAmazonDynamoDB? Database { get; set; }
     public ProvisionedThroughput ProvisionedThroughput { get; set; } = new ProvisionedThroughput
     {
         ReadCapacityUnits = 1,

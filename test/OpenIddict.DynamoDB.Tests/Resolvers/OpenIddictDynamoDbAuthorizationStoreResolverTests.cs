@@ -1,4 +1,3 @@
-using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using Xunit;
@@ -18,8 +17,10 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
             serviceCollection.AddSingleton<
                 IOpenIddictAuthorizationStore<OpenIddictDynamoDbAuthorization>,
                 OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>>();
-            serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
-            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>(new OpenIddictDynamoDbOptions
+            {
+                Database = database.Client,
+            });
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbAuthorizationStoreResolver(serviceProvider);
 
@@ -62,8 +63,10 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
             serviceCollection.AddSingleton<
                 IOpenIddictAuthorizationStore<OpenIddictDynamoDbAuthorization>,
                 OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>>();
-            serviceCollection.AddSingleton<IAmazonDynamoDB>(database.Client);
-            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>();
+            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>(new OpenIddictDynamoDbOptions
+            {
+                Database = database.Client,
+            });
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbAuthorizationStoreResolver(serviceProvider);
 

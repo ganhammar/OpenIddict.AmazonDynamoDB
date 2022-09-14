@@ -10,13 +10,26 @@ namespace OpenIddict.DynamoDB.Tests;
 public class OpenIddictDynamoDbScopeStoreTests
 {
     [Fact]
+    public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange, Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(new()));
+
+            Assert.Equal(nameof(OpenIddictDynamoDbOptions.Database), exception.ParamName);
+        }
+    }
+
+    [Fact]
     public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -32,7 +45,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -48,7 +61,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -64,7 +77,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act
@@ -82,7 +95,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -102,7 +115,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -120,7 +133,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -144,7 +157,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -162,7 +175,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -183,7 +196,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -201,7 +214,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             var id = Guid.NewGuid().ToString();
@@ -226,7 +239,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -244,7 +257,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             var name = "some-scope";
@@ -269,7 +282,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -286,7 +299,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -304,7 +317,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             var subject = Guid.NewGuid().ToString();
@@ -339,7 +352,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -357,7 +370,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -381,7 +394,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -399,7 +412,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -420,7 +433,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -448,7 +461,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -466,7 +479,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -490,7 +503,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -508,7 +521,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -529,7 +542,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -557,7 +570,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -575,7 +588,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -599,7 +612,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -617,7 +630,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -641,7 +654,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -659,7 +672,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -682,7 +695,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -708,7 +721,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -726,7 +739,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -749,7 +762,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope
             {
@@ -781,7 +794,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act
@@ -800,7 +813,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             var scopeCount = 10;
@@ -833,7 +846,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -866,7 +879,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             foreach (var index in Enumerable.Range(0, 10))
@@ -908,7 +921,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -924,7 +937,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -942,7 +955,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
 
@@ -962,7 +975,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -980,7 +993,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
 
@@ -1000,7 +1013,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1018,7 +1031,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
 
@@ -1038,7 +1051,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1056,7 +1069,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1080,7 +1093,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1109,7 +1122,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1127,7 +1140,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1151,7 +1164,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1181,7 +1194,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1199,7 +1212,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1223,7 +1236,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1253,7 +1266,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1271,7 +1284,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1295,7 +1308,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1325,7 +1338,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1342,7 +1355,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
 
             // Act & Assert
@@ -1359,7 +1372,7 @@ public class OpenIddictDynamoDbScopeStoreTests
         {
             // Arrange
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);
@@ -1380,7 +1393,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             // Arrange
             var context = new DynamoDBContext(database.Client);
             var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(
-                database.Client, new());
+                new() { Database = database.Client });
             await scopeStore.EnsureInitializedAsync();
             var scope = new OpenIddictDynamoDbScope();
             await scopeStore.CreateAsync(scope, CancellationToken.None);

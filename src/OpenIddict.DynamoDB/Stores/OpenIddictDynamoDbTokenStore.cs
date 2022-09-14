@@ -23,9 +23,14 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     private IDynamoDBContext _context;
     private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
 
-    public OpenIddictDynamoDbTokenStore(IAmazonDynamoDB client, OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
+    public OpenIddictDynamoDbTokenStore(OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
     {
-        _client = client;
+        if (openIddictDynamoDbOptions.Database is null)
+        {
+            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
+        }
+
+        _client = openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
         _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }

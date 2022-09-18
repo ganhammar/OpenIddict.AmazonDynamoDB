@@ -17,10 +17,7 @@ public class OpenIddictDynamoDbBuilder
 
     public OpenIddictDynamoDbBuilder Configure(Action<OpenIddictDynamoDbOptions> configuration)
     {
-        if (configuration is null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
+        ArgumentNullException.ThrowIfNull(configuration);
 
         Services.Configure(configuration);
 
@@ -61,80 +58,56 @@ public class OpenIddictDynamoDbBuilder
 
     public OpenIddictDynamoDbBuilder SetApplicationsTableName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            throw new ArgumentException(ExceptionMessage, nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.ApplicationsTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder SetApplicationRedirectsTableName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            throw new ArgumentException(ExceptionMessage, nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.ApplicationRedirectsTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder SetAuthorizationsTableName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            throw new ArgumentException(ExceptionMessage, nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.AuthorizationsTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder SetScopesTableName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            throw new ArgumentException(ExceptionMessage, nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.ScopesTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder SetTokensTableName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            throw new ArgumentException(ExceptionMessage, nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.TokensTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder UseDatabase(IAmazonDynamoDB database)
     {
-        if (database is null)
-        {
-            throw new ArgumentNullException(nameof(database));
-        }
+        ArgumentNullException.ThrowIfNull(database);
 
         return Configure(options => options.Database = database);
     }
 
     public OpenIddictDynamoDbBuilder SetBillingMode(BillingMode billingMode)
     {
-        if (billingMode is null)
-        {
-            throw new ArgumentNullException(nameof(billingMode));
-        }
+        ArgumentNullException.ThrowIfNull(billingMode);
 
         return Configure(options => options.BillingMode = billingMode);
     }
 
     public OpenIddictDynamoDbBuilder SetProvisionedThroughput(ProvisionedThroughput provisionedThroughput)
     {
-        if (provisionedThroughput is null)
-        {
-            throw new ArgumentNullException(nameof(provisionedThroughput));
-        }
+        ArgumentNullException.ThrowIfNull(provisionedThroughput);
 
         return Configure(options => options.ProvisionedThroughput = provisionedThroughput);
     }

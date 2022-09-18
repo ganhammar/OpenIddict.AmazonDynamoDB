@@ -39,7 +39,7 @@ public class OpenIddictDynamoDbBuilderTests
         var services = new ServiceCollection();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             CreateBuilder(services).SetApplicationsTableName(null!));
         Assert.Equal("name", exception.ParamName);
     }
@@ -66,7 +66,7 @@ public class OpenIddictDynamoDbBuilderTests
         var services = new ServiceCollection();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             CreateBuilder(services).SetApplicationRedirectsTableName(null!));
         Assert.Equal("name", exception.ParamName);
     }
@@ -93,7 +93,7 @@ public class OpenIddictDynamoDbBuilderTests
         var services = new ServiceCollection();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             CreateBuilder(services).SetAuthorizationsTableName(null!));
         Assert.Equal("name", exception.ParamName);
     }
@@ -120,7 +120,7 @@ public class OpenIddictDynamoDbBuilderTests
         var services = new ServiceCollection();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             CreateBuilder(services).SetTokensTableName(null!));
         Assert.Equal("name", exception.ParamName);
     }
@@ -147,7 +147,7 @@ public class OpenIddictDynamoDbBuilderTests
         var services = new ServiceCollection();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             CreateBuilder(services).SetScopesTableName(null!));
         Assert.Equal("name", exception.ParamName);
     }

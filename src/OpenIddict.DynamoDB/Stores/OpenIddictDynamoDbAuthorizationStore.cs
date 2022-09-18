@@ -51,10 +51,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public async ValueTask CreateAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization == null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -63,10 +60,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public async ValueTask DeleteAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization == null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -103,87 +97,48 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         }
     }
 
-    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, CancellationToken cancellationToken)
+    public IAsyncEnumerable<TAuthorization> FindAsync(
+        string subject, string client, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
 
         return FindBySubjectAndSearchKey(subject, client, cancellationToken);
     }
 
-    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
+    public IAsyncEnumerable<TAuthorization> FindAsync(
+        string subject, string client, string status, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
-        if (status == null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(status);
 
         return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
     }
 
-    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
+    public IAsyncEnumerable<TAuthorization> FindAsync(
+        string subject, string client, string status, string type, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
-        if (status == null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
-
-        if (type == null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(status);
+        ArgumentNullException.ThrowIfNull(type);
 
         return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
     }
 
-    public IAsyncEnumerable<TAuthorization> FindAsync(string subject, string client, string status, string type, ImmutableArray<string> scopes, CancellationToken cancellationToken)
+    public IAsyncEnumerable<TAuthorization> FindAsync(
+        string subject,
+        string client,
+        string status,
+        string type,
+        ImmutableArray<string> scopes,
+        CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
-        if (status == null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
-
-        if (type == null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(status);
+        ArgumentNullException.ThrowIfNull(type);
 
         if (scopes == null)
         {
@@ -208,10 +163,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public IAsyncEnumerable<TAuthorization> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         return ExecuteAsync(cancellationToken);
 
@@ -242,20 +194,14 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public async ValueTask<TAuthorization?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         return await _context.LoadAsync<TAuthorization>(identifier, cancellationToken);
     }
 
     public IAsyncEnumerable<TAuthorization> FindBySubjectAsync(string subject, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
 
         return ExecuteAsync(cancellationToken);
 
@@ -286,10 +232,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask<string?> GetApplicationIdAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.ApplicationId);
     }
@@ -301,30 +244,21 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask<DateTimeOffset?> GetCreationDateAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.CreationDate);
     }
 
     public ValueTask<string?> GetIdAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.Id);
     }
 
     public ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         if (string.IsNullOrEmpty(authorization.Properties))
         {
@@ -344,10 +278,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask<ImmutableArray<string>> GetScopesAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         if (authorization.Scopes is not { Count: > 0 })
         {
@@ -359,30 +290,21 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask<string?> GetStatusAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.Status);
     }
 
     public ValueTask<string?> GetSubjectAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.Subject);
     }
 
     public ValueTask<string?> GetTypeAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         return new(authorization.Type);
     }
@@ -496,10 +418,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetApplicationIdAsync(TAuthorization authorization, string? identifier, CancellationToken cancellationToken)
     {
-        if (authorization == null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         authorization.ApplicationId = identifier;
 
@@ -508,10 +427,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetCreationDateAsync(TAuthorization authorization, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        if (authorization == null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         authorization.CreationDate = date?.UtcDateTime;
 
@@ -520,10 +436,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetPropertiesAsync(TAuthorization authorization, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         if (properties is not { Count: > 0 })
         {
@@ -557,10 +470,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetScopesAsync(TAuthorization authorization, ImmutableArray<string> scopes, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         if (scopes.IsDefaultOrEmpty)
         {
@@ -576,10 +486,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetStatusAsync(TAuthorization authorization, string? status, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         authorization.Status = status;
 
@@ -588,10 +495,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetSubjectAsync(TAuthorization authorization, string? subject, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         authorization.Subject = subject;
 
@@ -600,10 +504,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public ValueTask SetTypeAsync(TAuthorization authorization, string? type, CancellationToken cancellationToken)
     {
-        if (authorization is null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         authorization.Type = type;
 
@@ -612,10 +513,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     public async ValueTask UpdateAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
-        if (authorization == null)
-        {
-            throw new ArgumentNullException(nameof(authorization));
-        }
+        ArgumentNullException.ThrowIfNull(authorization);
 
         // Ensure no one else is updating
         var databaseApplication = await _context.LoadAsync<TAuthorization>(authorization.Id, cancellationToken);

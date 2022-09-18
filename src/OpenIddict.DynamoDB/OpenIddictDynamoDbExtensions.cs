@@ -7,10 +7,7 @@ public static class OpenIddictDynamoDbExtensions
 {
     public static OpenIddictDynamoDbBuilder UseDynamoDb(this OpenIddictCoreBuilder builder)
     {
-        if (builder is null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentNullException.ThrowIfNull(builder);
 
         builder.SetDefaultApplicationEntity<OpenIddictDynamoDbApplication>()
             .SetDefaultAuthorizationEntity<OpenIddictDynamoDbAuthorization>()

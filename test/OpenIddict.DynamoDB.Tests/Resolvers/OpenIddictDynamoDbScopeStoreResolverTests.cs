@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using Xunit;
 
@@ -17,10 +18,10 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
             serviceCollection.AddSingleton<
                 IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
                 OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>(new OpenIddictDynamoDbOptions
+            serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
             {
                 Database = database.Client,
-            });
+            }));
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
 
@@ -63,10 +64,10 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
             serviceCollection.AddSingleton<
                 IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
                 OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-            serviceCollection.AddSingleton<OpenIddictDynamoDbOptions>(new OpenIddictDynamoDbOptions
+            serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
             {
                 Database = database.Client,
-            });
+            }));
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
 

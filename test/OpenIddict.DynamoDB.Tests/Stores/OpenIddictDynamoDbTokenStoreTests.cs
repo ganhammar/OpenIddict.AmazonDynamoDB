@@ -17,7 +17,7 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange, Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
-                new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(new()));
+                new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(TestUtils.GetOptions(new())));
 
             Assert.Equal(nameof(OpenIddictDynamoDbOptions.Database), exception.ParamName);
         }
@@ -29,9 +29,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
@@ -45,9 +45,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             Assert.Throws<NotSupportedException>(() =>
@@ -61,9 +61,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
@@ -77,9 +77,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act
             var count = await tokenStore.CountAsync(CancellationToken.None);
@@ -95,9 +95,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -115,9 +115,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -133,9 +133,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Subject = Guid.NewGuid().ToString(),
@@ -157,9 +157,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -175,9 +175,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -196,9 +196,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -214,9 +214,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -237,9 +237,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Properties = "{ \"Test\": { \"Something\": true }, \"Testing\": { \"Something\": true }, \"Testicles\": { \"Something\": true } }",
@@ -263,9 +263,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -283,9 +283,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Id = Guid.NewGuid().ToString(),
@@ -307,9 +307,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -327,9 +327,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 AuthorizationId = Guid.NewGuid().ToString(),
@@ -351,9 +351,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -371,9 +371,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 CreationDate = DateTime.UtcNow,
@@ -395,9 +395,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -415,9 +415,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 ExpirationDate = DateTime.UtcNow,
@@ -439,9 +439,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -459,9 +459,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Payload = Guid.NewGuid().ToString(),
@@ -483,9 +483,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -503,9 +503,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 RedemptionDate = DateTime.UtcNow,
@@ -527,9 +527,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -547,9 +547,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 ReferenceId = Guid.NewGuid().ToString(),
@@ -571,9 +571,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -591,9 +591,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 ApplicationId = Guid.NewGuid().ToString(),
@@ -615,9 +615,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -635,9 +635,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Status = Guid.NewGuid().ToString(),
@@ -659,9 +659,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -679,9 +679,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Subject = Guid.NewGuid().ToString(),
@@ -703,9 +703,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -723,9 +723,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken
             {
                 Type = Guid.NewGuid().ToString(),
@@ -748,9 +748,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act
             var token = await tokenStore.InstantiateAsync(CancellationToken.None);
@@ -767,9 +767,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var tokenCount = 10;
             foreach (var index in Enumerable.Range(0, tokenCount))
@@ -800,9 +800,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -833,9 +833,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -875,9 +875,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             Assert.Throws<NotSupportedException>(() =>
@@ -891,9 +891,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -909,9 +909,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -933,9 +933,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -962,9 +962,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -979,9 +979,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
@@ -996,9 +996,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -1017,9 +1017,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
             await tokenStore.CreateAsync(token, CancellationToken.None);
 
@@ -1040,9 +1040,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1058,9 +1058,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1078,9 +1078,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1096,9 +1096,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1116,9 +1116,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1134,9 +1134,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1154,9 +1154,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1172,9 +1172,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1192,9 +1192,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1210,9 +1210,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1230,9 +1230,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1248,9 +1248,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1268,9 +1268,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1286,9 +1286,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1306,9 +1306,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1324,9 +1324,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1344,9 +1344,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1362,9 +1362,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1382,9 +1382,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1400,9 +1400,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
             var token = new OpenIddictDynamoDbToken();
 
             // Act
@@ -1423,9 +1423,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1444,9 +1444,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1466,9 +1466,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1484,9 +1484,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act
             var tokens = tokenStore.FindAsync("test", "test", CancellationToken.None);
@@ -1508,9 +1508,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -1541,9 +1541,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var subject = Guid.NewGuid().ToString();
             var applicationId = Guid.NewGuid().ToString();
@@ -1578,9 +1578,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act
             var tokens = tokenStore.FindAsync("test", "test", "test", CancellationToken.None);
@@ -1602,9 +1602,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var status = "some-status";
 
@@ -1638,9 +1638,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var subject = Guid.NewGuid().ToString();
             var applicationId = Guid.NewGuid().ToString();
@@ -1677,9 +1677,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act
             var tokens = tokenStore.FindAsync("test", "test", "test", "test", CancellationToken.None);
@@ -1701,9 +1701,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var status = "some-status";
             var type = "some-type";
@@ -1739,9 +1739,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var subject = Guid.NewGuid().ToString();
             var applicationId = Guid.NewGuid().ToString();
@@ -1779,9 +1779,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1797,9 +1797,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var id = Guid.NewGuid().ToString();
             await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
@@ -1822,9 +1822,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1840,9 +1840,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var id = Guid.NewGuid().ToString();
             await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
@@ -1870,9 +1870,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1888,9 +1888,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var subject = "some-subject";
             await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
@@ -1918,9 +1918,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -1936,9 +1936,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var authorizationId = Guid.NewGuid().ToString();
             await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
@@ -1966,9 +1966,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {
             // Arrange
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -1984,9 +1984,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var referenceId = Guid.NewGuid().ToString();
             await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
@@ -2010,9 +2010,9 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -2041,12 +2041,10 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
-            await authorizationStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             var numberOfTokens = 10;
             foreach (var index in Enumerable.Range(0, numberOfTokens))
@@ -2084,12 +2082,10 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
-            await authorizationStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {
@@ -2126,12 +2122,10 @@ public class OpenIddictDynamoDbTokenStoreTests
         {
             // Arrange
             var context = new DynamoDBContext(database.Client);
-            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(
-                new() { Database = database.Client });
-            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(
-                new() { Database = database.Client });
-            await tokenStore.EnsureInitializedAsync();
-            await authorizationStore.EnsureInitializedAsync();
+            var options = TestUtils.GetOptions(new() {  Database = database.Client });
+            var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
             foreach (var index in Enumerable.Range(0, 10))
             {

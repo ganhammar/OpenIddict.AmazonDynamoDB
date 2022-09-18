@@ -1,17 +1,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Util;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 
 namespace OpenIddict.DynamoDB;
@@ -21,18 +19,25 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
-    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
+    private IOptionsMonitor<OpenIddictDynamoDbOptions> _optionsMonitor;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions => _optionsMonitor.CurrentValue;
 
-    public OpenIddictDynamoDbScopeStore(OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
+    public OpenIddictDynamoDbScopeStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
     {
-        if (openIddictDynamoDbOptions.Database is null)
+        if (optionsMonitor == null)
         {
-            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
+            throw new ArgumentNullException(nameof(optionsMonitor));
         }
 
-        _client = openIddictDynamoDbOptions.Database;
+        _optionsMonitor = optionsMonitor;
+
+        if (_openIddictDynamoDbOptions.Database is null)
+        {
+            throw new ArgumentNullException(nameof(_openIddictDynamoDbOptions.Database));
+        }
+
+        _client = _openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
-        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -458,101 +463,5 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         scope.ConcurrencyToken = Guid.NewGuid().ToString();
 
         await _context.SaveAsync(scope, cancellationToken);
-    }
-
-    public Task EnsureInitializedAsync()
-    {
-        if (_client == null)
-        {
-            throw new ArgumentNullException(nameof(_client));
-        }
-
-        if (_context == null)
-        {
-            throw new ArgumentNullException(nameof(_context));
-        }
-
-        if (_openIddictDynamoDbOptions.ScopesTableName != Constants.DefaultScopeTableName)
-        {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                _openIddictDynamoDbOptions.ScopesTableName, Constants.DefaultScopeTableName));
-        }
-
-        return EnsureInitializedAsync(_client);
-    }
-
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
-    {
-        var scopeGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
-        {
-            new GlobalSecondaryIndex
-            {
-                IndexName = "Name-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("ScopeName", KeyType.HASH),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-        };
-
-        var tableNames = await client.ListTablesAsync();
-
-        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ScopesTableName))
-        {
-            await CreateScopeTableAsync(
-                client, scopeGlobalSecondaryIndexes);
-        }
-        else
-        {
-            await DynamoDbUtils.UpdateSecondaryIndexes(
-                client,
-                _openIddictDynamoDbOptions.ScopesTableName,
-                scopeGlobalSecondaryIndexes);
-        }
-    }
-
-    private async Task CreateScopeTableAsync(IAmazonDynamoDB client,
-        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
-    {
-        var response = await client.CreateTableAsync(new CreateTableRequest
-        {
-            TableName = _openIddictDynamoDbOptions.ScopesTableName,
-            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = _openIddictDynamoDbOptions.BillingMode,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new KeySchemaElement
-                {
-                    AttributeName = "Id",
-                    KeyType = KeyType.HASH,
-                },
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "Id",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "ScopeName",
-                    AttributeType = ScalarAttributeType.S,
-                },
-            },
-            GlobalSecondaryIndexes = globalSecondaryIndexes,
-        });
-
-        if (response.HttpStatusCode != HttpStatusCode.OK)
-        {
-            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ScopesTableName}");
-        }
-
-        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ScopesTableName);
     }
 }

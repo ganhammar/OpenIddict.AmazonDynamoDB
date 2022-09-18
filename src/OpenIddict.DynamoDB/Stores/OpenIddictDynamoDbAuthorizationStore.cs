@@ -1,16 +1,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Util;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -21,18 +19,25 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
-    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
+    private IOptionsMonitor<OpenIddictDynamoDbOptions> _optionsMonitor;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions => _optionsMonitor.CurrentValue;
 
-    public OpenIddictDynamoDbAuthorizationStore(OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
+    public OpenIddictDynamoDbAuthorizationStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
     {
-        if (openIddictDynamoDbOptions.Database is null)
+        if (optionsMonitor == null)
         {
-            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
+            throw new ArgumentNullException(nameof(optionsMonitor));
         }
 
-        _client = openIddictDynamoDbOptions.Database;
+        _optionsMonitor = optionsMonitor;
+
+        if (_openIddictDynamoDbOptions.Database is null)
+        {
+            throw new ArgumentNullException(nameof(_openIddictDynamoDbOptions.Database));
+        }
+
+        _client = _openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
-        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -628,137 +633,5 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         authorization.ConcurrencyToken = Guid.NewGuid().ToString();
 
         await _context.SaveAsync(authorization, cancellationToken);
-    }
-
-    public Task EnsureInitializedAsync()
-    {
-        if (_client == null)
-        {
-            throw new ArgumentNullException(nameof(_client));
-        }
-
-        if (_context == null)
-        {
-            throw new ArgumentNullException(nameof(_context));
-        }
-
-        if (_openIddictDynamoDbOptions.AuthorizationsTableName != Constants.DefaultAuthorizationTableName)
-        {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                _openIddictDynamoDbOptions.AuthorizationsTableName, Constants.DefaultAuthorizationTableName));
-        }
-
-        return EnsureInitializedAsync(_client);
-    }
-
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
-    {
-        var authorizationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
-        {
-            new GlobalSecondaryIndex
-            {
-                IndexName = "ApplicationId-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("ApplicationId", KeyType.HASH),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-            new GlobalSecondaryIndex
-            {
-                IndexName = "Subject-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("Subject", KeyType.HASH),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-            new GlobalSecondaryIndex
-            {
-                IndexName = "Subject-SearchKey-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("Subject", KeyType.HASH),
-                    new KeySchemaElement("SearchKey", KeyType.RANGE),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-        };
-
-        var tableNames = await client.ListTablesAsync();
-
-        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.AuthorizationsTableName))
-        {
-            await CreateAuthorizationTableAsync(client, authorizationGlobalSecondaryIndexes);
-        }
-        else
-        {
-            await DynamoDbUtils.UpdateSecondaryIndexes(
-                client,
-                _openIddictDynamoDbOptions.AuthorizationsTableName,
-                authorizationGlobalSecondaryIndexes);
-        }
-    }
-
-    private async Task CreateAuthorizationTableAsync(IAmazonDynamoDB client,
-        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
-    {
-        var response = await client.CreateTableAsync(new CreateTableRequest
-        {
-            TableName = _openIddictDynamoDbOptions.AuthorizationsTableName,
-            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = _openIddictDynamoDbOptions.BillingMode,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new KeySchemaElement
-                {
-                    AttributeName = "Id",
-                    KeyType = KeyType.HASH,
-                },
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "Id",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "ApplicationId",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "Subject",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "SearchKey",
-                    AttributeType = ScalarAttributeType.S,
-                },
-            },
-            GlobalSecondaryIndexes = globalSecondaryIndexes,
-        });
-
-        if (response.HttpStatusCode != HttpStatusCode.OK)
-        {
-            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.AuthorizationsTableName}");
-        }
-
-        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.AuthorizationsTableName);
     }
 }

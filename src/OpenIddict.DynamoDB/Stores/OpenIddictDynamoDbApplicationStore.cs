@@ -1,17 +1,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Util;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 
 namespace OpenIddict.DynamoDB;
@@ -21,18 +19,25 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
-    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions;
+    private IOptionsMonitor<OpenIddictDynamoDbOptions> _optionsMonitor;
+    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions => _optionsMonitor.CurrentValue;
 
-    public OpenIddictDynamoDbApplicationStore(OpenIddictDynamoDbOptions openIddictDynamoDbOptions)
+    public OpenIddictDynamoDbApplicationStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
     {
-        if (openIddictDynamoDbOptions.Database is null)
+        if (optionsMonitor == null)
         {
-            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
+            throw new ArgumentNullException(nameof(optionsMonitor));
         }
 
-        _client = openIddictDynamoDbOptions.Database;
+        _optionsMonitor = optionsMonitor;
+
+        if (_openIddictDynamoDbOptions.Database is null)
+        {
+            throw new ArgumentNullException(nameof(_openIddictDynamoDbOptions.Database));
+        }
+
+        _client = _openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
-        _openIddictDynamoDbOptions = openIddictDynamoDbOptions;
     }
 
     public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -706,186 +711,5 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         // Save current redirects
         await SaveRedirectUris(application, cancellationToken);
-    }
-
-    public Task EnsureInitializedAsync()
-    {
-        if (_client == null)
-        {
-            throw new ArgumentNullException(nameof(_client));
-        }
-
-        if (_context == null)
-        {
-            throw new ArgumentNullException(nameof(_context));
-        }
-
-        if (_openIddictDynamoDbOptions.ApplicationsTableName != Constants.DefaultApplicationTableName)
-        {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                _openIddictDynamoDbOptions.ApplicationsTableName,
-                Constants.DefaultApplicationTableName));
-        }
-
-        if (_openIddictDynamoDbOptions.ApplicationRedirectsTableName != Constants.DefaultApplicationRedirectsTableName)
-        {
-            AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
-                Constants.DefaultApplicationRedirectsTableName));
-        }
-
-        return EnsureInitializedAsync(_client);
-    }
-
-    private async Task EnsureInitializedAsync(IAmazonDynamoDB client)
-    {
-        var applicationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
-        {
-            new GlobalSecondaryIndex
-            {
-                IndexName = "ClientId-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("ClientId", KeyType.HASH),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-        };
-        var applicationRedirectGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
-        {
-            new GlobalSecondaryIndex
-            {
-                IndexName = "ApplicationId-index",
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement("ApplicationId", KeyType.HASH),
-                },
-                ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-                Projection = new Projection
-                {
-                    ProjectionType = ProjectionType.ALL,
-                },
-            },
-        };
-
-        var tableNames = await client.ListTablesAsync();
-
-        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationsTableName))
-        {
-            await CreateApplicationTableAsync(
-                client, applicationGlobalSecondaryIndexes);
-        }
-        else
-        {
-            await DynamoDbUtils.UpdateSecondaryIndexes(
-                client,
-                _openIddictDynamoDbOptions.ApplicationsTableName,
-                applicationGlobalSecondaryIndexes);
-        }
-
-        if (!tableNames.TableNames.Contains(_openIddictDynamoDbOptions.ApplicationRedirectsTableName))
-        {
-            await CreateApplicationRedirectTableAsync(client, applicationRedirectGlobalSecondaryIndexes);
-        }
-        else
-        {
-            await DynamoDbUtils.UpdateSecondaryIndexes(
-                client,
-                _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
-                applicationRedirectGlobalSecondaryIndexes);
-        }
-    }
-
-    private async Task CreateApplicationTableAsync(IAmazonDynamoDB client, List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
-    {
-        var response = await client.CreateTableAsync(new CreateTableRequest
-        {
-            TableName = _openIddictDynamoDbOptions.ApplicationsTableName,
-            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = _openIddictDynamoDbOptions.BillingMode,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new KeySchemaElement
-                {
-                    AttributeName = "Id",
-                    KeyType = KeyType.HASH,
-                },
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "Id",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "ClientId",
-                    AttributeType = ScalarAttributeType.S,
-                },
-            },
-            GlobalSecondaryIndexes = globalSecondaryIndexes,
-        });
-
-        if (response.HttpStatusCode != HttpStatusCode.OK)
-        {
-            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationsTableName}");
-        }
-
-        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationsTableName);
-    }
-
-    private async Task CreateApplicationRedirectTableAsync(IAmazonDynamoDB client,
-        List<GlobalSecondaryIndex>? globalSecondaryIndexes = default)
-    {
-        var response = await client.CreateTableAsync(new CreateTableRequest
-        {
-            TableName = _openIddictDynamoDbOptions.ApplicationRedirectsTableName,
-            ProvisionedThroughput = _openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = _openIddictDynamoDbOptions.BillingMode,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new KeySchemaElement
-                {
-                    AttributeName = "RedirectUri",
-                    KeyType = KeyType.HASH,
-                },
-                new KeySchemaElement
-                {
-                    AttributeName = "RedirectType",
-                    KeyType = KeyType.RANGE,
-                },
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition
-                {
-                    AttributeName = "RedirectUri",
-                    AttributeType = ScalarAttributeType.S,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "RedirectType",
-                    AttributeType = ScalarAttributeType.N,
-                },
-                new AttributeDefinition
-                {
-                    AttributeName = "ApplicationId",
-                    AttributeType = ScalarAttributeType.S,
-                },
-            },
-            GlobalSecondaryIndexes = globalSecondaryIndexes,
-        });
-
-        if (response.HttpStatusCode != HttpStatusCode.OK)
-        {
-            throw new Exception($"Couldn't create table {_openIddictDynamoDbOptions.ApplicationRedirectsTableName}");
-        }
-
-        await DynamoDbUtils.WaitForActiveTableAsync(client, _openIddictDynamoDbOptions.ApplicationRedirectsTableName);
     }
 }

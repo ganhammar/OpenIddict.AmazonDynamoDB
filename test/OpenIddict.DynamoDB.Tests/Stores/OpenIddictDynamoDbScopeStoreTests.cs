@@ -10,6 +10,19 @@ namespace OpenIddict.DynamoDB.Tests;
 public class OpenIddictDynamoDbScopeStoreTests
 {
     [Fact]
+    public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange, Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(null!));
+
+            Assert.Equal("optionsMonitor", exception.ParamName);
+        }
+    }
+
+    [Fact]
     public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
@@ -18,7 +31,7 @@ public class OpenIddictDynamoDbScopeStoreTests
             var exception = Assert.Throws<ArgumentNullException>(() =>
                 new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(TestUtils.GetOptions(new())));
 
-            Assert.Equal(nameof(OpenIddictDynamoDbOptions.Database), exception.ParamName);
+            Assert.Equal("_openIddictDynamoDbOptions.Database", exception.ParamName);
         }
     }
 

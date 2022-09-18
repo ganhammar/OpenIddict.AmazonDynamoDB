@@ -24,17 +24,11 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public OpenIddictDynamoDbApplicationStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
     {
-        if (optionsMonitor == null)
-        {
-            throw new ArgumentNullException(nameof(optionsMonitor));
-        }
+        ArgumentNullException.ThrowIfNull(optionsMonitor);
 
         _optionsMonitor = optionsMonitor;
 
-        if (_openIddictDynamoDbOptions.Database is null)
-        {
-            throw new ArgumentNullException(nameof(_openIddictDynamoDbOptions.Database));
-        }
+        ArgumentNullException.ThrowIfNull(_openIddictDynamoDbOptions.Database);
 
         _client = _openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);

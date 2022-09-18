@@ -24,17 +24,11 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public OpenIddictDynamoDbTokenStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
     {
-        if (optionsMonitor == null)
-        {
-            throw new ArgumentNullException(nameof(optionsMonitor));
-        }
+        ArgumentNullException.ThrowIfNull(optionsMonitor);
 
         _optionsMonitor = optionsMonitor;
 
-        if (_openIddictDynamoDbOptions.Database is null)
-        {
-            throw new ArgumentNullException(nameof(_openIddictDynamoDbOptions.Database));
-        }
+        ArgumentNullException.ThrowIfNull(_openIddictDynamoDbOptions.Database);
 
         _client = _openIddictDynamoDbOptions.Database;
         _context = new DynamoDBContext(_client);
@@ -57,10 +51,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public async ValueTask CreateAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token == null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -69,10 +60,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token == null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -111,70 +99,34 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
 
         return FindBySubjectAndSearchKey(subject, client, cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
-        if (status == null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(status);
 
         return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
-
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
-
-        if (status == null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
-
-        if (type == null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(status);
+        ArgumentNullException.ThrowIfNull(type);
 
         return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
     }
 
     public IAsyncEnumerable<TToken> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         return ExecuteAsync(cancellationToken);
 
@@ -205,10 +157,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public IAsyncEnumerable<TToken> FindByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         return ExecuteAsync(cancellationToken);
 
@@ -239,20 +188,14 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public async ValueTask<TToken?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         return await _context.LoadAsync<TToken>(identifier, cancellationToken);
     }
 
     public async ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
         {
@@ -273,10 +216,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public IAsyncEnumerable<TToken> FindBySubjectAsync(string subject, CancellationToken cancellationToken)
     {
-        if (subject == null)
-        {
-            throw new ArgumentNullException(nameof(subject));
-        }
+        ArgumentNullException.ThrowIfNull(subject);
 
         return ExecuteAsync(cancellationToken);
 
@@ -307,10 +247,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask<string?> GetApplicationIdAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.ApplicationId);
     }
@@ -322,60 +259,42 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask<string?> GetAuthorizationIdAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.AuthorizationId);
     }
 
     public ValueTask<DateTimeOffset?> GetCreationDateAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.CreationDate);
     }
 
     public ValueTask<DateTimeOffset?> GetExpirationDateAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.ExpirationDate);
     }
 
     public ValueTask<string?> GetIdAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.Id);
     }
 
     public ValueTask<string?> GetPayloadAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.Payload);
     }
 
     public ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         if (string.IsNullOrEmpty(token.Properties))
         {
@@ -395,50 +314,35 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask<DateTimeOffset?> GetRedemptionDateAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.RedemptionDate);
     }
 
     public ValueTask<string?> GetReferenceIdAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.ReferenceId);
     }
 
     public ValueTask<string?> GetStatusAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.Status);
     }
 
     public ValueTask<string?> GetSubjectAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.Subject);
     }
 
     public ValueTask<string?> GetTypeAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         return new(token.Type);
     }
@@ -548,10 +452,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.ApplicationId = identifier;
 
@@ -560,10 +461,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetAuthorizationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.AuthorizationId = identifier;
 
@@ -572,10 +470,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetCreationDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.CreationDate = date?.UtcDateTime;
 
@@ -584,10 +479,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetExpirationDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.ExpirationDate = date?.UtcDateTime;
 
@@ -596,10 +488,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetPayloadAsync(TToken token, string? payload, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.Payload = payload;
 
@@ -608,10 +497,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetPropertiesAsync(TToken token, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         if (properties is not { Count: > 0 })
         {
@@ -645,10 +531,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetRedemptionDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.RedemptionDate = date?.UtcDateTime;
 
@@ -657,10 +540,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetReferenceIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.ReferenceId = identifier;
 
@@ -669,10 +549,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetStatusAsync(TToken token, string? status, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.Status = status;
 
@@ -681,10 +558,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetSubjectAsync(TToken token, string? subject, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.Subject = subject;
 
@@ -693,10 +567,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public ValueTask SetTypeAsync(TToken token, string? type, CancellationToken cancellationToken)
     {
-        if (token is null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         token.Type = type;
 
@@ -705,10 +576,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     public async ValueTask UpdateAsync(TToken token, CancellationToken cancellationToken)
     {
-        if (token == null)
-        {
-            throw new ArgumentNullException(nameof(token));
-        }
+        ArgumentNullException.ThrowIfNull(token);
 
         // Ensure no one else is updating
         var databaseApplication = await _context.LoadAsync<TToken>(token.Id, cancellationToken);

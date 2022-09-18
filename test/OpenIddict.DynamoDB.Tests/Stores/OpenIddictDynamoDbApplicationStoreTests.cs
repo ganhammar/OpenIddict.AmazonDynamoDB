@@ -31,7 +31,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
             var exception = Assert.Throws<ArgumentNullException>(() =>
                 new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(TestUtils.GetOptions(new())));
 
-            Assert.Equal(nameof(OpenIddictDynamoDbOptions.Database), exception.ParamName);
+            Assert.Equal("_openIddictDynamoDbOptions.Database", exception.ParamName);
         }
     }
 

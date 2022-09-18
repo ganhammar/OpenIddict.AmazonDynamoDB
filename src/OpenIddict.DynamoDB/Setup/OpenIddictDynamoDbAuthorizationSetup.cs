@@ -12,15 +12,8 @@ public static class OpenIddictDynamoDbAuthorizationSetup
         OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
         CancellationToken cancellationToken = default)
     {
-        if (openIddictDynamoDbOptions == null)
-        {
-            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions));
-        }
-
-        if (openIddictDynamoDbOptions.Database == null)
-        {
-            throw new ArgumentNullException(nameof(openIddictDynamoDbOptions.Database));
-        }
+        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions);
+        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions.Database);
 
         if (openIddictDynamoDbOptions.AuthorizationsTableName != Constants.DefaultAuthorizationTableName)
         {

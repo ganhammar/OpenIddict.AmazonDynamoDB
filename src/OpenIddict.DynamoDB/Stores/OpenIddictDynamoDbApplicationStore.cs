@@ -51,10 +51,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask CreateAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application == null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -97,10 +94,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask DeleteAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application == null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -109,10 +103,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask<TApplication?> FindByClientIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         var search = _context.FromQueryAsync<TApplication>(new QueryOperationConfig
         {
@@ -140,10 +131,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask<TApplication?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
     {
-        if (identifier == null)
-        {
-            throw new ArgumentNullException(nameof(identifier));
-        }
+        ArgumentNullException.ThrowIfNull(identifier);
 
         var application = await _context.LoadAsync<TApplication>(identifier, cancellationToken);
 
@@ -240,60 +228,42 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<string?> GetClientIdAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.ClientId);
     }
 
     public ValueTask<string?> GetClientSecretAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.ClientSecret);
     }
 
     public ValueTask<string?> GetClientTypeAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.Type);
     }
 
     public ValueTask<string?> GetConsentTypeAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.ConsentType);
     }
 
     public ValueTask<string?> GetDisplayNameAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.DisplayName);
     }
 
     public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDisplayNamesAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (application.DisplayNames is not { Count: > 0 })
         {
@@ -307,20 +277,14 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<string?> GetIdAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         return new(application.Id.ToString());
     }
 
     public ValueTask<ImmutableArray<string>> GetPermissionsAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (application.Permissions is not { Count: > 0 })
         {
@@ -332,10 +296,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableArray<string>> GetPostLogoutRedirectUrisAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (application.PostLogoutRedirectUris is not { Count: > 0 })
         {
@@ -347,10 +308,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (string.IsNullOrEmpty(application.Properties))
         {
@@ -370,10 +328,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableArray<string>> GetRedirectUrisAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (application.RedirectUris is not { Count: > 0 })
         {
@@ -385,10 +340,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask<ImmutableArray<string>> GetRequirementsAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (application.Requirements is not { Count: > 0 })
         {
@@ -450,10 +402,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetClientIdAsync(TApplication application, string? identifier, CancellationToken cancellationToken)
     {
-        if (application == null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         application.ClientId = identifier;
 
@@ -462,10 +411,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetClientSecretAsync(TApplication application, string? secret, CancellationToken cancellationToken)
     {
-        if (application == null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         application.ClientSecret = secret;
 
@@ -474,10 +420,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetClientTypeAsync(TApplication application, string? type, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         application.Type = type;
 
@@ -486,10 +429,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetConsentTypeAsync(TApplication application, string? type, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         application.ConsentType = type;
 
@@ -498,10 +438,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetDisplayNameAsync(TApplication application, string? name, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         application.DisplayName = name;
 
@@ -510,10 +447,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetDisplayNamesAsync(TApplication application, ImmutableDictionary<CultureInfo, string> names, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (names is not { Count: > 0 })
         {
@@ -529,10 +463,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetPermissionsAsync(TApplication application, ImmutableArray<string> permissions, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (permissions.IsDefaultOrEmpty)
         {
@@ -548,10 +479,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetPostLogoutRedirectUrisAsync(TApplication application, ImmutableArray<string> addresses, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (addresses.IsDefaultOrEmpty)
         {
@@ -567,10 +495,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetPropertiesAsync(TApplication application, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (properties is not { Count: > 0 })
         {
@@ -604,10 +529,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetRedirectUrisAsync(TApplication application, ImmutableArray<string> addresses, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (addresses.IsDefaultOrEmpty)
         {
@@ -623,10 +545,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public ValueTask SetRequirementsAsync(TApplication application, ImmutableArray<string> requirements, CancellationToken cancellationToken)
     {
-        if (application is null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         if (requirements.IsDefaultOrEmpty)
         {
@@ -642,10 +561,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     public async ValueTask UpdateAsync(TApplication application, CancellationToken cancellationToken)
     {
-        if (application == null)
-        {
-            throw new ArgumentNullException(nameof(application));
-        }
+        ArgumentNullException.ThrowIfNull(application);
 
         // Ensure no one else is updating
         var databaseApplication = await _context.LoadAsync<TApplication>(application.Id, cancellationToken);

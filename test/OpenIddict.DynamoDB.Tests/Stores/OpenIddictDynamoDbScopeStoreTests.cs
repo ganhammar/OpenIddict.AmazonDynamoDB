@@ -1473,4 +1473,39 @@ public class OpenIddictDynamoDbScopeStoreTests
             Assert.Equal(databaseScope.Name, scope.Name);
         }
     }
+
+    [Fact]
+    public async Task Should_UpdateScopeWithResources_When_ResourcesIsSet()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var options = TestUtils.GetOptions(new() { Database = database.Client });
+            var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+            var scope = new OpenIddictDynamoDbScope
+            {
+                Resources = new List<string>
+                {
+                    "some-resource",
+                },
+            };
+            await scopeStore.CreateAsync(scope, CancellationToken.None);
+
+            // Act
+            var resourceName = "some-new-resource";
+            scope.Resources = new List<string>
+            {
+                resourceName,
+            };
+            await scopeStore.UpdateAsync(scope, CancellationToken.None);
+
+            // Assert
+            var updatedScope = await scopeStore.FindByIdAsync(scope.Id, CancellationToken.None);
+            Assert.NotNull(updatedScope);
+            Assert.NotNull(updatedScope?.Resources);
+            Assert.Equal(resourceName, updatedScope!.Resources!.First());
+        }
+    }
 }

@@ -494,20 +494,32 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
         // Update scope resouces
         // Fetch all resources
-        await SetResources(scope, cancellationToken);
+        var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeResource>(new QueryOperationConfig
+        {
+            KeyExpression = new Expression
+            {
+                ExpressionStatement = "ScopeId = :scopeId",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":scopeId", scope.Id },
+                }
+            },
+        });
+
+        var resources = await search.GetRemainingAsync(cancellationToken);
 
         // Remove previously stored redirects
-        if (scope.Resources?.Any() == true)
+        if (resources?.Any() == true)
         {
-            var writeRequests = scope.Resources
+            var writeRequests = resources
                 .Select(x => new WriteRequest
                 {
                     DeleteRequest = new DeleteRequest
                     {
                         Key = new Dictionary<string, AttributeValue>
                         {
-                            { "ScopeId", new AttributeValue { S = scope.Id } },
-                            { "ScopeResource", new AttributeValue { S = x } },
+                            { "ScopeId", new AttributeValue { S = x.ScopeId } },
+                            { "ScopeResource", new AttributeValue { S = x.ScopeResource } },
                         },
                     },
                 })
@@ -517,7 +529,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
             {
                 RequestItems = new Dictionary<string, List<WriteRequest>>
                 {
-                    { Constants.DefaultApplicationRedirectsTableName, writeRequests },
+                    { Constants.DefaultScopeResourceTableName, writeRequests },
                 },
             };
 

@@ -168,6 +168,33 @@ public class OpenIddictDynamoDbBuilderTests
     }
 
     [Fact]
+    public void Should_ThrowException_When_SetScopeResoucesTableNameAndNameIsNull()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            CreateBuilder(services).SetScopeResourcesTableName(null!));
+        Assert.Equal("name", exception.ParamName);
+    }
+
+    [Fact]
+    public void Should_SetTableName_When_CallingSetScopeResourcesTableName()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        CreateBuilder(services).SetScopeResourcesTableName("test");
+
+        // Assert
+        var serviceProvider = services.BuildServiceProvider();
+        var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
+        Assert.Equal("test", options.ScopeResourcesTableName);
+    }
+
+    [Fact]
     public void Should_Succeed_When_ReplacingApplicationEntity()
     {
         // Arrange

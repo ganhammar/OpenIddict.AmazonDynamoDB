@@ -61,6 +61,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     private async Task SaveRedirectUris(TApplication application, CancellationToken cancellationToken)
     {
+        var batch = _context.CreateBatchWrite<OpenIddictDynamoDbApplicationRedirect>();
+
         if (application.RedirectUris?.Any() == true)
         {
             foreach (var redirectUri in application.RedirectUris)
@@ -72,7 +74,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                     ApplicationId = application.Id,
                 };
 
-                await _context.SaveAsync(applicationRedirect, cancellationToken);
+                batch.AddPutItem(applicationRedirect);
             }
         }
 
@@ -87,9 +89,11 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                     ApplicationId = application.Id,
                 };
 
-                await _context.SaveAsync(applicationRedirect, cancellationToken);
+                batch.AddPutItem(applicationRedirect);
             }
         }
+
+        await batch.ExecuteAsync(cancellationToken);
     }
 
     public async ValueTask DeleteAsync(TApplication application, CancellationToken cancellationToken)
@@ -116,7 +120,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
                     { ":clientId", identifier },
                 }
             },
-            Limit = 1
+            Limit = 1,
         });
         var applications = await search.GetRemainingAsync(cancellationToken);
         var application = applications?.FirstOrDefault();
@@ -189,6 +193,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
                 if (application != default)
                 {
+                    await SetRedirectUris(application, cancellationToken);
+
                     yield return application;
                 }
             }
@@ -215,6 +221,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
                 if (application != default)
                 {
+                    await SetRedirectUris(application, cancellationToken);
+
                     yield return application;
                 }
             }

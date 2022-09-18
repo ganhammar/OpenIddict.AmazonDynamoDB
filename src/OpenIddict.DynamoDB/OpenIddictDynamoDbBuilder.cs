@@ -7,8 +7,6 @@ using OpenIddict.Core;
 namespace OpenIddict.DynamoDB;
 public class OpenIddictDynamoDbBuilder
 {
-    private static string ExceptionMessage = "The table name cannot be null or empty";
-
     public OpenIddictDynamoDbBuilder(IServiceCollection services)
         => Services = services ?? throw new ArgumentNullException(nameof(services));
 
@@ -82,6 +80,13 @@ public class OpenIddictDynamoDbBuilder
         ArgumentNullException.ThrowIfNull(name);
 
         return Configure(options => options.ScopesTableName = name);
+    }
+
+    public OpenIddictDynamoDbBuilder SetScopeResourcesTableName(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        return Configure(options => options.ScopeResourcesTableName = name);
     }
 
     public OpenIddictDynamoDbBuilder SetTokensTableName(string name)

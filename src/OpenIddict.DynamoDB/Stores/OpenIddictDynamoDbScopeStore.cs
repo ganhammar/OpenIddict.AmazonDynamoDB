@@ -49,6 +49,52 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         throw new NotSupportedException();
     }
 
+    private async Task SaveResources(TScope scope, CancellationToken cancellationToken)
+    {
+        if (scope.Resources?.Any() != true)
+        {
+            return;
+        }
+
+        var batch = _context.CreateBatchWrite<OpenIddictDynamoDbScopeResource>();
+
+        foreach (var resouce in scope.Resources)
+        {
+            var scopeResource = new OpenIddictDynamoDbScopeResource
+            {
+                ScopeId = scope.Id,
+                ScopeResource = resouce,
+            };
+
+            batch.AddPutItem(scopeResource);
+        }
+
+        await batch.ExecuteAsync(cancellationToken);
+    }
+
+    private async Task SetResources(TScope scope, CancellationToken cancellationToken)
+    {
+        var scopeId = scope.Id;
+        var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeResource>(new QueryOperationConfig
+        {
+            KeyExpression = new Expression
+            {
+                ExpressionStatement = "ScopeId = :scopeId",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":scopeId", scopeId },
+                }
+            },
+        });
+
+        var resources = await search.GetRemainingAsync(cancellationToken);
+
+        scope.Resources = resources
+            .Where(x => x.ScopeResource != default)
+            .Select(x => x.ScopeResource!)
+            .ToList();
+    }
+
     public async ValueTask CreateAsync(TScope scope, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(scope);
@@ -56,6 +102,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         cancellationToken.ThrowIfCancellationRequested();
 
         await _context.SaveAsync(scope, cancellationToken);
+        await SaveResources(scope, cancellationToken);
     }
 
     public async ValueTask DeleteAsync(TScope scope, CancellationToken cancellationToken)
@@ -71,7 +118,10 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     {
         ArgumentNullException.ThrowIfNull(identifier);
 
-        return await _context.LoadAsync<TScope>(identifier, cancellationToken);
+        var scope = await _context.LoadAsync<TScope>(identifier, cancellationToken);
+        await SetResources(scope, cancellationToken);
+
+        return scope;
     }
 
     public async ValueTask<TScope?> FindByNameAsync(string name, CancellationToken cancellationToken)
@@ -92,7 +142,16 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
             Limit = 1
         });
         var scopes = await search.GetRemainingAsync(cancellationToken);
-        return scopes?.FirstOrDefault();
+        var scope = scopes?.FirstOrDefault();
+
+        if (scope == default)
+        {
+            return default;
+        }
+
+        await SetResources(scope, cancellationToken);
+
+        return scope;
     }
 
     public IAsyncEnumerable<TScope> FindByNamesAsync(ImmutableArray<string> names, CancellationToken cancellationToken)
@@ -121,6 +180,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
             foreach (var scope in scopes)
             {
+                await SetResources(scope, cancellationToken);
                 yield return scope;
             }
         }
@@ -128,7 +188,41 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     public IAsyncEnumerable<TScope> FindByResourceAsync(string resource, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(resource);
+
+        return ExecuteAsync(cancellationToken);
+
+        async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeResource>(new QueryOperationConfig
+            {
+                IndexName = "Resource-index",
+                KeyExpression = new Expression
+                {
+                    ExpressionStatement = "ScopeResource = :resource",
+                    ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                    {
+                        { ":resource", resource },
+                    }
+                },
+            });
+
+            var scopeResources = await search.GetRemainingAsync();
+            var scopeIds = scopeResources.Select(x => x.ScopeId).Distinct();
+
+            var batch = _context.CreateBatchGet<TScope>();
+            foreach (var scopeId in scopeIds)
+            {
+                batch.AddKey(scopeId);
+            }
+            await batch.ExecuteAsync(cancellationToken);
+
+            foreach (var scope in batch.Results)
+            {
+                await SetResources(scope, cancellationToken);
+                yield return scope;
+            }
+        }
     }
 
     public ValueTask<TResult> GetAsync<TState, TResult>(Func<IQueryable<TScope>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)
@@ -397,5 +491,40 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
         scope.ConcurrencyToken = Guid.NewGuid().ToString();
 
         await _context.SaveAsync(scope, cancellationToken);
+
+        // Update scope resouces
+        // Fetch all resources
+        await SetResources(scope, cancellationToken);
+
+        // Remove previously stored redirects
+        if (scope.Resources?.Any() == true)
+        {
+            var writeRequests = scope.Resources
+                .Select(x => new WriteRequest
+                {
+                    DeleteRequest = new DeleteRequest
+                    {
+                        Key = new Dictionary<string, AttributeValue>
+                        {
+                            { "ScopeId", new AttributeValue { S = scope.Id } },
+                            { "ScopeResource", new AttributeValue { S = x } },
+                        },
+                    },
+                })
+                .ToList();
+
+            var request = new BatchWriteItemRequest
+            {
+                RequestItems = new Dictionary<string, List<WriteRequest>>
+                {
+                    { Constants.DefaultApplicationRedirectsTableName, writeRequests },
+                },
+            };
+
+            await _client.BatchWriteItemAsync(request, cancellationToken);
+        }
+
+        // Save current redirects
+        await SaveResources(scope, cancellationToken);
     }
 }

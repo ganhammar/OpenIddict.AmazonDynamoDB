@@ -323,6 +323,58 @@ public class OpenIddictDynamoDbScopeStoreTests
     }
 
     [Fact]
+    public async Task Should_ThrowException_When_TryingToFindScopeByResourceAndResourceIsNull()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var options = TestUtils.GetOptions(new() { Database = database.Client });
+            var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                scopeStore.FindByResourceAsync(default!, CancellationToken.None));
+            Assert.Equal("resource", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_ReturnScope_When_FindingScopesByResourceWithMatch()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            await database.Client.DeleteTableAsync(Constants.DefaultScopeResourceTableName);
+            // Arrange
+            var context = new DynamoDBContext(database.Client);
+            var options = TestUtils.GetOptions(new() { Database = database.Client });
+            var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+            var resource = "some-resource";
+            await scopeStore.CreateAsync(new OpenIddictDynamoDbScope
+            {
+                Resources = new List<string>
+                {
+                    resource
+                },
+            }, CancellationToken.None);
+
+            // Act
+            var scopes = scopeStore.FindByResourceAsync(resource, CancellationToken.None);
+
+            // Assert
+            var matchedScopes = new List<OpenIddictDynamoDbScope>();
+            await foreach (var scope in scopes)
+            {
+                matchedScopes.Add(scope);
+            }
+            Assert.Single(matchedScopes);
+            Assert.Equal(resource, matchedScopes[0].Resources![0]);
+        }
+    }
+
+    [Fact]
     public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())

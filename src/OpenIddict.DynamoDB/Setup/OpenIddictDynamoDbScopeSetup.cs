@@ -21,10 +21,10 @@ public static class OpenIddictDynamoDbScopeSetup
                 openIddictDynamoDbOptions.ScopesTableName, Constants.DefaultScopeTableName));
         }
 
-        return SetupTable(openIddictDynamoDbOptions, cancellationToken);
+        return SetupTables(openIddictDynamoDbOptions, cancellationToken);
     }
 
-    private static async Task SetupTable(
+    private static async Task SetupTables(
         OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
         CancellationToken cancellationToken)
     {
@@ -36,6 +36,22 @@ public static class OpenIddictDynamoDbScopeSetup
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement("ScopeName", KeyType.HASH),
+                },
+                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                Projection = new Projection
+                {
+                    ProjectionType = ProjectionType.ALL,
+                },
+            },
+        };
+        var scopeResourceGlobalSecondaryIndex = new List<GlobalSecondaryIndex>
+        {
+            new GlobalSecondaryIndex
+            {
+                IndexName = "Resource-index",
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement("ScopeResource", KeyType.HASH),
                 },
                 ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
                 Projection = new Projection
@@ -60,6 +76,22 @@ public static class OpenIddictDynamoDbScopeSetup
                 openIddictDynamoDbOptions.Database,
                 openIddictDynamoDbOptions.ScopesTableName,
                 scopeGlobalSecondaryIndexes,
+                cancellationToken);
+        }
+
+        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.ScopeResourcesTableName))
+        {
+            await CreateScopeResourceTableAsync(
+                openIddictDynamoDbOptions,
+                scopeResourceGlobalSecondaryIndex,
+                cancellationToken);
+        }
+        else
+        {
+            await DynamoDbUtils.UpdateSecondaryIndexes(
+                openIddictDynamoDbOptions.Database,
+                openIddictDynamoDbOptions.ScopeResourcesTableName,
+                scopeResourceGlobalSecondaryIndex,
                 cancellationToken);
         }
     }
@@ -106,6 +138,56 @@ public static class OpenIddictDynamoDbScopeSetup
         await DynamoDbUtils.WaitForActiveTableAsync(
             openIddictDynamoDbOptions.Database,
             openIddictDynamoDbOptions.ScopesTableName,
+            cancellationToken);
+    }
+
+    private static async Task CreateScopeResourceTableAsync(
+        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        List<GlobalSecondaryIndex>? globalSecondaryIndexes,
+        CancellationToken cancellationToken)
+    {
+        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = openIddictDynamoDbOptions.ScopeResourcesTableName,
+            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement
+                {
+                    AttributeName = "ScopeId",
+                    KeyType = KeyType.HASH,
+                },
+                new KeySchemaElement
+                {
+                    AttributeName = "ScopeResource",
+                    KeyType = KeyType.RANGE,
+                },
+            },
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition
+                {
+                    AttributeName = "ScopeId",
+                    AttributeType = ScalarAttributeType.S,
+                },
+                new AttributeDefinition
+                {
+                    AttributeName = "ScopeResource",
+                    AttributeType = ScalarAttributeType.S,
+                },
+            },
+            GlobalSecondaryIndexes = globalSecondaryIndexes,
+        }, cancellationToken);
+
+        if (response.HttpStatusCode != HttpStatusCode.OK)
+        {
+            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.ScopeResourcesTableName}");
+        }
+
+        await DynamoDbUtils.WaitForActiveTableAsync(
+            openIddictDynamoDbOptions.Database,
+            openIddictDynamoDbOptions.ScopeResourcesTableName,
             cancellationToken);
     }
 }

@@ -35,3 +35,26 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: test/OpenIddict.AmazonDynamoDB.Tests/TestResults/coverage.info
           fail_ci_if_error: false
+
+  publish:
+
+    name: Publish
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDKs
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.x
+
+      - name: Publish to NuGet
+        id: publish_nuget
+        uses: brandedoutcast/publish-nuget@v2
+        with:
+          PROJECT_FILE_PATH: src/OpenIddict/OpenIddict.csproj
+          NUGET_KEY: ${{ secrets.NUGET_API_KEY }}

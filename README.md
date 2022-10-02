@@ -1,4 +1,4 @@
-# OpenIddict.DynamoDB
+# OpenIddict.AmazonDynamoDB
 
 WIP, Come back later :)
 

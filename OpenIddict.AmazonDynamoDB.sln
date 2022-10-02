@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4262A927-DE13-4AF0-AEBB-890BC8FA0C13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenIddict.AmazonDynamoDB", "src\OpenIddict.AmazonDynamoDB\OpenIddict.AmazonDynamoDB.csproj", "{21181432-FA87-467C-8944-CE8436C6669E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0023288C-8539-4196-9B43-269B98564E14}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenIddict.AmazonDynamoDB.Tests", "test\OpenIddict.AmazonDynamoDB.Tests\OpenIddict.AmazonDynamoDB.Tests.csproj", "{9EC115CE-0B76-4A35-A52B-C6F8E97C5045}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21181432-FA87-467C-8944-CE8436C6669E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21181432-FA87-467C-8944-CE8436C6669E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21181432-FA87-467C-8944-CE8436C6669E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21181432-FA87-467C-8944-CE8436C6669E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EC115CE-0B76-4A35-A52B-C6F8E97C5045}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EC115CE-0B76-4A35-A52B-C6F8E97C5045}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EC115CE-0B76-4A35-A52B-C6F8E97C5045}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EC115CE-0B76-4A35-A52B-C6F8E97C5045}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{21181432-FA87-467C-8944-CE8436C6669E} = {4262A927-DE13-4AF0-AEBB-890BC8FA0C13}
+		{9EC115CE-0B76-4A35-A52B-C6F8E97C5045} = {0023288C-8539-4196-9B43-269B98564E14}
+	EndGlobalSection
+EndGlobal

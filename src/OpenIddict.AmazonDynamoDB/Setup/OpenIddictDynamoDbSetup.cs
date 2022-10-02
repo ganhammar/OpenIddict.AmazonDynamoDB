@@ -5,13 +5,13 @@ namespace OpenIddict.AmazonDynamoDB;
 
 public static class OpenIddictDynamoDbSetup
 {
-    public static void EnsureInitialized(ServiceProvider services)
+    public static void EnsureInitialized(IServiceProvider services)
     {
         EnsureInitialized(services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>());
     }
 
     public static async Task EnsureInitializedAsync(
-        ServiceProvider services,
+        IServiceProvider services,
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(

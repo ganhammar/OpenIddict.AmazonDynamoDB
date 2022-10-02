@@ -53,16 +53,12 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     {
         ArgumentNullException.ThrowIfNull(authorization);
 
-        cancellationToken.ThrowIfCancellationRequested();
-
         await _context.SaveAsync(authorization, cancellationToken);
     }
 
     public async ValueTask DeleteAsync(TAuthorization authorization, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(authorization);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         await _context.DeleteAsync(authorization, cancellationToken);
     }
@@ -359,6 +355,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         throw new NotSupportedException();
     }
 
+    // TODO: User DynamoDB expirations instead
     public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
         // Get all authorizations which is older than threshold

@@ -53,8 +53,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     {
         ArgumentNullException.ThrowIfNull(application);
 
-        cancellationToken.ThrowIfCancellationRequested();
-
         await _context.SaveAsync(application, cancellationToken);
         await SaveRedirectUris(application, cancellationToken);
     }
@@ -99,8 +97,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     public async ValueTask DeleteAsync(TApplication application, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(application);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         await _context.DeleteAsync(application, cancellationToken);
     }

@@ -53,16 +53,12 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     {
         ArgumentNullException.ThrowIfNull(token);
 
-        cancellationToken.ThrowIfCancellationRequested();
-
         await _context.SaveAsync(token, cancellationToken);
     }
 
     public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(token);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         await _context.DeleteAsync(token, cancellationToken);
     }
@@ -397,6 +393,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         throw new NotSupportedException();
     }
 
+    // TODO: User DynamoDB expirations instead
     public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
         // Get all tokens which is older than threshold

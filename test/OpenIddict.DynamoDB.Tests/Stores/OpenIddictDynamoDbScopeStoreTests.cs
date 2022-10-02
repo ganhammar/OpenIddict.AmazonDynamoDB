@@ -1397,7 +1397,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     }
 
     [Fact]
-    public async Task Should_ThrowException_When_ToUpdateScopeThatIsNull()
+    public async Task Should_ThrowException_When_TryingToUpdateScopeThatIsNull()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())
         {

@@ -99,8 +99,6 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     {
         ArgumentNullException.ThrowIfNull(scope);
 
-        cancellationToken.ThrowIfCancellationRequested();
-
         await _context.SaveAsync(scope, cancellationToken);
         await SaveResources(scope, cancellationToken);
     }
@@ -108,8 +106,6 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     public async ValueTask DeleteAsync(TScope scope, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(scope);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         await _context.DeleteAsync(scope, cancellationToken);
     }

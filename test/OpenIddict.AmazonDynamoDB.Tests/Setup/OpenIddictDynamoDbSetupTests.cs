@@ -128,6 +128,30 @@ public class OpenIddictDynamoDbSetupTests
     }
 
     [Fact]
+    public async Task Should_SetupTables_When_CalledSynchronouslyWithDatbaseInServiceProvider()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            services.AddSingleton<IAmazonDynamoDB>(database.Client);
+            CreateBuilder(services);
+
+            // Act
+            OpenIddictDynamoDbSetup.EnsureInitialized(services.BuildServiceProvider());
+
+            // Assert
+            var tableNames = await database.Client.ListTablesAsync();
+            Assert.Contains(Constants.DefaultApplicationRedirectsTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultApplicationTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultAuthorizationTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultScopeResourceTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultScopeTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultTokenTableName, tableNames.TableNames);
+        }
+    }
+
+    [Fact]
     public async Task Should_SetupTablesWithDifferentNames_When_OtherIsSpecified()
     {
         using (var database = DynamoDbLocalServerUtils.CreateDatabase())

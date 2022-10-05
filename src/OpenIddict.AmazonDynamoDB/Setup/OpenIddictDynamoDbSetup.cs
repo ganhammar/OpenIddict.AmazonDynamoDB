@@ -8,7 +8,11 @@ public static class OpenIddictDynamoDbSetup
 {
     public static void EnsureInitialized(IServiceProvider services)
     {
-        EnsureInitialized(services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>());
+        var database = services.GetService<IAmazonDynamoDB>();
+
+        EnsureInitialized(
+            services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>(),
+            database);
     }
 
     public static async Task EnsureInitializedAsync(
@@ -43,8 +47,10 @@ public static class OpenIddictDynamoDbSetup
         await Task.WhenAll(promises);
     }
 
-    public static void EnsureInitialized(IOptionsMonitor<OpenIddictDynamoDbOptions> openIddictDynamoDbOptions)
+    public static void EnsureInitialized(
+        IOptionsMonitor<OpenIddictDynamoDbOptions> openIddictDynamoDbOptions,
+        IAmazonDynamoDB? database = default)
     {
-        EnsureInitializedAsync(openIddictDynamoDbOptions).GetAwaiter().GetResult();
+        EnsureInitializedAsync(openIddictDynamoDbOptions, database).GetAwaiter().GetResult();
     }
 }

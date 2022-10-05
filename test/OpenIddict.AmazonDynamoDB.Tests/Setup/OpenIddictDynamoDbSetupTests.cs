@@ -1,3 +1,4 @@
+using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -87,6 +88,30 @@ public class OpenIddictDynamoDbSetupTests
             // Arrange
             var services = new ServiceCollection();
             CreateBuilder(services).UseDatabase(database.Client);
+
+            // Act
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(services.BuildServiceProvider());
+
+            // Assert
+            var tableNames = await database.Client.ListTablesAsync();
+            Assert.Contains(Constants.DefaultApplicationRedirectsTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultApplicationTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultAuthorizationTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultScopeResourceTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultScopeTableName, tableNames.TableNames);
+            Assert.Contains(Constants.DefaultTokenTableName, tableNames.TableNames);
+        }
+    }
+
+    [Fact]
+    public async Task Should_SetupTables_When_CalledAsynchronouslyWithDatbaseInServiceProvider()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            services.AddSingleton<IAmazonDynamoDB>(database.Client);
+            CreateBuilder(services);
 
             // Act
             await OpenIddictDynamoDbSetup.EnsureInitializedAsync(services.BuildServiceProvider());

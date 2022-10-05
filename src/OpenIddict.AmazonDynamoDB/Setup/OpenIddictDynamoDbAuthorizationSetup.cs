@@ -9,23 +9,27 @@ namespace OpenIddict.AmazonDynamoDB;
 public static class OpenIddictDynamoDbAuthorizationSetup
 {
     public static Task EnsureInitializedAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB? database = default,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions);
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions.Database);
+        var dynamoDb = database ?? options.Database;
 
-        if (openIddictDynamoDbOptions.AuthorizationsTableName != Constants.DefaultAuthorizationTableName)
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(dynamoDb);
+
+        if (options.AuthorizationsTableName != Constants.DefaultAuthorizationTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                openIddictDynamoDbOptions.AuthorizationsTableName, Constants.DefaultAuthorizationTableName));
+                options.AuthorizationsTableName, Constants.DefaultAuthorizationTableName));
         }
 
-        return SetupTable(openIddictDynamoDbOptions, cancellationToken);
+        return SetupTable(options, dynamoDb, cancellationToken);
     }
 
     private static async Task SetupTable(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         CancellationToken cancellationToken)
     {
         var authorizationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
@@ -37,7 +41,7 @@ public static class OpenIddictDynamoDbAuthorizationSetup
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -50,7 +54,7 @@ public static class OpenIddictDynamoDbAuthorizationSetup
                 {
                     new KeySchemaElement("Subject", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -64,7 +68,7 @@ public static class OpenIddictDynamoDbAuthorizationSetup
                     new KeySchemaElement("Subject", KeyType.HASH),
                     new KeySchemaElement("SearchKey", KeyType.RANGE),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -72,35 +76,37 @@ public static class OpenIddictDynamoDbAuthorizationSetup
             },
         };
 
-        var tableNames = await openIddictDynamoDbOptions.Database!.ListTablesAsync(cancellationToken);
+        var tableNames = await database.ListTablesAsync(cancellationToken);
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.AuthorizationsTableName))
+        if (!tableNames.TableNames.Contains(options.AuthorizationsTableName))
         {
             await CreateAuthorizationTableAsync(
-                openIddictDynamoDbOptions,
+                options,
+                database,
                 authorizationGlobalSecondaryIndexes,
                 cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database,
-                openIddictDynamoDbOptions.AuthorizationsTableName,
+                database,
+                options.AuthorizationsTableName,
                 authorizationGlobalSecondaryIndexes,
                 cancellationToken);
         }
     }
 
     private static async Task CreateAuthorizationTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.AuthorizationsTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.AuthorizationsTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -137,12 +143,12 @@ public static class OpenIddictDynamoDbAuthorizationSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.AuthorizationsTableName}");
+            throw new Exception($"Couldn't create table {options.AuthorizationsTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database,
-            openIddictDynamoDbOptions.AuthorizationsTableName,
+            database,
+            options.AuthorizationsTableName,
             cancellationToken);
     }
 }

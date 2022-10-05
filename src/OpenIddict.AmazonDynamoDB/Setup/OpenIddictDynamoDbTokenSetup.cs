@@ -9,23 +9,27 @@ namespace OpenIddict.AmazonDynamoDB;
 public static class OpenIddictDynamoDbTokenSetup
 {
     public static Task EnsureInitializedAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB? database = default,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions);
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions.Database);
+        var dynamoDb = database ?? options.Database;
 
-        if (openIddictDynamoDbOptions.TokensTableName != Constants.DefaultTokenTableName)
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(dynamoDb);
+
+        if (options.TokensTableName != Constants.DefaultTokenTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                openIddictDynamoDbOptions.TokensTableName, Constants.DefaultTokenTableName));
+                options.TokensTableName, Constants.DefaultTokenTableName));
         }
 
-        return SetupTable(openIddictDynamoDbOptions, cancellationToken);
+        return SetupTable(options, dynamoDb, cancellationToken);
     }
 
     private static async Task SetupTable(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         CancellationToken cancellationToken)
     {
         var tokenGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
@@ -38,7 +42,7 @@ public static class OpenIddictDynamoDbTokenSetup
                     new KeySchemaElement("Subject", KeyType.HASH),
                     new KeySchemaElement("SearchKey", KeyType.RANGE),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -51,7 +55,7 @@ public static class OpenIddictDynamoDbTokenSetup
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -64,7 +68,7 @@ public static class OpenIddictDynamoDbTokenSetup
                 {
                     new KeySchemaElement("AuthorizationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -77,7 +81,7 @@ public static class OpenIddictDynamoDbTokenSetup
                 {
                     new KeySchemaElement("ReferenceId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -85,35 +89,37 @@ public static class OpenIddictDynamoDbTokenSetup
             },
         };
 
-        var tableNames = await openIddictDynamoDbOptions.Database!.ListTablesAsync(cancellationToken);
+        var tableNames = await database.ListTablesAsync(cancellationToken);
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.TokensTableName))
+        if (!tableNames.TableNames.Contains(options.TokensTableName))
         {
             await CreateTokenTableAsync(
-                openIddictDynamoDbOptions,
+                options,
+                database,
                 tokenGlobalSecondaryIndexes,
                 cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database,
-                openIddictDynamoDbOptions.TokensTableName,
+                database,
+                options.TokensTableName,
                 tokenGlobalSecondaryIndexes,
                 cancellationToken);
         }
     }
 
     private static async Task CreateTokenTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.TokensTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.TokensTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -160,12 +166,12 @@ public static class OpenIddictDynamoDbTokenSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.TokensTableName}");
+            throw new Exception($"Couldn't create table {options.TokensTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database,
-            openIddictDynamoDbOptions.TokensTableName,
+            database,
+            options.TokensTableName,
             cancellationToken);
     }
 }

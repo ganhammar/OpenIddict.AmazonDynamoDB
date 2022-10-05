@@ -9,31 +9,35 @@ namespace OpenIddict.AmazonDynamoDB;
 public static class OpenIddictDynamoDbApplicationSetup
 {
     public static Task EnsureInitializedAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB? database = default,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions);
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions.Database);
+        var dynamoDb = database ?? options.Database;
 
-        if (openIddictDynamoDbOptions.ApplicationsTableName != Constants.DefaultApplicationTableName)
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(dynamoDb);
+
+        if (options.ApplicationsTableName != Constants.DefaultApplicationTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                openIddictDynamoDbOptions.ApplicationsTableName,
+                options.ApplicationsTableName,
                 Constants.DefaultApplicationTableName));
         }
 
-        if (openIddictDynamoDbOptions.ApplicationRedirectsTableName != Constants.DefaultApplicationRedirectsTableName)
+        if (options.ApplicationRedirectsTableName != Constants.DefaultApplicationRedirectsTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                openIddictDynamoDbOptions.ApplicationRedirectsTableName,
+                options.ApplicationRedirectsTableName,
                 Constants.DefaultApplicationRedirectsTableName));
         }
 
-        return SetupTables(openIddictDynamoDbOptions, cancellationToken);
+        return SetupTables(options, dynamoDb, cancellationToken);
     }
 
     private static async Task SetupTables(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         CancellationToken cancellationToken)
     {
         var applicationGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
@@ -45,7 +49,7 @@ public static class OpenIddictDynamoDbApplicationSetup
                 {
                     new KeySchemaElement("ClientId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -61,7 +65,7 @@ public static class OpenIddictDynamoDbApplicationSetup
                 {
                     new KeySchemaElement("ApplicationId", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -69,49 +73,51 @@ public static class OpenIddictDynamoDbApplicationSetup
             },
         };
 
-        var tableNames = await openIddictDynamoDbOptions.Database!.ListTablesAsync(cancellationToken);
+        var tableNames = await database.ListTablesAsync(cancellationToken);
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.ApplicationsTableName))
+        if (!tableNames.TableNames.Contains(options.ApplicationsTableName))
         {
             await CreateApplicationTableAsync(
-                openIddictDynamoDbOptions, applicationGlobalSecondaryIndexes, cancellationToken);
+                options, database, applicationGlobalSecondaryIndexes, cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database!,
-                openIddictDynamoDbOptions.ApplicationsTableName,
+                database,
+                options.ApplicationsTableName,
                 applicationGlobalSecondaryIndexes,
                 cancellationToken);
         }
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.ApplicationRedirectsTableName))
+        if (!tableNames.TableNames.Contains(options.ApplicationRedirectsTableName))
         {
             await CreateApplicationRedirectTableAsync(
-                openIddictDynamoDbOptions,
+                options,
+                database,
                 applicationRedirectGlobalSecondaryIndexes,
                 cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database!,
-                openIddictDynamoDbOptions.ApplicationRedirectsTableName,
+                database,
+                options.ApplicationRedirectsTableName,
                 applicationRedirectGlobalSecondaryIndexes,
                 cancellationToken);
         }
     }
 
     private static async Task CreateApplicationTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.ApplicationsTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.ApplicationsTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -138,25 +144,26 @@ public static class OpenIddictDynamoDbApplicationSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.ApplicationsTableName}");
+            throw new Exception($"Couldn't create table {options.ApplicationsTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database!,
-            openIddictDynamoDbOptions.ApplicationsTableName,
+            database,
+            options.ApplicationsTableName,
             cancellationToken);
     }
 
     private static async Task CreateApplicationRedirectTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.ApplicationRedirectsTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.ApplicationRedirectsTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -193,12 +200,12 @@ public static class OpenIddictDynamoDbApplicationSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.ApplicationRedirectsTableName}");
+            throw new Exception($"Couldn't create table {options.ApplicationRedirectsTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database!,
-            openIddictDynamoDbOptions.ApplicationRedirectsTableName,
+            database,
+            options.ApplicationRedirectsTableName,
             cancellationToken);
     }
 }

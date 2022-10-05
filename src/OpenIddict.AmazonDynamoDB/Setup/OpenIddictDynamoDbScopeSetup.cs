@@ -9,23 +9,27 @@ namespace OpenIddict.AmazonDynamoDB;
 public static class OpenIddictDynamoDbScopeSetup
 {
     public static Task EnsureInitializedAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB? database = default,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions);
-        ArgumentNullException.ThrowIfNull(openIddictDynamoDbOptions.Database);
+        var dynamoDb = database ?? options.Database;
 
-        if (openIddictDynamoDbOptions.ScopesTableName != Constants.DefaultScopeTableName)
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(dynamoDb);
+
+        if (options.ScopesTableName != Constants.DefaultScopeTableName)
         {
             AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-                openIddictDynamoDbOptions.ScopesTableName, Constants.DefaultScopeTableName));
+                options.ScopesTableName, Constants.DefaultScopeTableName));
         }
 
-        return SetupTables(openIddictDynamoDbOptions, cancellationToken);
+        return SetupTables(options, dynamoDb, cancellationToken);
     }
 
     private static async Task SetupTables(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         CancellationToken cancellationToken)
     {
         var scopeGlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
@@ -37,7 +41,7 @@ public static class OpenIddictDynamoDbScopeSetup
                 {
                     new KeySchemaElement("ScopeName", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -53,7 +57,7 @@ public static class OpenIddictDynamoDbScopeSetup
                 {
                     new KeySchemaElement("ScopeResource", KeyType.HASH),
                 },
-                ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
+                ProvisionedThroughput = options.ProvisionedThroughput,
                 Projection = new Projection
                 {
                     ProjectionType = ProjectionType.ALL,
@@ -61,51 +65,54 @@ public static class OpenIddictDynamoDbScopeSetup
             },
         };
 
-        var tableNames = await openIddictDynamoDbOptions.Database!.ListTablesAsync(cancellationToken);
+        var tableNames = await database.ListTablesAsync(cancellationToken);
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.ScopesTableName))
+        if (!tableNames.TableNames.Contains(options.ScopesTableName))
         {
             await CreateScopeTableAsync(
-                openIddictDynamoDbOptions,
+                options,
+                database,
                 scopeGlobalSecondaryIndexes,
                 cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database,
-                openIddictDynamoDbOptions.ScopesTableName,
+                database,
+                options.ScopesTableName,
                 scopeGlobalSecondaryIndexes,
                 cancellationToken);
         }
 
-        if (!tableNames.TableNames.Contains(openIddictDynamoDbOptions.ScopeResourcesTableName))
+        if (!tableNames.TableNames.Contains(options.ScopeResourcesTableName))
         {
             await CreateScopeResourceTableAsync(
-                openIddictDynamoDbOptions,
+                options,
+                database,
                 scopeResourceGlobalSecondaryIndex,
                 cancellationToken);
         }
         else
         {
             await DynamoDbUtils.UpdateSecondaryIndexes(
-                openIddictDynamoDbOptions.Database,
-                openIddictDynamoDbOptions.ScopeResourcesTableName,
+                database,
+                options.ScopeResourcesTableName,
                 scopeResourceGlobalSecondaryIndex,
                 cancellationToken);
         }
     }
 
     private static async Task CreateScopeTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.ScopesTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.ScopesTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -132,25 +139,26 @@ public static class OpenIddictDynamoDbScopeSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.ScopesTableName}");
+            throw new Exception($"Couldn't create table {options.ScopesTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database,
-            openIddictDynamoDbOptions.ScopesTableName,
+            database,
+            options.ScopesTableName,
             cancellationToken);
     }
 
     private static async Task CreateScopeResourceTableAsync(
-        OpenIddictDynamoDbOptions openIddictDynamoDbOptions,
+        OpenIddictDynamoDbOptions options,
+        IAmazonDynamoDB database,
         List<GlobalSecondaryIndex>? globalSecondaryIndexes,
         CancellationToken cancellationToken)
     {
-        var response = await openIddictDynamoDbOptions.Database!.CreateTableAsync(new CreateTableRequest
+        var response = await database.CreateTableAsync(new CreateTableRequest
         {
-            TableName = openIddictDynamoDbOptions.ScopeResourcesTableName,
-            ProvisionedThroughput = openIddictDynamoDbOptions.ProvisionedThroughput,
-            BillingMode = openIddictDynamoDbOptions.BillingMode,
+            TableName = options.ScopeResourcesTableName,
+            ProvisionedThroughput = options.ProvisionedThroughput,
+            BillingMode = options.BillingMode,
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement
@@ -182,12 +190,12 @@ public static class OpenIddictDynamoDbScopeSetup
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
-            throw new Exception($"Couldn't create table {openIddictDynamoDbOptions.ScopeResourcesTableName}");
+            throw new Exception($"Couldn't create table {options.ScopeResourcesTableName}");
         }
 
         await DynamoDbUtils.WaitForActiveTableAsync(
-            openIddictDynamoDbOptions.Database,
-            openIddictDynamoDbOptions.ScopeResourcesTableName,
+            database,
+            options.ScopeResourcesTableName,
             cancellationToken);
     }
 }

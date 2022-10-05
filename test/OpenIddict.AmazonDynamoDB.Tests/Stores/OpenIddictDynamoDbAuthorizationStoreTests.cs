@@ -32,7 +32,29 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
             var exception = Assert.Throws<ArgumentNullException>(() =>
                 new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(TestUtils.GetOptions(new())));
 
-            Assert.Equal("_openIddictDynamoDbOptions.Database", exception.ParamName);
+            Assert.Equal("Database", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var options = TestUtils.GetOptions(new());
+            var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options, database.Client);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, database.Client);
+
+            // Act
+            await authorizationStore.CreateAsync(new(), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultAuthorizationTableName,
+            });
+            Assert.Equal(1, response.Table.ItemCount);
         }
     }
 

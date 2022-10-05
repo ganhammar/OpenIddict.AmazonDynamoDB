@@ -1,3 +1,4 @@
+using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -14,25 +15,29 @@ public static class OpenIddictDynamoDbSetup
         IServiceProvider services,
         CancellationToken cancellationToken = default)
     {
+        var database = services.GetService<IAmazonDynamoDB>();
+
         await EnsureInitializedAsync(
             services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>(),
+            database,
             cancellationToken);
     }
 
     public static async Task EnsureInitializedAsync(
         IOptionsMonitor<OpenIddictDynamoDbOptions> openIddictDynamoDbOptions,
+        IAmazonDynamoDB? database = default,
         CancellationToken cancellationToken = default)
     {
         var promises = new[]
         {
             OpenIddictDynamoDbApplicationSetup.EnsureInitializedAsync(
-                openIddictDynamoDbOptions.CurrentValue),
+                openIddictDynamoDbOptions.CurrentValue, database),
             OpenIddictDynamoDbAuthorizationSetup.EnsureInitializedAsync(
-                openIddictDynamoDbOptions.CurrentValue),
+                openIddictDynamoDbOptions.CurrentValue, database),
             OpenIddictDynamoDbTokenSetup.EnsureInitializedAsync(
-                openIddictDynamoDbOptions.CurrentValue),
+                openIddictDynamoDbOptions.CurrentValue, database),
             OpenIddictDynamoDbScopeSetup.EnsureInitializedAsync(
-                openIddictDynamoDbOptions.CurrentValue)
+                openIddictDynamoDbOptions.CurrentValue, database)
         };
 
         await Task.WhenAll(promises);

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
@@ -31,7 +32,29 @@ public class OpenIddictDynamoDbScopeStoreTests
             var exception = Assert.Throws<ArgumentNullException>(() =>
                 new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(TestUtils.GetOptions(new())));
 
-            Assert.Equal("_openIddictDynamoDbOptions.Database", exception.ParamName);
+            Assert.Equal("Database", exception.ParamName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
+    {
+        using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+        {
+            // Arrange
+            var options = TestUtils.GetOptions(new());
+            var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options, database.Client);
+            await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, database.Client);
+
+            // Act
+            await scopeStore.CreateAsync(new(), CancellationToken.None);
+
+            // Assert
+            var response = await database.Client.DescribeTableAsync(new DescribeTableRequest
+            {
+                TableName = Constants.DefaultScopeTableName,
+            });
+            Assert.Equal(1, response.Table.ItemCount);
         }
     }
 

@@ -19,18 +19,21 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 {
     private IAmazonDynamoDB _client;
     private IDynamoDBContext _context;
-    private IOptionsMonitor<OpenIddictDynamoDbOptions> _optionsMonitor;
-    private OpenIddictDynamoDbOptions _openIddictDynamoDbOptions => _optionsMonitor.CurrentValue;
 
-    public OpenIddictDynamoDbAuthorizationStore(IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor)
+    public OpenIddictDynamoDbAuthorizationStore(
+        IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
+        IAmazonDynamoDB? database = default)
     {
         ArgumentNullException.ThrowIfNull(optionsMonitor);
 
-        _optionsMonitor = optionsMonitor;
+        var options = optionsMonitor.CurrentValue;
 
-        ArgumentNullException.ThrowIfNull(_openIddictDynamoDbOptions.Database);
+        if (options.Database == default && database == default)
+        {
+            throw new ArgumentNullException(nameof(options.Database));
+        }
 
-        _client = _openIddictDynamoDbOptions.Database;
+        _client = database ?? options.Database!;
         _context = new DynamoDBContext(_client);
     }
 

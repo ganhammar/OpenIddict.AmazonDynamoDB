@@ -27,7 +27,7 @@ public class OpenIddictDynamoDbScopeStoreResolver : IOpenIddictScopeStoreResolve
                 throw new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0259));
             }
 
-            return typeof(IOpenIddictScopeStore<>).MakeGenericType(key);
+            return typeof(OpenIddictDynamoDbScopeStore<>).MakeGenericType(key);
         });
 
         return (IOpenIddictScopeStore<TScope>) _provider.GetRequiredService(type);

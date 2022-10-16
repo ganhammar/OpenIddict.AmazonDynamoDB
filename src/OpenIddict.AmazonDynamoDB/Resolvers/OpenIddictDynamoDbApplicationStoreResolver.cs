@@ -27,7 +27,7 @@ public class OpenIddictDynamoDbApplicationStoreResolver : IOpenIddictApplication
                 throw new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0257));
             }
 
-            return typeof(IOpenIddictApplicationStore<>).MakeGenericType(key);
+            return typeof(OpenIddictDynamoDbApplicationStore<>).MakeGenericType(key);
         });
 
         return (IOpenIddictApplicationStore<TApplication>) _provider.GetRequiredService(type);

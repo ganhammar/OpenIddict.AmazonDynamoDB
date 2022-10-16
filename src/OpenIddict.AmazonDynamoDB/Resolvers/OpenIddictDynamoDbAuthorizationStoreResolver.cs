@@ -27,7 +27,7 @@ public class OpenIddictDynamoDbAuthorizationStoreResolver : IOpenIddictAuthoriza
                 throw new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0258));
             }
 
-            return typeof(IOpenIddictAuthorizationStore<>).MakeGenericType(key);
+            return typeof(OpenIddictDynamoDbAuthorizationStore<>).MakeGenericType(key);
         });
 
         return (IOpenIddictAuthorizationStore<TAuthorization>) _provider.GetRequiredService(type);

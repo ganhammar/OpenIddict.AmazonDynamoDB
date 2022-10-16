@@ -86,7 +86,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
                 ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
                 {
                     { ":scopeId", scopeId },
-                }
+                },
             },
         });
 
@@ -136,9 +136,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
                 ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
                 {
                     { ":name", name },
-                }
+                },
             },
-            Limit = 1
+            Limit = 1,
         });
         var scopes = await search.GetRemainingAsync(cancellationToken);
         var scope = scopes?.FirstOrDefault();
@@ -202,7 +202,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
                     ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
                     {
                         { ":resource", resource },
-                    }
+                    },
                 },
             });
 

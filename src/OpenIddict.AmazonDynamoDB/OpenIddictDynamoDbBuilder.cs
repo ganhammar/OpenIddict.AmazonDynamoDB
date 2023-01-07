@@ -7,113 +7,113 @@ using OpenIddict.Core;
 namespace OpenIddict.AmazonDynamoDB;
 public class OpenIddictDynamoDbBuilder
 {
-    public OpenIddictDynamoDbBuilder(IServiceCollection services)
-        => Services = services ?? throw new ArgumentNullException(nameof(services));
+  public OpenIddictDynamoDbBuilder(IServiceCollection services)
+    => Services = services ?? throw new ArgumentNullException(nameof(services));
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public IServiceCollection Services { get; }
+  [EditorBrowsable(EditorBrowsableState.Never)]
+  public IServiceCollection Services { get; }
 
-    public OpenIddictDynamoDbBuilder Configure(Action<OpenIddictDynamoDbOptions> configuration)
-    {
-        ArgumentNullException.ThrowIfNull(configuration);
+  public OpenIddictDynamoDbBuilder Configure(Action<OpenIddictDynamoDbOptions> configuration)
+  {
+    ArgumentNullException.ThrowIfNull(configuration);
 
-        Services.Configure(configuration);
+    Services.Configure(configuration);
 
-        return this;
-    }
+    return this;
+  }
 
-    public OpenIddictDynamoDbBuilder ReplaceDefaultApplicationEntity<TApplication>()
-        where TApplication : OpenIddictDynamoDbApplication
-    {
-        Services.Configure<OpenIddictCoreOptions>(options => options.DefaultApplicationType = typeof(TApplication));
+  public OpenIddictDynamoDbBuilder ReplaceDefaultApplicationEntity<TApplication>()
+    where TApplication : OpenIddictDynamoDbApplication
+  {
+    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultApplicationType = typeof(TApplication));
 
-        return this;
-    }
+    return this;
+  }
 
-    public OpenIddictDynamoDbBuilder ReplaceDefaultAuthorizationEntity<TAuthorization>()
-        where TAuthorization : OpenIddictDynamoDbAuthorization
-    {
-        Services.Configure<OpenIddictCoreOptions>(options => options.DefaultAuthorizationType = typeof(TAuthorization));
+  public OpenIddictDynamoDbBuilder ReplaceDefaultAuthorizationEntity<TAuthorization>()
+    where TAuthorization : OpenIddictDynamoDbAuthorization
+  {
+    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultAuthorizationType = typeof(TAuthorization));
 
-        return this;
-    }
+    return this;
+  }
 
-    public OpenIddictDynamoDbBuilder ReplaceDefaultScopeEntity<TScope>()
-        where TScope : OpenIddictDynamoDbScope
-    {
-        Services.Configure<OpenIddictCoreOptions>(options => options.DefaultScopeType = typeof(TScope));
+  public OpenIddictDynamoDbBuilder ReplaceDefaultScopeEntity<TScope>()
+    where TScope : OpenIddictDynamoDbScope
+  {
+    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultScopeType = typeof(TScope));
 
-        return this;
-    }
+    return this;
+  }
 
-    public OpenIddictDynamoDbBuilder ReplaceDefaultTokenEntity<TToken>()
-        where TToken : OpenIddictDynamoDbToken
-    {
-        Services.Configure<OpenIddictCoreOptions>(options => options.DefaultTokenType = typeof(TToken));
+  public OpenIddictDynamoDbBuilder ReplaceDefaultTokenEntity<TToken>()
+    where TToken : OpenIddictDynamoDbToken
+  {
+    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultTokenType = typeof(TToken));
 
-        return this;
-    }
+    return this;
+  }
 
-    public OpenIddictDynamoDbBuilder SetApplicationsTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetApplicationsTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.ApplicationsTableName = name);
-    }
+    return Configure(options => options.ApplicationsTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder SetApplicationRedirectsTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetApplicationRedirectsTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.ApplicationRedirectsTableName = name);
-    }
+    return Configure(options => options.ApplicationRedirectsTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder SetAuthorizationsTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetAuthorizationsTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.AuthorizationsTableName = name);
-    }
+    return Configure(options => options.AuthorizationsTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder SetScopesTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetScopesTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.ScopesTableName = name);
-    }
+    return Configure(options => options.ScopesTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder SetScopeResourcesTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetScopeResourcesTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.ScopeResourcesTableName = name);
-    }
+    return Configure(options => options.ScopeResourcesTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder SetTokensTableName(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
+  public OpenIddictDynamoDbBuilder SetTokensTableName(string name)
+  {
+    ArgumentNullException.ThrowIfNull(name);
 
-        return Configure(options => options.TokensTableName = name);
-    }
+    return Configure(options => options.TokensTableName = name);
+  }
 
-    public OpenIddictDynamoDbBuilder UseDatabase(IAmazonDynamoDB database)
-    {
-        ArgumentNullException.ThrowIfNull(database);
+  public OpenIddictDynamoDbBuilder UseDatabase(IAmazonDynamoDB database)
+  {
+    ArgumentNullException.ThrowIfNull(database);
 
-        return Configure(options => options.Database = database);
-    }
+    return Configure(options => options.Database = database);
+  }
 
-    public OpenIddictDynamoDbBuilder SetBillingMode(BillingMode billingMode)
-    {
-        ArgumentNullException.ThrowIfNull(billingMode);
+  public OpenIddictDynamoDbBuilder SetBillingMode(BillingMode billingMode)
+  {
+    ArgumentNullException.ThrowIfNull(billingMode);
 
-        return Configure(options => options.BillingMode = billingMode);
-    }
+    return Configure(options => options.BillingMode = billingMode);
+  }
 
-    public OpenIddictDynamoDbBuilder SetProvisionedThroughput(ProvisionedThroughput provisionedThroughput)
-    {
-        ArgumentNullException.ThrowIfNull(provisionedThroughput);
+  public OpenIddictDynamoDbBuilder SetProvisionedThroughput(ProvisionedThroughput provisionedThroughput)
+  {
+    ArgumentNullException.ThrowIfNull(provisionedThroughput);
 
-        return Configure(options => options.ProvisionedThroughput = provisionedThroughput);
-    }
+    return Configure(options => options.ProvisionedThroughput = provisionedThroughput);
+  }
 }

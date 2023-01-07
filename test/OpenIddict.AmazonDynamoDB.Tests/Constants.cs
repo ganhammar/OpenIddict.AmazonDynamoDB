@@ -1,4 +1,4 @@
-﻿namespace OpenIddict.AmazonDynamoDB;
+﻿namespace OpenIddict.AmazonDynamoDB.Tests;
 
 internal class Constants
 {

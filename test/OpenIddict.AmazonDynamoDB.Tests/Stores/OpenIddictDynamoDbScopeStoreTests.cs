@@ -19,7 +19,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   {
     // Arrange, Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(null!));
+      new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(null!));
 
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
@@ -29,7 +29,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   {
     // Arrange, Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(TestUtils.GetOptions(new())));
+      new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(TestUtils.GetOptions(new())));
 
     Assert.Equal("Database", exception.ParamName);
   }
@@ -38,16 +38,19 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
+    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new());
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
-    await scopeStore.CreateAsync(new(), CancellationToken.None);
+    var scope = new OpenIddictDynamoDbScope();
+    await scopeStore.CreateAsync(scope, CancellationToken.None);
 
     // Assert
-    var count = await scopeStore.CountAsync(CancellationToken.None);
-    Assert.Equal(1, count);
+    var databaseToken = await context.LoadAsync<OpenIddictDynamoDbScope>(
+      scope.PartitionKey, scope.SortKey);
+    Assert.NotNull(databaseToken);
   }
 
   [Fact]
@@ -60,7 +63,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
-        await scopeStore.CountAsync<int>(default!, CancellationToken.None));
+      await scopeStore.CountAsync<int>(default!, CancellationToken.None));
   }
 
   [Fact]
@@ -73,7 +76,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
-        scopeStore.ListAsync<int, int>(default!, default, CancellationToken.None));
+      scopeStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
   [Fact]
@@ -86,39 +89,25 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
-        await scopeStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
+      await scopeStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
   }
 
   [Fact]
-  public async Task Should_ReturnZero_When_CountingScopesInEmptyDatabase()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act
-    var count = await scopeStore.CountAsync(CancellationToken.None);
-
-    // Assert
-    Assert.Equal(0, count);
-  }
-
-  [Fact]
-  public async Task Should_ReturnOne_When_CountingScopesAfterCreatingOne()
+  public async Task Should_IncreaseCount_When_CountingScopesAfterCreatingOne()
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
+    var originalCount = await scopeStore.CountAsync(CancellationToken.None);
     await scopeStore.CreateAsync(scope, CancellationToken.None);
 
     // Act
     var count = await scopeStore.CountAsync(CancellationToken.None);
 
     // Assert
-    Assert.Equal(1, count);
+    Assert.Equal(originalCount + 1, count);
   }
 
   [Fact]
@@ -131,7 +120,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.CreateAsync(default!, CancellationToken.None));
+      await scopeStore.CreateAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -167,7 +156,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.DeleteAsync(default!, CancellationToken.None));
+      await scopeStore.DeleteAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -200,7 +189,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.FindByIdAsync(default!, CancellationToken.None));
+      await scopeStore.FindByIdAsync(default!, CancellationToken.None));
     Assert.Equal("identifier", exception.ParamName);
   }
 
@@ -237,7 +226,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.FindByNameAsync(default!, CancellationToken.None));
+      await scopeStore.FindByNameAsync(default!, CancellationToken.None));
     Assert.Equal("name", exception.ParamName);
   }
 
@@ -274,7 +263,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        scopeStore.FindByNamesAsync(default!, CancellationToken.None));
+      scopeStore.FindByNamesAsync(default!, CancellationToken.None));
     Assert.Equal("names", exception.ParamName);
   }
 
@@ -289,7 +278,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     // Act & Assert
     var names = Enumerable.Range(0, 101).Select(index => index.ToString()).ToImmutableArray();
     var exception = Assert.Throws<NotSupportedException>(() =>
-        scopeStore.FindByNamesAsync(names, CancellationToken.None));
+      scopeStore.FindByNamesAsync(names, CancellationToken.None));
   }
 
   [Fact]
@@ -302,7 +291,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        scopeStore.FindByResourceAsync(default!, CancellationToken.None));
+      scopeStore.FindByResourceAsync(default!, CancellationToken.None));
     Assert.Equal("resource", exception.ParamName);
   }
 
@@ -315,7 +304,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
-    var resource = "some-resource";
+    var resource = $"some-resource-{Guid.NewGuid()}";
     await scopeStore.CreateAsync(new OpenIddictDynamoDbScope
     {
       Resources = new List<string>
@@ -380,7 +369,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetDisplayNameAsync(default!, CancellationToken.None));
+      await scopeStore.GetDisplayNameAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -416,7 +405,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetDisplayNamesAsync(default!, CancellationToken.None));
+      await scopeStore.GetDisplayNamesAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -449,11 +438,11 @@ public class OpenIddictDynamoDbScopeStoreTests
     var scope = new OpenIddictDynamoDbScope
     {
       DisplayNames = new Dictionary<string, string>
-                {
-                    { "sv-SE", "Testar" },
-                    { "es-ES", "Testado" },
-                    { "en-US", "Testing" },
-                },
+      {
+        { "sv-SE", "Testar" },
+        { "es-ES", "Testado" },
+        { "en-US", "Testing" },
+      },
     };
     await scopeStore.CreateAsync(scope, CancellationToken.None);
 
@@ -474,7 +463,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetDescriptionAsync(default!, CancellationToken.None));
+      await scopeStore.GetDescriptionAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -510,7 +499,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetDescriptionsAsync(default!, CancellationToken.None));
+      await scopeStore.GetDescriptionsAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -543,11 +532,11 @@ public class OpenIddictDynamoDbScopeStoreTests
     var scope = new OpenIddictDynamoDbScope
     {
       Descriptions = new Dictionary<string, string>
-                {
-                    { "sv-SE", "Testar" },
-                    { "es-ES", "Testado" },
-                    { "en-US", "Testing" },
-                },
+      {
+        { "sv-SE", "Testar" },
+        { "es-ES", "Testado" },
+        { "en-US", "Testing" },
+      },
     };
     await scopeStore.CreateAsync(scope, CancellationToken.None);
 
@@ -568,7 +557,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetNameAsync(default!, CancellationToken.None));
+      await scopeStore.GetNameAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -604,7 +593,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetIdAsync(default!, CancellationToken.None));
+      await scopeStore.GetIdAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -640,7 +629,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetPropertiesAsync(default!, CancellationToken.None));
+      await scopeStore.GetPropertiesAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -657,8 +646,8 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var properties = await scopeStore.GetPropertiesAsync(
-        scope,
-        CancellationToken.None);
+      scope,
+      CancellationToken.None);
 
     // Assert
     Assert.Empty(properties);
@@ -680,8 +669,8 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var properties = await scopeStore.GetPropertiesAsync(
-        scope,
-        CancellationToken.None);
+      scope,
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(properties);
@@ -698,7 +687,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.GetResourcesAsync(default!, CancellationToken.None));
+      await scopeStore.GetResourcesAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -715,8 +704,8 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var resources = await scopeStore.GetResourcesAsync(
-        scope,
-        CancellationToken.None);
+      scope,
+      CancellationToken.None);
 
     // Assert
     Assert.Empty(resources);
@@ -733,11 +722,11 @@ public class OpenIddictDynamoDbScopeStoreTests
     var scope = new OpenIddictDynamoDbScope
     {
       Resources = new List<string>
-                {
-                    "Thing",
-                    "Other-Thing",
-                    "More-Things",
-                },
+      {
+        "Thing",
+        "Other-Thing",
+        "More-Things",
+      },
     };
     await scopeStore.CreateAsync(scope, CancellationToken.None);
 
@@ -777,12 +766,15 @@ public class OpenIddictDynamoDbScopeStoreTests
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     var scopeCount = 10;
+    var scopeIds = new List<string>();
     foreach (var index in Enumerable.Range(0, scopeCount))
     {
-      await scopeStore.CreateAsync(new OpenIddictDynamoDbScope
+      var scope = new OpenIddictDynamoDbScope
       {
         DisplayName = index.ToString(),
-      }, CancellationToken.None);
+      };
+      await scopeStore.CreateAsync(scope, CancellationToken.None);
+      scopeIds.Add(scope.Id);
     }
 
     // Act
@@ -794,7 +786,8 @@ public class OpenIddictDynamoDbScopeStoreTests
     {
       matchedScopes.Add(scope);
     }
-    Assert.Equal(scopeCount, matchedScopes.Count);
+    Assert.True(matchedScopes.Count >= scopeCount);
+    Assert.False(scopeIds.Except(matchedScopes.Select(x => x.Id)).Any());
   }
 
   [Fact]
@@ -877,7 +870,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
-        scopeStore.ListAsync(5, 5, CancellationToken.None));
+      scopeStore.ListAsync(5, 5, CancellationToken.None));
   }
 
   [Fact]
@@ -890,7 +883,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetDescriptionAsync(default!, default, CancellationToken.None));
+      await scopeStore.SetDescriptionAsync(default!, default, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -922,7 +915,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetDisplayNameAsync(default!, default, CancellationToken.None));
+      await scopeStore.SetDisplayNameAsync(default!, default, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -954,7 +947,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetNameAsync(default!, default, CancellationToken.None));
+      await scopeStore.SetNameAsync(default!, default, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -986,7 +979,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
+      await scopeStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1003,9 +996,9 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     await scopeStore.SetPropertiesAsync(
-        scope,
-        default!,
-        CancellationToken.None);
+      scope,
+      default!,
+      CancellationToken.None);
 
     // Assert
     Assert.Null(scope.Properties);
@@ -1024,15 +1017,15 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var properties = new Dictionary<string, JsonElement>
-            {
-                { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-                { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-                { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-            };
+    {
+      { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+      { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+      { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+    };
     await scopeStore.SetPropertiesAsync(
-        scope,
-        properties.ToImmutableDictionary(x => x.Key, x => x.Value),
-        CancellationToken.None);
+      scope,
+      properties.ToImmutableDictionary(x => x.Key, x => x.Value),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(scope.Properties);
@@ -1048,7 +1041,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetDisplayNamesAsync(default!, default!, CancellationToken.None));
+      await scopeStore.SetDisplayNamesAsync(default!, default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1065,9 +1058,9 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     await scopeStore.SetDisplayNamesAsync(
-        scope,
-        ImmutableDictionary.Create<CultureInfo, string>(),
-        CancellationToken.None);
+      scope,
+      ImmutableDictionary.Create<CultureInfo, string>(),
+      CancellationToken.None);
 
     // Assert
     Assert.Null(scope.DisplayNames);
@@ -1086,15 +1079,15 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var displayNames = new Dictionary<CultureInfo, string>
-            {
-                { new CultureInfo("sv-SE"), "Testar" },
-                { new CultureInfo("es-ES"), "Testado" },
-                { new CultureInfo("en-US"), "Testing" },
-            };
+    {
+      { new CultureInfo("sv-SE"), "Testar" },
+      { new CultureInfo("es-ES"), "Testado" },
+      { new CultureInfo("en-US"), "Testing" },
+    };
     await scopeStore.SetDisplayNamesAsync(
-        scope,
-        displayNames.ToImmutableDictionary(x => x.Key, x => x.Value),
-        CancellationToken.None);
+      scope,
+      displayNames.ToImmutableDictionary(x => x.Key, x => x.Value),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(scope.DisplayNames);
@@ -1111,7 +1104,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetDescriptionsAsync(default!, default!, CancellationToken.None));
+      await scopeStore.SetDescriptionsAsync(default!, default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1128,9 +1121,9 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     await scopeStore.SetDescriptionsAsync(
-        scope,
-        ImmutableDictionary.Create<CultureInfo, string>(),
-        CancellationToken.None);
+      scope,
+      ImmutableDictionary.Create<CultureInfo, string>(),
+      CancellationToken.None);
 
     // Assert
     Assert.Null(scope.Descriptions);
@@ -1149,15 +1142,15 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var descriptions = new Dictionary<CultureInfo, string>
-            {
-                { new CultureInfo("sv-SE"), "Testar" },
-                { new CultureInfo("es-ES"), "Testado" },
-                { new CultureInfo("en-US"), "Testing" },
-            };
+    {
+      { new CultureInfo("sv-SE"), "Testar" },
+      { new CultureInfo("es-ES"), "Testado" },
+      { new CultureInfo("en-US"), "Testing" },
+    };
     await scopeStore.SetDescriptionsAsync(
-        scope,
-        descriptions.ToImmutableDictionary(x => x.Key, x => x.Value),
-        CancellationToken.None);
+      scope,
+      descriptions.ToImmutableDictionary(x => x.Key, x => x.Value),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(scope.Descriptions);
@@ -1174,7 +1167,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.SetResourcesAsync(default!, default!, CancellationToken.None));
+      await scopeStore.SetResourcesAsync(default!, default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1191,9 +1184,9 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     await scopeStore.SetResourcesAsync(
-        scope,
-        ImmutableArray.Create<string>(),
-        CancellationToken.None);
+      scope,
+      ImmutableArray.Create<string>(),
+      CancellationToken.None);
 
     // Assert
     Assert.Null(scope.Resources);
@@ -1212,15 +1205,15 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act
     var resources = new List<string>
-            {
-                "Testar",
-                "Testado",
-                "Testing",
-            };
+    {
+      "Testar",
+      "Testado",
+      "Testing",
+    };
     await scopeStore.SetResourcesAsync(
-        scope,
-        resources.ToImmutableArray(),
-        CancellationToken.None);
+      scope,
+      resources.ToImmutableArray(),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(scope.Resources);
@@ -1237,7 +1230,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await scopeStore.UpdateAsync(default!, CancellationToken.None));
+      await scopeStore.UpdateAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1251,7 +1244,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
-        await scopeStore.UpdateAsync(new OpenIddictDynamoDbScope(), CancellationToken.None));
+      await scopeStore.UpdateAsync(new OpenIddictDynamoDbScope(), CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1268,7 +1261,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     // Act & Assert
     scope.ConcurrencyToken = Guid.NewGuid().ToString();
     var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
-        await scopeStore.UpdateAsync(scope, CancellationToken.None));
+      await scopeStore.UpdateAsync(scope, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
   }
 
@@ -1304,18 +1297,18 @@ public class OpenIddictDynamoDbScopeStoreTests
     var scope = new OpenIddictDynamoDbScope
     {
       Resources = new List<string>
-                {
-                    "some-resource",
-                },
+      {
+        "some-resource",
+      },
     };
     await scopeStore.CreateAsync(scope, CancellationToken.None);
 
     // Act
     var resourceName = "some-new-resource";
     scope.Resources = new List<string>
-            {
-                resourceName,
-            };
+    {
+      resourceName,
+    };
     await scopeStore.UpdateAsync(scope, CancellationToken.None);
 
     // Assert

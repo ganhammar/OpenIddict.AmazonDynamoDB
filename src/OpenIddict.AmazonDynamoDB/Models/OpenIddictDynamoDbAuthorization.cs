@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbAuthorization
   [DynamoDBRangeKey]
   public string? SortKey
   {
-    get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
+    get => $"#AUTHORIZATION#{Id}";
     set { }
   }
   public virtual string Id { get; set; }
@@ -28,4 +28,9 @@ public class OpenIddictDynamoDbAuthorization
   public virtual string? Status { get; set; }
   public virtual string? Subject { get; set; }
   public virtual string? Type { get; set; }
+  public string? SearchKey
+  {
+    get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
+    set { }
+  }
 }

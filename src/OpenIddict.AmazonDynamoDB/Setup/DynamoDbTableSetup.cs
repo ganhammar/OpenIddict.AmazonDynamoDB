@@ -69,7 +69,7 @@ public static class DynamoDbTableSetup
           KeySchema = new List<KeySchemaElement>
           {
             new KeySchemaElement("Subject", KeyType.HASH),
-            new KeySchemaElement("SortKey", KeyType.RANGE),
+            new KeySchemaElement("SearchKey", KeyType.RANGE),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -160,6 +160,7 @@ public static class DynamoDbTableSetup
         new("ApplicationId", ScalarAttributeType.S),
         // Authorization
         new("Subject", ScalarAttributeType.S),
+        new("SearchKey", ScalarAttributeType.S),
         // Scope
         new("ScopeName", ScalarAttributeType.S),
         new("ScopeResource", ScalarAttributeType.S),

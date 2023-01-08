@@ -70,7 +70,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     await _context.SaveAsync(new CountModel(CountType.Authorization, count - 1), cancellationToken);
   }
 
-  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSortKey(string subject, string sortKey, CancellationToken cancellationToken)
+  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
   {
     return ExecuteAsync(cancellationToken);
 
@@ -81,11 +81,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         IndexName = "Subject-index",
         KeyExpression = new Expression
         {
-          ExpressionStatement = "Subject = :subject and begins_with(SortKey, :sortKey)",
+          ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
           ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
           {
             { ":subject", subject },
-            { ":sortKey", sortKey },
+            { ":searchKey", searchKey },
           }
         },
       });
@@ -105,7 +105,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(subject);
     ArgumentNullException.ThrowIfNull(client);
 
-    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}", cancellationToken);
+    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -115,7 +115,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(client);
     ArgumentNullException.ThrowIfNull(status);
 
-    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
+    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -126,7 +126,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(status);
     ArgumentNullException.ThrowIfNull(type);
 
-    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
+    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -151,7 +151,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var authorizations = FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
+      var authorizations = FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
 
       await foreach (var authorization in authorizations)
       {

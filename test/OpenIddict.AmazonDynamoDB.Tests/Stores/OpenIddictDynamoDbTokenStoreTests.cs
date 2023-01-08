@@ -38,16 +38,18 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
+    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new());
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
-    await tokenStore.CreateAsync(new(), CancellationToken.None);
+    var token = new OpenIddictDynamoDbToken();
+    await tokenStore.CreateAsync(token, CancellationToken.None);
 
     // Assert
-    var count = await tokenStore.CountAsync(CancellationToken.None);
-    Assert.True(count >= 1);
+    var databaseToken = await context.LoadAsync<OpenIddictDynamoDbToken>(token.PartitionKey, token.SortKey);
+    Assert.NotNull(databaseToken);
   }
 
   [Fact]
@@ -1810,11 +1812,12 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
+    var beforeCount = await tokenStore.CountAsync(CancellationToken.None);
     await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
 
     // Assert
     var count = await tokenStore.CountAsync(CancellationToken.None);
-    Assert.Equal(numberOfTokens, count);
+    Assert.Equal(beforeCount, count);
   }
 
   [Fact]
@@ -1844,11 +1847,12 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
+    var beforeCount = await tokenStore.CountAsync(CancellationToken.None);
     await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
 
     // Assert
     var count = await tokenStore.CountAsync(CancellationToken.None);
-    Assert.Equal(0, count);
+    Assert.Equal(beforeCount - 10, count);
   }
 
   [Fact]
@@ -1878,10 +1882,11 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
+    var beforeCount = await tokenStore.CountAsync(CancellationToken.None);
     await tokenStore.PruneAsync(DateTime.UtcNow.AddDays(-5), CancellationToken.None);
 
     // Assert
     var count = await tokenStore.CountAsync(CancellationToken.None);
-    Assert.Equal(5, count);
+    Assert.Equal(beforeCount - 5, count);
   }
 }

@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbToken
   [DynamoDBRangeKey]
   public string? SortKey
   {
-    get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
+    get => $"#TOKEN#{Id}";
     set { }
   }
   public virtual string? ApplicationId { get; set; }
@@ -31,4 +31,9 @@ public class OpenIddictDynamoDbToken
   public virtual string? Status { get; set; }
   public virtual string? Subject { get; set; }
   public virtual string? Type { get; set; }
+  public string? SearchKey
+  {
+    get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
+    set { }
+  }
 }

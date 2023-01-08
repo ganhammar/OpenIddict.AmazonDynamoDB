@@ -1,14 +1,19 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.DatabaseCollection)]
+[Collection(Constants.LocalDatabaseCollection)]
 public class OpenIddictDynamoDbScopeStoreTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbScopeStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
@@ -34,8 +39,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   {
     // Arrange
     var options = TestUtils.GetOptions(new());
-    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options, DatabaseFixture.Client);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, DatabaseFixture.Client);
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options, _client);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
     await scopeStore.CreateAsync(new(), CancellationToken.None);
@@ -49,7 +54,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -62,7 +67,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -75,7 +80,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -88,7 +93,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnZero_When_CountingScopesInEmptyDatabase()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -103,7 +108,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnOne_When_CountingScopesAfterCreatingOne()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -120,7 +125,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToCreateScopeThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -134,8 +139,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_CreateScope_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -156,7 +161,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToDeleteScopeThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -170,8 +175,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_DeleteScope_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -189,7 +194,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToFindScopeByIdAndIdentifierIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -203,8 +208,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnScope_When_FindingScopesBySubjectWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -226,7 +231,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToFindScopeByNameAndNameIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -240,8 +245,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnScope_When_FindingScopesByNameWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -263,7 +268,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToFindScopeByNamesAndNamesIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -277,7 +282,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToFindScopeByNamesAndNamesIsMoreThanAHundredItems()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -291,7 +296,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToFindScopeByResourceAndResourceIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -305,8 +310,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnScope_When_FindingScopesByResourceWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -336,8 +341,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -369,7 +374,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetDisplayNameAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -383,8 +388,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnDisplayName_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -405,7 +410,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetDisplayNamesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -419,8 +424,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnEmptyList_When_ScopeDoesntHaveAnyDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -437,8 +442,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnDisplayNames_When_ScopeHasDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -463,7 +468,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetDescriptionAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -477,8 +482,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnDescription_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -499,7 +504,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetDescriptionsAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -513,8 +518,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnEmptyList_When_ScopeDoesntHaveAnyDescriptions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -531,8 +536,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnDescriptions_When_ScopeHasDescriptions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -557,7 +562,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetNameAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -571,8 +576,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnName_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -593,7 +598,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetIdAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -607,8 +612,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnId_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -629,7 +634,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -643,8 +648,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -663,8 +668,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -687,7 +692,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToGetResourcesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -701,8 +706,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnEmptyDictionary_When_ResourcesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -721,8 +726,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnNonEmptyDictionary_When_ResourcesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope
@@ -750,8 +755,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnNewScope_When_CallingInstantiate()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -766,8 +771,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnList_When_ListingScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -796,8 +801,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnFirstFive_When_ListingScopesWithCount()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -826,8 +831,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ReturnLastFive_When_ListingScopesWithCountAndOffset()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -866,7 +871,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -879,7 +884,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetDescriptionAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -893,8 +898,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetDescription_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -911,7 +916,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetDisplayNameAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -925,8 +930,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetDisplayName_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -943,7 +948,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetNameAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -957,8 +962,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetName_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -975,7 +980,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -989,8 +994,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1010,8 +1015,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1037,7 +1042,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetDisplayNamesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1051,8 +1056,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1072,8 +1077,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetDisplayNames_When_SettingDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1100,7 +1105,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetDescriptionsAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1114,8 +1119,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDescriptions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1135,8 +1140,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetDescriptions_When_SettingDescriptions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1163,7 +1168,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToSetResourcesAndScopeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1177,8 +1182,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetNull_When_SetEmptyDictionaryAsResources()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1198,8 +1203,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_SetResources_When_SettingResources()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1226,7 +1231,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToUpdateScopeThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1240,7 +1245,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_TryingToUpdateScopeThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1254,7 +1259,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1271,8 +1276,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_UpdateScope_When_ScopeIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope();
@@ -1292,8 +1297,8 @@ public class OpenIddictDynamoDbScopeStoreTests
   public async Task Should_UpdateScopeWithResources_When_ResourcesIsSet()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var scope = new OpenIddictDynamoDbScope

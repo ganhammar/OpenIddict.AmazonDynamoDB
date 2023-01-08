@@ -4,23 +4,27 @@ using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.DatabaseCollection)]
+[Collection(Constants.RemoteDatabaseCollection)]
 public class OpenIddictDynamoDbSetupTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbSetupTests(DatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public async Task Should_SetupTables_When_CalledSynchronously()
   {
     // Arrange
     var options = TestUtils.GetOptions(new()
     {
-      Database = DatabaseFixture.Client,
+      Database = _client,
     });
 
     // Act
     OpenIddictDynamoDbSetup.EnsureInitialized(options);
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
@@ -29,13 +33,13 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    CreateBuilder(services).UseDatabase(DatabaseFixture.Client);
+    CreateBuilder(services).UseDatabase(_client);
 
     // Act
     OpenIddictDynamoDbSetup.EnsureInitialized(services.BuildServiceProvider());
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
@@ -45,14 +49,14 @@ public class OpenIddictDynamoDbSetupTests
     // Arrange
     var options = TestUtils.GetOptions(new()
     {
-      Database = DatabaseFixture.Client,
+      Database = _client,
     });
 
     // Act
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
@@ -61,13 +65,13 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    CreateBuilder(services).UseDatabase(DatabaseFixture.Client);
+    CreateBuilder(services).UseDatabase(_client);
 
     // Act
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(services.BuildServiceProvider());
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
@@ -76,14 +80,14 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton<IAmazonDynamoDB>(DatabaseFixture.Client);
+    services.AddSingleton<IAmazonDynamoDB>(_client);
     CreateBuilder(services);
 
     // Act
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(services.BuildServiceProvider());
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
@@ -92,14 +96,14 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton<IAmazonDynamoDB>(DatabaseFixture.Client);
+    services.AddSingleton<IAmazonDynamoDB>(_client);
     CreateBuilder(services);
 
     // Act
     OpenIddictDynamoDbSetup.EnsureInitialized(services.BuildServiceProvider());
 
     // Assert
-    var tableNames = await DatabaseFixture.Client.ListTablesAsync();
+    var tableNames = await _client.ListTablesAsync();
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 

@@ -1,14 +1,19 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.DatabaseCollection)]
+[Collection(Constants.LocalDatabaseCollection)]
 public class OpenIddictDynamoDbAuthorizationStoreTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbAuthorizationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
@@ -34,8 +39,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   {
     // Arrange
     var options = TestUtils.GetOptions(new());
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options, DatabaseFixture.Client);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, DatabaseFixture.Client);
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options, _client);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
     await authorizationStore.CreateAsync(new(), CancellationToken.None);
@@ -49,7 +54,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnZero_When_CountingAuthorizationsInEmptyDatabase()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -64,7 +69,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnOne_When_CountingAuthorizationsAfterCreatingOne()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -81,7 +86,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -94,7 +99,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToCreateAuthorizationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -108,8 +113,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_CreateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -131,7 +136,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToDeleteAuthorizationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -145,8 +150,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -168,7 +173,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -181,8 +186,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnList_When_ListingAuthorizations()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -211,8 +216,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnFirstFive_When_ListingAuthorizationsWithCount()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -241,8 +246,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnLastFive_When_ListingAuthorizationsWithCountAndOffset()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -281,7 +286,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -294,7 +299,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_ToUpdateAuthorizationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -308,7 +313,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToUpdateAuthorizationThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -322,7 +327,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -339,8 +344,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_UpdateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -361,7 +366,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetTypeAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -375,8 +380,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetType_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -393,7 +398,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetSubjectAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -407,8 +412,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetSubject_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -425,7 +430,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetStatusAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -439,8 +444,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetStatus_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -457,7 +462,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetScopesAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -471,8 +476,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -492,8 +497,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetScopes_When_SettingScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -520,7 +525,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -534,8 +539,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -555,8 +560,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -582,7 +587,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -596,8 +601,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -616,8 +621,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -640,7 +645,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetCreationDateAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -654,8 +659,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -672,7 +677,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToSetApplicationIdAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -686,8 +691,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -704,8 +709,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnNewApplication_When_CallingInstantiate()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -720,7 +725,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetTypeAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -734,8 +739,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnType_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -756,7 +761,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetSubjectAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -770,8 +775,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnSubject_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -792,7 +797,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetStatusAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -806,8 +811,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnStatus_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -828,7 +833,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetIdAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -842,8 +847,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -864,7 +869,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetCreationDateAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -878,8 +883,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -900,7 +905,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetApplicationIdAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -914,8 +919,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -936,7 +941,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -949,7 +954,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToGetScopesAndAuthorizationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -963,8 +968,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_AuthorizationDoesntHaveAnyScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
@@ -981,8 +986,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnScopes_When_AuthorizationHasScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
@@ -1007,7 +1012,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndSubjectIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1021,7 +1026,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndClientIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1035,8 +1040,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1056,8 +1061,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1086,7 +1091,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndSubjectIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1100,7 +1105,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndClientIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1114,7 +1119,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndStatusIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1128,8 +1133,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithStatusMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1160,7 +1165,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndSubjectIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1174,7 +1179,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndClientIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1188,7 +1193,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndStatusIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1202,7 +1207,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndTypeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1216,8 +1221,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithTypeMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1250,7 +1255,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndSubjectIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1270,7 +1275,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndClientIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1290,7 +1295,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndStatusIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1310,7 +1315,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndTypeIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1330,7 +1335,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndScopesIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1350,8 +1355,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithScopesMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1392,7 +1397,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationByApplicationIdAndIdentifierIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1406,8 +1411,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsByApplicationIdWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1428,8 +1433,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsByApplicationIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1461,7 +1466,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationBySubjectAndSubjectIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1475,8 +1480,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsBySubjectWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1497,8 +1502,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1530,7 +1535,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ThrowException_When_TryingToFindAuthorizationByIdAndIdentifierIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1544,8 +1549,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnAuthorization_When_FindingAuthorizationsByIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1567,8 +1572,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteAllAuthorizations_When_AllHasExpired()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1592,8 +1597,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreOldButValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1619,8 +1624,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteAllAuthorizations_When_TheyAreAdHocAndNoTokens()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1646,8 +1651,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreAdHocAndHaveTokens()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1684,8 +1689,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteSomeAuthorizations_When_SomeAreOutsideOfTheThresholdRange()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 

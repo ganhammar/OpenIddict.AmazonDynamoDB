@@ -5,11 +5,12 @@ namespace OpenIddict.AmazonDynamoDB.Tests;
 public class DatabaseFixture : IDisposable
 {
   public static readonly string TableName = Guid.NewGuid().ToString();
-  public static readonly AmazonDynamoDBClient Client = new();
+  public readonly AmazonDynamoDBClient Client;
   private bool _disposed;
 
-  public DatabaseFixture()
+  public DatabaseFixture(AmazonDynamoDBConfig? config = default)
   {
+    Client = new AmazonDynamoDBClient(config);
     CreateTable().GetAwaiter().GetResult();
     var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
   }

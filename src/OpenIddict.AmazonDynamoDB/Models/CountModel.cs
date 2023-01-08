@@ -6,7 +6,11 @@ namespace OpenIddict.AmazonDynamoDB;
 internal class CountModel
 {
   public CountModel() { }
-  public CountModel(CountType _type, long? count = default) => Type = _type;
+  public CountModel(CountType type, long? count = default)
+  {
+    Type = type;
+    Count = count ?? 0;
+  }
 
   [DynamoDBHashKey]
   public string PartitionKey

@@ -57,7 +57,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     await _context.SaveAsync(token, cancellationToken);
 
     var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Token, count + 1), cancellationToken);
+    var newCount = count + 1;
+    await _context.SaveAsync(new CountModel(CountType.Token, newCount), cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)

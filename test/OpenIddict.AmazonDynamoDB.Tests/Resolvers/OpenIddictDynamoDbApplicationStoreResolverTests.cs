@@ -1,13 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Amazon.DynamoDBv2;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.DatabaseCollection)]
+[Collection(Constants.LocalDatabaseCollection)]
 public class OpenIddictDynamoDbApplicationStoreResolverTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbApplicationStoreResolverTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public void Should_ReturnApplicationStore_When_ItHasBeenRegistered()
   {
@@ -18,7 +23,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
       OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>>();
     serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      Database = DatabaseFixture.Client,
+      Database = _client,
     }));
     var serviceProvider = serviceCollection.BuildServiceProvider();
     var resolver = new OpenIddictDynamoDbApplicationStoreResolver(serviceProvider);
@@ -61,7 +66,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
       OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>>();
     serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      Database = DatabaseFixture.Client,
+      Database = _client,
     }));
     var serviceProvider = serviceCollection.BuildServiceProvider();
     var resolver = new OpenIddictDynamoDbApplicationStoreResolver(serviceProvider);

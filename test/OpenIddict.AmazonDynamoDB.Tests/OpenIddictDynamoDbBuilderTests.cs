@@ -140,14 +140,15 @@ public class OpenIddictDynamoDbBuilderTests
   {
     // Arrange
     var services = new ServiceCollection();
+    var db = new AmazonDynamoDBClient();
 
     // Act
-    CreateBuilder(services).UseDatabase(DatabaseFixture.Client);
+    CreateBuilder(services).UseDatabase(db);
 
     // Assert
     var serviceProvider = services.BuildServiceProvider();
     var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal(DatabaseFixture.Client, options.Database);
+    Assert.Equal(db, options.Database);
   }
 
   [Fact]

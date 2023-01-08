@@ -2,5 +2,6 @@
 
 internal class Constants
 {
-  public const string DatabaseCollection = "DatabaseDependent";
+  public const string LocalDatabaseCollection = "LocalDatabaseDependent";
+  public const string RemoteDatabaseCollection = "RemoteDatabaseDependent";
 }

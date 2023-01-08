@@ -26,6 +26,8 @@ jobs:
           aws-region: eu-north-1
           role-to-assume: ${{ secrets.DEPLOY_ROLE }}
           role-session-name: OIDCSession
+      - name: Setup DynamoDB Local
+        run: docker run -d -p 8000:8000 amazon/dynamodb-local
 
       - name: Restore
         run: dotnet restore

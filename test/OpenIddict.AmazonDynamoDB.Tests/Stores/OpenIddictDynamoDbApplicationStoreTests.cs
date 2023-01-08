@@ -1,14 +1,19 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.DatabaseCollection)]
+[Collection(Constants.LocalDatabaseCollection)]
 public class OpenIddictDynamoDbApplicationStoreTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbApplicationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
@@ -34,8 +39,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   {
     // Arrange
     var options = TestUtils.GetOptions(new());
-    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options, DatabaseFixture.Client);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, DatabaseFixture.Client);
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options, _client);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
     await applicationStore.CreateAsync(new(), CancellationToken.None);
@@ -49,7 +54,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnZero_When_CountingApplicationsInEmptyDatabase()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -64,7 +69,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnOne_When_CountingApplicationsAfterCreatingOne()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -84,7 +89,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -97,7 +102,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToCreateApplicationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -111,8 +116,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_CreateApplication_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -134,7 +139,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToDeleteApplicationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -148,8 +153,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_DeleteApplication_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -171,7 +176,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToFindApplicationWithoutIdentifier()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -185,7 +190,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_NotThrowException_When_TryingToFindApplicationWithIdentifierThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -200,8 +205,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByExistingIdentifier()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -222,7 +227,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToFindApplicationByClientIdWithoutIdentifier()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -236,7 +241,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_NotThrowException_When_TryingToFindApplicationByClientIdWithIdentifierThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -251,8 +256,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByClientIdByExistingIdentifier()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -273,7 +278,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToFindApplicationByRedirectUriWithoutAddress()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -287,7 +292,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_NotThrowException_When_TryingToFindApplicationByRedirectUriWithAddressThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -307,8 +312,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByRedirectUriByExistingAddress()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var redirectUri = "http://test.com/test/redirect";
@@ -336,8 +341,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByRedirectUriByExistingAddressAmongOthers()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var redirectUri = "http://test.com/test/redirect";
@@ -370,7 +375,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToFindApplicationByPostLogoutRedirectUriWithoutAddress()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -384,7 +389,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_NotThrowException_When_TryingToFindApplicationByPostLogoutRedirectUriWithAddressThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -404,8 +409,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByPostLogoutRedirectUriByExistingAddress()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var redirectUri = "http://test.com/test/redirect";
@@ -433,8 +438,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByPostLogoutRedirectUriByExistingAddressAmongOthers()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var redirectUri = "http://test.com/test/redirect";
@@ -467,7 +472,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_ToUpdateApplicationThatIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -481,7 +486,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToUpdateApplicationThatDoesntExist()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -495,7 +500,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -512,8 +517,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_UpdateApplication_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -534,8 +539,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_UpdateApplicationWithRedirectUris_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -571,7 +576,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -584,7 +589,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetClientIdAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -598,8 +603,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnClientId_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -620,7 +625,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetClientSecretAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -634,8 +639,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnClientSecret_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -656,7 +661,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetClientTypeAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -670,8 +675,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnClientType_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -692,7 +697,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetConsentTypeAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -706,8 +711,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnConsentType_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -728,7 +733,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetDisplayNameAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -742,8 +747,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnDisplayName_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -764,7 +769,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetIdAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -778,8 +783,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnId_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -797,7 +802,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetClientIdAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -811,8 +816,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetClientId_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -829,7 +834,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetClientSecretAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -843,8 +848,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetClientSecret_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -861,7 +866,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetClientTypeAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -875,8 +880,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetClientType_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -893,7 +898,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetConsentTypeAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -907,8 +912,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetConsentType_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -925,7 +930,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetDisplayNameAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -939,8 +944,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetDisplayName_When_ApplicationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -957,7 +962,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetPermissionsAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -971,8 +976,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPermissions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -989,8 +994,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnPermissions_When_ApplicationHasPermissions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1015,7 +1020,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetPostLogoutRedirectUrisAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1029,8 +1034,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPostLogoutRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1047,8 +1052,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnPostLogoutRedirectUris_When_ApplicationHasPostLogoutRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1073,7 +1078,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetRedirectUrisAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1087,8 +1092,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1105,8 +1110,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnRedirectUris_When_ApplicationHasRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1131,7 +1136,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetRequirementsAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1145,8 +1150,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRequirements()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1163,8 +1168,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnRequirements_When_ApplicationHasRequirements()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1189,7 +1194,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetDisplayNamesAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1203,8 +1208,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1221,8 +1226,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnDisplayNames_When_ApplicationHasDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1247,7 +1252,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetDisplayNamesAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1261,8 +1266,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1282,8 +1287,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetDisplayNames_When_SettingDisplayNames()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1310,7 +1315,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetPermissionsAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1324,8 +1329,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsPermissions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1345,8 +1350,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetPermissions_When_SettingPermissions()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1373,7 +1378,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetPostLogoutRedirectUrisAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1387,8 +1392,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsPostLogoutRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1408,8 +1413,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetPostLogoutRedirectUris_When_SettingPostLogoutRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1436,7 +1441,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetRedirectUrisAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1450,8 +1455,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1471,8 +1476,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetRedirectUris_When_SettingRedirectUris()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1499,7 +1504,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetRequirementsAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1513,8 +1518,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsRequirements()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1534,8 +1539,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetRequirements_When_SettingRequirements()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1562,7 +1567,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1576,8 +1581,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1597,8 +1602,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1624,7 +1629,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndApplicationIsNull()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1638,8 +1643,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication();
@@ -1658,8 +1663,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var application = new OpenIddictDynamoDbApplication
@@ -1682,8 +1687,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnNewApplication_When_CallingInstantiate()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1698,7 +1703,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1711,8 +1716,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnList_When_ListingApplications()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1741,8 +1746,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnFirstFive_When_ListingApplicationsWithCount()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1771,8 +1776,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ReturnLastFive_When_ListingApplicationsWithCountAndOffset()
   {
     // Arrange
-    var context = new DynamoDBContext(DatabaseFixture.Client);
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
@@ -1811,7 +1816,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
-    var options = TestUtils.GetOptions(new() { Database = DatabaseFixture.Client });
+    var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 

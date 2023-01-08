@@ -19,7 +19,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   {
     // Arrange, Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(null!));
+      new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(null!));
 
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
@@ -29,7 +29,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   {
     // Arrange, Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(TestUtils.GetOptions(new())));
+      new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(TestUtils.GetOptions(new())));
 
     Assert.Equal("Database", exception.ParamName);
   }
@@ -38,48 +38,37 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
+    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new());
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
-    await authorizationStore.CreateAsync(new(), CancellationToken.None);
+    var authorization = new OpenIddictDynamoDbAuthorization();
+    await authorizationStore.CreateAsync(authorization, CancellationToken.None);
 
     // Assert
-    var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(1, count);
+    var databaseToken = await context.LoadAsync<OpenIddictDynamoDbAuthorization>(
+      authorization.PartitionKey, authorization.SortKey);
+    Assert.NotNull(databaseToken);
   }
 
   [Fact]
-  public async Task Should_ReturnZero_When_CountingAuthorizationsInEmptyDatabase()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act
-    var count = await authorizationStore.CountAsync(CancellationToken.None);
-
-    // Assert
-    Assert.Equal(0, count);
-  }
-
-  [Fact]
-  public async Task Should_ReturnOne_When_CountingAuthorizationsAfterCreatingOne()
+  public async Task Should_IncreaseCount_When_CountingAuthorizationsAfterCreatingOne()
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization();
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
     await authorizationStore.CreateAsync(authorization, CancellationToken.None);
 
     // Act
     var count = await authorizationStore.CountAsync(CancellationToken.None);
 
     // Assert
-    Assert.Equal(1, count);
+    Assert.Equal(beforeCount + 1, count);
   }
 
   [Fact]
@@ -92,7 +81,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
-        await authorizationStore.CountAsync<int>(default!, CancellationToken.None));
+      await authorizationStore.CountAsync<int>(default!, CancellationToken.None));
   }
 
   [Fact]
@@ -142,7 +131,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.DeleteAsync(default!, CancellationToken.None));
+      await authorizationStore.DeleteAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -179,7 +168,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
-        authorizationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
+      authorizationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
   [Fact]
@@ -192,12 +181,15 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     var authorizationCount = 10;
+    var authorizationIds = new List<string>();
     foreach (var index in Enumerable.Range(0, authorizationCount))
     {
-      await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+      var authorization = new OpenIddictDynamoDbAuthorization
       {
         Subject = index.ToString(),
-      }, CancellationToken.None);
+      };
+      await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+      authorizationIds.Add(authorization.Id);
     }
 
     // Act
@@ -209,7 +201,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     {
       matchedAuthorizations.Add(authorization);
     }
-    Assert.Equal(authorizationCount, matchedAuthorizations.Count);
+    Assert.True(matchedAuthorizations.Count >= authorizationCount);
+    Assert.False(authorizationIds.Except(matchedAuthorizations.Select(x => x.Id)).Any());
   }
 
   [Fact]
@@ -292,7 +285,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
-        authorizationStore.ListAsync(5, 5, CancellationToken.None));
+      authorizationStore.ListAsync(5, 5, CancellationToken.None));
   }
 
   [Fact]
@@ -305,7 +298,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.UpdateAsync(default!, CancellationToken.None));
+      await authorizationStore.UpdateAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -319,7 +312,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
-        await authorizationStore.UpdateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None));
+      await authorizationStore.UpdateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -336,7 +329,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     // Act & Assert
     authorization.ConcurrencyToken = Guid.NewGuid().ToString();
     var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
-        await authorizationStore.UpdateAsync(authorization, CancellationToken.None));
+      await authorizationStore.UpdateAsync(authorization, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -372,7 +365,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetTypeAsync(default!, default, CancellationToken.None));
+      await authorizationStore.SetTypeAsync(default!, default, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -404,7 +397,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetSubjectAsync(default!, default, CancellationToken.None));
+      await authorizationStore.SetSubjectAsync(default!, default, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -436,7 +429,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetStatusAsync(default!, default, CancellationToken.None));
+      await authorizationStore.SetStatusAsync(default!, default, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -468,7 +461,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetScopesAsync(default!, default!, CancellationToken.None));
+      await authorizationStore.SetScopesAsync(default!, default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -485,9 +478,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     await authorizationStore.SetScopesAsync(
-        authorization,
-        default,
-        CancellationToken.None);
+      authorization,
+      default,
+      CancellationToken.None);
 
     // Assert
     Assert.Null(authorization.Scopes);
@@ -506,15 +499,15 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var redirectUris = new List<string>
-            {
-                "something",
-                "other",
-                "some_more",
-            };
+    {
+      "something",
+      "other",
+      "some_more",
+    };
     await authorizationStore.SetScopesAsync(
-        authorization,
-        redirectUris.ToImmutableArray(),
-        CancellationToken.None);
+      authorization,
+      redirectUris.ToImmutableArray(),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(authorization.Scopes);
@@ -531,7 +524,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
+      await authorizationStore.SetPropertiesAsync(default!, default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -548,9 +541,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     await authorizationStore.SetPropertiesAsync(
-        authorization,
-        default!,
-        CancellationToken.None);
+      authorization,
+      default!,
+      CancellationToken.None);
 
     // Assert
     Assert.Null(authorization.Properties);
@@ -569,15 +562,15 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var properties = new Dictionary<string, JsonElement>
-            {
-                { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-                { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-                { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
-            };
+    {
+      { "Test", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+      { "Testing", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+      { "Testicles", JsonDocument.Parse("{ \"Test\": true }").RootElement },
+    };
     await authorizationStore.SetPropertiesAsync(
-        authorization,
-        properties.ToImmutableDictionary(x => x.Key, x => x.Value),
-        CancellationToken.None);
+      authorization,
+      properties.ToImmutableDictionary(x => x.Key, x => x.Value),
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(authorization.Properties);
@@ -593,7 +586,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetPropertiesAsync(default!, CancellationToken.None));
+      await authorizationStore.GetPropertiesAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -610,8 +603,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var properties = await authorizationStore.GetPropertiesAsync(
-        authorization,
-        CancellationToken.None);
+      authorization,
+      CancellationToken.None);
 
     // Assert
     Assert.Empty(properties);
@@ -633,8 +626,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var properties = await authorizationStore.GetPropertiesAsync(
-        authorization,
-        CancellationToken.None);
+      authorization,
+      CancellationToken.None);
 
     // Assert
     Assert.NotNull(properties);
@@ -651,7 +644,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetCreationDateAsync(default!, default, CancellationToken.None));
+      await authorizationStore.SetCreationDateAsync(default!, default, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -683,7 +676,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.SetApplicationIdAsync(default!, default, CancellationToken.None));
+      await authorizationStore.SetApplicationIdAsync(default!, default, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -731,7 +724,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetTypeAsync(default!, CancellationToken.None));
+      await authorizationStore.GetTypeAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -767,7 +760,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetSubjectAsync(default!, CancellationToken.None));
+      await authorizationStore.GetSubjectAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -803,7 +796,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetStatusAsync(default!, CancellationToken.None));
+      await authorizationStore.GetStatusAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -839,7 +832,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetIdAsync(default!, CancellationToken.None));
+      await authorizationStore.GetIdAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -875,7 +868,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetCreationDateAsync(default!, CancellationToken.None));
+      await authorizationStore.GetCreationDateAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -911,7 +904,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetApplicationIdAsync(default!, CancellationToken.None));
+      await authorizationStore.GetApplicationIdAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -947,7 +940,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<NotSupportedException>(async () =>
-        await authorizationStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
+      await authorizationStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
   }
 
   [Fact]
@@ -960,7 +953,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.GetScopesAsync(default!, CancellationToken.None));
+      await authorizationStore.GetScopesAsync(default!, CancellationToken.None));
     Assert.Equal("authorization", exception.ParamName);
   }
 
@@ -993,11 +986,11 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var authorization = new OpenIddictDynamoDbAuthorization
     {
       Scopes = new List<string>
-                {
-                    "get",
-                    "set",
-                    "delete",
-                },
+      {
+        "get",
+        "set",
+        "delete",
+      },
     };
     await authorizationStore.CreateAsync(authorization, CancellationToken.None);
 
@@ -1018,7 +1011,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(default!, "test", CancellationToken.None));
+      authorizationStore.FindAsync(default!, "test", CancellationToken.None));
     Assert.Equal("subject", exception.ParamName);
   }
 
@@ -1032,7 +1025,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", default!, CancellationToken.None));
+      authorizationStore.FindAsync("test", default!, CancellationToken.None));
     Assert.Equal("client", exception.ParamName);
   }
 
@@ -1066,17 +1059,19 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
+    var uniqueKey = Guid.NewGuid().ToString();
     foreach (var index in Enumerable.Range(0, 10))
     {
       await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
       {
-        Subject = index.ToString(),
-        ApplicationId = index.ToString(),
+        Subject = $"{index.ToString()}-{uniqueKey}",
+        ApplicationId = $"{index.ToString()}-{uniqueKey}",
       }, CancellationToken.None);
     }
 
     // Act
-    var authorizations = authorizationStore.FindAsync("5", "5", CancellationToken.None);
+    var authorizations = authorizationStore
+      .FindAsync($"5-{uniqueKey}", $"5-{uniqueKey}", CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1097,7 +1092,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(default!, "test", "test", CancellationToken.None));
+      authorizationStore.FindAsync(default!, "test", "test", CancellationToken.None));
     Assert.Equal("subject", exception.ParamName);
   }
 
@@ -1111,7 +1106,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", default!, "test", CancellationToken.None));
+      authorizationStore.FindAsync("test", default!, "test", CancellationToken.None));
     Assert.Equal("client", exception.ParamName);
   }
 
@@ -1125,7 +1120,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", "test", default!, CancellationToken.None));
+      authorizationStore.FindAsync("test", "test", default!, CancellationToken.None));
     Assert.Equal("status", exception.ParamName);
   }
 
@@ -1171,7 +1166,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(default!, "test", "test", "test", CancellationToken.None));
+      authorizationStore.FindAsync(default!, "test", "test", "test", CancellationToken.None));
     Assert.Equal("subject", exception.ParamName);
   }
 
@@ -1185,7 +1180,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", default!, "test", "test", CancellationToken.None));
+      authorizationStore.FindAsync("test", default!, "test", "test", CancellationToken.None));
     Assert.Equal("client", exception.ParamName);
   }
 
@@ -1199,7 +1194,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", "test", default!, "test", CancellationToken.None));
+      authorizationStore.FindAsync("test", "test", default!, "test", CancellationToken.None));
     Assert.Equal("status", exception.ParamName);
   }
 
@@ -1213,7 +1208,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync("test", "test", "test", default!, CancellationToken.None));
+      authorizationStore.FindAsync("test", "test", "test", default!, CancellationToken.None));
     Assert.Equal("type", exception.ParamName);
   }
 
@@ -1261,13 +1256,13 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(
-            default!,
-            "test",
-            "test",
-            "test",
-            new[] { "get" }.ToImmutableArray(),
-            CancellationToken.None));
+      authorizationStore.FindAsync(
+        default!,
+        "test",
+        "test",
+        "test",
+        new[] { "get" }.ToImmutableArray(),
+        CancellationToken.None));
     Assert.Equal("subject", exception.ParamName);
   }
 
@@ -1281,13 +1276,13 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(
-            "test",
-            default!,
-            "test",
-            "test",
-            new[] { "get" }.ToImmutableArray(),
-            CancellationToken.None));
+      authorizationStore.FindAsync(
+        "test",
+        default!,
+        "test",
+        "test",
+        new[] { "get" }.ToImmutableArray(),
+        CancellationToken.None));
     Assert.Equal("client", exception.ParamName);
   }
 
@@ -1301,13 +1296,13 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(
-            "test",
-            "test",
-            default!,
-            "test",
-            new[] { "get" }.ToImmutableArray(),
-            CancellationToken.None));
+      authorizationStore.FindAsync(
+        "test",
+        "test",
+        default!,
+        "test",
+        new[] { "get" }.ToImmutableArray(),
+        CancellationToken.None));
     Assert.Equal("status", exception.ParamName);
   }
 
@@ -1321,13 +1316,13 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(
-            "test",
-            "test",
-            "test",
-            default!,
-            new[] { "get" }.ToImmutableArray(),
-            CancellationToken.None));
+      authorizationStore.FindAsync(
+        "test",
+        "test",
+        "test",
+        default!,
+        new[] { "get" }.ToImmutableArray(),
+        CancellationToken.None));
     Assert.Equal("type", exception.ParamName);
   }
 
@@ -1341,13 +1336,13 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindAsync(
-            "test",
-            "test",
-            "test",
-            "test",
-            default!,
-            CancellationToken.None));
+      authorizationStore.FindAsync(
+        "test",
+        "test",
+        "test",
+        "test",
+        default!,
+        CancellationToken.None));
     Assert.Equal("scopes", exception.ParamName);
   }
 
@@ -1377,12 +1372,12 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var authorizations = authorizationStore.FindAsync(
-        "5",
-        "5",
-        status,
-        type,
-        scopes.ToImmutableArray(),
-        CancellationToken.None);
+      "5",
+      "5",
+      status,
+      type,
+      scopes.ToImmutableArray(),
+      CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1403,7 +1398,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindByApplicationIdAsync(default!, CancellationToken.None));
+      authorizationStore.FindByApplicationIdAsync(default!, CancellationToken.None));
     Assert.Equal("identifier", exception.ParamName);
   }
 
@@ -1418,7 +1413,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var authorizations = authorizationStore.FindByApplicationIdAsync(
-        Guid.NewGuid().ToString(), CancellationToken.None);
+      Guid.NewGuid().ToString(), CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1451,7 +1446,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var authorizations = authorizationStore.FindByApplicationIdAsync(
-        applicationId, CancellationToken.None);
+      applicationId, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1472,7 +1467,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        authorizationStore.FindBySubjectAsync(default!, CancellationToken.None));
+      authorizationStore.FindBySubjectAsync(default!, CancellationToken.None));
     Assert.Equal("subject", exception.ParamName);
   }
 
@@ -1487,7 +1482,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var authorizations = authorizationStore.FindBySubjectAsync(
-        Guid.NewGuid().ToString(), CancellationToken.None);
+      Guid.NewGuid().ToString(), CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1520,7 +1515,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act
     var authorizations = authorizationStore.FindBySubjectAsync(
-        subject, CancellationToken.None);
+      subject, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1541,7 +1536,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await authorizationStore.FindByIdAsync(default!, CancellationToken.None));
+      await authorizationStore.FindByIdAsync(default!, CancellationToken.None));
     Assert.Equal("identifier", exception.ParamName);
   }
 
@@ -1576,6 +1571,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
     foreach (var index in Enumerable.Range(0, 10))
     {
@@ -1590,7 +1586,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(0, count);
+    Assert.Equal(beforeCount, count);
   }
 
   [Fact]
@@ -1601,6 +1597,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await authorizationStore.PruneAsync(DateTime.UtcNow.AddDays(-4), CancellationToken.None);
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
     var numberOfTokens = 10;
     foreach (var index in Enumerable.Range(0, numberOfTokens))
@@ -1617,7 +1615,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(numberOfTokens, count);
+    Assert.Equal(beforeCount + numberOfTokens, count);
   }
 
   [Fact]
@@ -1628,6 +1626,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
     foreach (var index in Enumerable.Range(0, 10))
     {
@@ -1644,7 +1643,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(0, count);
+    Assert.Equal(beforeCount, count);
   }
 
   [Fact]
@@ -1657,6 +1656,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
     var authorizationCount = 10;
 
     foreach (var index in Enumerable.Range(0, authorizationCount))
@@ -1682,7 +1682,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(authorizationCount, count);
+    Assert.Equal(beforeCount + authorizationCount, count);
   }
 
   [Fact]
@@ -1693,6 +1693,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
     foreach (var index in Enumerable.Range(0, 10))
     {
@@ -1708,6 +1709,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(5, count);
+    Assert.Equal(beforeCount + 5, count);
   }
 }

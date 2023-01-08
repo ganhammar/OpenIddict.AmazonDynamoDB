@@ -15,7 +15,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace OpenIddict.AmazonDynamoDB;
 
 public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictAuthorizationStore<TAuthorization>
-    where TAuthorization : OpenIddictDynamoDbAuthorization
+    where TAuthorization : OpenIddictDynamoDbAuthorization, new()
 {
   private IAmazonDynamoDB _client;
   private IDynamoDBContext _context;
@@ -39,12 +39,10 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
   {
-    var description = await _client.DescribeTableAsync(new DescribeTableRequest
-    {
-      TableName = Constants.DefaultAuthorizationTableName,
-    });
+    var count = new CountModel(CountType.Authorization);
+    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
 
-    return description.Table.ItemCount;
+    return count?.Count ?? 0;
   }
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TAuthorization>, IQueryable<TResult>> query, CancellationToken cancellationToken)
@@ -57,6 +55,9 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(authorization);
 
     await _context.SaveAsync(authorization, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Authorization, count + 1), cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TAuthorization authorization, CancellationToken cancellationToken)
@@ -64,9 +65,12 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(authorization);
 
     await _context.DeleteAsync(authorization, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Authorization, count - 1), cancellationToken);
   }
 
-  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
+  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSortKey(string subject, string sortKey, CancellationToken cancellationToken)
   {
     return ExecuteAsync(cancellationToken);
 
@@ -74,17 +78,16 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     {
       var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
       {
-        IndexName = "Subject-SearchKey-index",
+        IndexName = "Subject-index",
         KeyExpression = new Expression
         {
-          ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
+          ExpressionStatement = "Subject = :subject and begins_with(SortKey, :sortKey)",
           ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
           {
             { ":subject", subject },
-            { ":searchKey", searchKey },
+            { ":sortKey", sortKey },
           }
         },
-        Limit = 1,
       });
 
       var authorizations = await search.GetRemainingAsync(cancellationToken);
@@ -102,7 +105,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(subject);
     ArgumentNullException.ThrowIfNull(client);
 
-    return FindBySubjectAndSearchKey(subject, client, cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -112,7 +115,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(client);
     ArgumentNullException.ThrowIfNull(status);
 
-    return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -123,7 +126,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(status);
     ArgumentNullException.ThrowIfNull(type);
 
-    return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindAsync(
@@ -148,7 +151,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var authorizations = FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
+      var authorizations = FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
 
       await foreach (var authorization in authorizations)
       {
@@ -175,11 +178,10 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         {
           ExpressionStatement = "ApplicationId = :applicationId",
           ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
-                    {
-                        { ":applicationId", identifier },
-                    }
+          {
+            { ":applicationId", identifier },
+          }
         },
-        Limit = 1,
       });
 
       var authorizations = await search.GetRemainingAsync(cancellationToken);
@@ -195,7 +197,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    return await _context.LoadAsync<TAuthorization>(identifier, cancellationToken);
+    return await GetByPartitionKey(new() { Id = identifier }, cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindBySubjectAsync(string subject, CancellationToken cancellationToken)
@@ -217,7 +219,6 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             { ":subject", subject },
           }
         },
-        Limit = 1,
       });
 
       var authorizations = await search.GetRemainingAsync(cancellationToken);
@@ -369,9 +370,10 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     throw new NotSupportedException();
   }
 
-  // TODO: User DynamoDB expirations instead
+  // TODO: Use DynamoDB expirations instead
   public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
+    var deleteCount = 0;
     // Get all authorizations which is older than threshold
     var filter = new ScanFilter();
     filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
@@ -393,6 +395,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       if (authorization.Status != Statuses.Valid)
       {
         batchDelete.AddDeleteItem(authorization);
+        deleteCount++;
       }
       else if (authorization.Type == AuthorizationTypes.AdHoc)
       {
@@ -414,17 +417,20 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             { ":authorizationId", authorization.Id },
           }
         },
-        Limit = 1,
       });
       var tokens = await tokensQuery.GetRemainingAsync();
 
       if (tokens.Any() == false)
       {
         batchDelete.AddDeleteItem(authorization);
+        deleteCount++;
       }
     }
 
     await batchDelete.ExecuteAsync(cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Authorization, count - deleteCount), cancellationToken);
   }
 
   public ValueTask SetApplicationIdAsync(TAuthorization authorization, string? identifier, CancellationToken cancellationToken)
@@ -536,7 +542,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(authorization);
 
     // Ensure no one else is updating
-    var databaseApplication = await _context.LoadAsync<TAuthorization>(authorization.Id, cancellationToken);
+    var databaseApplication = await GetByPartitionKey(authorization, cancellationToken);
     if (databaseApplication == default || databaseApplication.ConcurrencyToken != authorization.ConcurrencyToken)
     {
       throw new ArgumentException("Given authorization is invalid", nameof(authorization));
@@ -545,5 +551,24 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     authorization.ConcurrencyToken = Guid.NewGuid().ToString();
 
     await _context.SaveAsync(authorization, cancellationToken);
+  }
+
+  private async Task<TAuthorization?> GetByPartitionKey(TAuthorization token, CancellationToken cancellationToken)
+  {
+    var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
+    {
+      KeyExpression = new Expression
+      {
+        ExpressionStatement = "PartitionKey = :partitionKey",
+        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        {
+          { ":partitionKey", token.PartitionKey },
+        }
+      },
+      Limit = 1,
+    });
+    var result = await search.GetNextSetAsync();
+
+    return result.Any() ? result.First() : default;
   }
 }

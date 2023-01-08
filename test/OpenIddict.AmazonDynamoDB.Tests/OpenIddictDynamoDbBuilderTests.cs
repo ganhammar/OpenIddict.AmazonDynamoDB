@@ -28,170 +28,35 @@ public class OpenIddictDynamoDbBuilderTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).Configure(null!));
+      CreateBuilder(services).Configure(null!));
     Assert.Equal("configuration", exception.ParamName);
   }
 
   [Fact]
-  public void Should_ThrowException_When_SetApplicationsTableNameAndNameIsNull()
+  public void Should_ThrowException_When_SetDefaultTableNameAndNameIsNull()
   {
     // Arrange
     var services = new ServiceCollection();
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetApplicationsTableName(null!));
+      CreateBuilder(services).SetDefaultTableName(null!));
     Assert.Equal("name", exception.ParamName);
   }
 
   [Fact]
-  public void Should_SetTableName_When_CallingSetApplicationsTableName()
+  public void Should_SetTableName_When_CallingSetDefaultTableName()
   {
     // Arrange
     var services = new ServiceCollection();
 
     // Act
-    CreateBuilder(services).SetApplicationsTableName("test");
+    CreateBuilder(services).SetDefaultTableName("test");
 
     // Assert
     var serviceProvider = services.BuildServiceProvider();
     var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.ApplicationsTableName);
-  }
-
-  [Fact]
-  public void Should_ThrowException_When_SetApplicationRedirectsTableNameAndNameIsNull()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetApplicationRedirectsTableName(null!));
-    Assert.Equal("name", exception.ParamName);
-  }
-
-  [Fact]
-  public void Should_SetTableName_When_CallingSetApplicationRedirectsTableName()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).SetApplicationRedirectsTableName("test");
-
-    // Assert
-    var serviceProvider = services.BuildServiceProvider();
-    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.ApplicationRedirectsTableName);
-  }
-
-  [Fact]
-  public void Should_ThrowException_When_SetAuthorizationsTableNameAndNameIsNull()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetAuthorizationsTableName(null!));
-    Assert.Equal("name", exception.ParamName);
-  }
-
-  [Fact]
-  public void Should_SetTableName_When_CallingSetAuthorizationsTableName()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).SetAuthorizationsTableName("test");
-
-    // Assert
-    var serviceProvider = services.BuildServiceProvider();
-    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.AuthorizationsTableName);
-  }
-
-  [Fact]
-  public void Should_ThrowException_When_SetTokensTableNameAndNameIsNull()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetTokensTableName(null!));
-    Assert.Equal("name", exception.ParamName);
-  }
-
-  [Fact]
-  public void Should_SetTableName_When_CallingSetTokensTableName()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).SetTokensTableName("test");
-
-    // Assert
-    var serviceProvider = services.BuildServiceProvider();
-    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.TokensTableName);
-  }
-
-  [Fact]
-  public void Should_ThrowException_When_SetScopesTableNameAndNameIsNull()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetScopesTableName(null!));
-    Assert.Equal("name", exception.ParamName);
-  }
-
-  [Fact]
-  public void Should_SetTableName_When_CallingSetScopesTableName()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).SetScopesTableName("test");
-
-    // Assert
-    var serviceProvider = services.BuildServiceProvider();
-    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.ScopesTableName);
-  }
-
-  [Fact]
-  public void Should_ThrowException_When_SetScopeResoucesTableNameAndNameIsNull()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetScopeResourcesTableName(null!));
-    Assert.Equal("name", exception.ParamName);
-  }
-
-  [Fact]
-  public void Should_SetTableName_When_CallingSetScopeResourcesTableName()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).SetScopeResourcesTableName("test");
-
-    // Assert
-    var serviceProvider = services.BuildServiceProvider();
-    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-    Assert.Equal("test", options.ScopeResourcesTableName);
+    Assert.Equal("test", options.DefaultTableName);
   }
 
   [Fact]
@@ -266,26 +131,23 @@ public class OpenIddictDynamoDbBuilderTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).UseDatabase(null!));
+      CreateBuilder(services).UseDatabase(null!));
     Assert.Equal("database", exception.ParamName);
   }
 
   [Fact]
   public void Should_SetDatabase_When_CallingUseDatabase()
   {
-    using (var database = DynamoDbLocalServerUtils.CreateDatabase())
-    {
-      // Arrange
-      var services = new ServiceCollection();
+    // Arrange
+    var services = new ServiceCollection();
 
-      // Act
-      CreateBuilder(services).UseDatabase(database.Client);
+    // Act
+    CreateBuilder(services).UseDatabase(DatabaseFixture.Client);
 
-      // Assert
-      var serviceProvider = services.BuildServiceProvider();
-      var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
-      Assert.Equal(database.Client, options.Database);
-    }
+    // Assert
+    var serviceProvider = services.BuildServiceProvider();
+    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue;
+    Assert.Equal(DatabaseFixture.Client, options.Database);
   }
 
   [Fact]
@@ -296,7 +158,7 @@ public class OpenIddictDynamoDbBuilderTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetBillingMode(null!));
+      CreateBuilder(services).SetBillingMode(null!));
     Assert.Equal("billingMode", exception.ParamName);
   }
 
@@ -323,7 +185,7 @@ public class OpenIddictDynamoDbBuilderTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        CreateBuilder(services).SetProvisionedThroughput(null!));
+      CreateBuilder(services).SetProvisionedThroughput(null!));
     Assert.Equal("provisionedThroughput", exception.ParamName);
   }
 
@@ -348,7 +210,7 @@ public class OpenIddictDynamoDbBuilderTests
   }
 
   private static OpenIddictDynamoDbBuilder CreateBuilder(IServiceCollection services)
-      => services.AddOpenIddict().AddCore().UseDynamoDb();
+    => services.AddOpenIddict().AddCore().UseDynamoDb().SetDefaultTableName(DatabaseFixture.TableName);
 
   public class CustomApplication : OpenIddictDynamoDbApplication { }
   public class CustomAuthorization : OpenIddictDynamoDbAuthorization { }

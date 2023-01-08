@@ -15,7 +15,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace OpenIddict.AmazonDynamoDB;
 
 public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken>
-    where TToken : OpenIddictDynamoDbToken
+    where TToken : OpenIddictDynamoDbToken, new()
 {
   private IAmazonDynamoDB _client;
   private IDynamoDBContext _context;
@@ -39,12 +39,10 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
   {
-    var description = await _client.DescribeTableAsync(new DescribeTableRequest
-    {
-      TableName = Constants.DefaultTokenTableName,
-    });
+    var count = new CountModel(CountType.Token);
+    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
 
-    return description.Table.ItemCount;
+    return count?.Count ?? 0;
   }
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TToken>, IQueryable<TResult>> query, CancellationToken cancellationToken)
@@ -57,6 +55,9 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(token);
 
     await _context.SaveAsync(token, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Token, count + 1), cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)
@@ -64,9 +65,12 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(token);
 
     await _context.DeleteAsync(token, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Token, count - 1), cancellationToken);
   }
 
-  private IAsyncEnumerable<TToken> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
+  private IAsyncEnumerable<TToken> FindBySubjectAndSortKey(string subject, string sortKey, CancellationToken cancellationToken)
   {
     return ExecuteAsync(cancellationToken);
 
@@ -74,17 +78,16 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     {
       var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
       {
-        IndexName = "Subject-SearchKey-index",
+        IndexName = "Subject-index",
         KeyExpression = new Expression
         {
-          ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
+          ExpressionStatement = "Subject = :subject and begins_with(SortKey, :sortKey)",
           ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
           {
             { ":subject", subject },
-            { ":searchKey", searchKey },
+            { ":sortKey", sortKey },
           }
         },
-        Limit = 1,
       });
 
       var tokens = await search.GetRemainingAsync(cancellationToken);
@@ -101,7 +104,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(subject);
     ArgumentNullException.ThrowIfNull(client);
 
-    return FindBySubjectAndSearchKey(subject, client, cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}", cancellationToken);
   }
 
   public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
@@ -110,7 +113,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(client);
     ArgumentNullException.ThrowIfNull(status);
 
-    return FindBySubjectAndSearchKey(subject, $"{client}#{status}", cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
   }
 
   public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
@@ -120,7 +123,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(status);
     ArgumentNullException.ThrowIfNull(type);
 
-    return FindBySubjectAndSearchKey(subject, $"{client}#{status}#{type}", cancellationToken);
+    return FindBySubjectAndSortKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
   }
 
   public IAsyncEnumerable<TToken> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -142,7 +145,6 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
             { ":applicationId", identifier },
           }
         },
-        Limit = 1,
       });
 
       var tokens = await search.GetRemainingAsync(cancellationToken);
@@ -173,7 +175,6 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
             { ":authorizationId", identifier },
           }
         },
-        Limit = 1,
       });
 
       var tokens = await search.GetRemainingAsync(cancellationToken);
@@ -189,7 +190,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    return await _context.LoadAsync<TToken>(identifier, cancellationToken);
+    return await GetByPartitionKey(new() { Id = identifier }, cancellationToken);
   }
 
   public async ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
@@ -207,7 +208,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
           { ":referenceId", identifier },
         }
       },
-      Limit = 1
+      Limit = 1,
     });
     var tokens = await search.GetRemainingAsync(cancellationToken);
     return tokens?.FirstOrDefault();
@@ -223,7 +224,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     {
       var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
       {
-        IndexName = "Subject-SearchKey-index",
+        IndexName = "Subject-index",
         KeyExpression = new Expression
         {
           ExpressionStatement = "Subject = :subject",
@@ -232,7 +233,6 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
             { ":subject", subject },
           }
         },
-        Limit = 1,
       });
 
       var tokens = await search.GetRemainingAsync(cancellationToken);
@@ -396,9 +396,10 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     throw new NotSupportedException();
   }
 
-  // TODO: User DynamoDB expirations instead
+  // TODO: Use DynamoDB expirations instead
   public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
+    var deleteCount = 0;
     // Get all tokens which is older than threshold
     var filter = new ScanFilter();
     filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
@@ -421,6 +422,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         || token.ExpirationDate < DateTime.UtcNow)
       {
         batchDelete.AddDeleteItem(token);
+        deleteCount++;
       }
       else
       {
@@ -436,18 +438,27 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
       .Distinct();
     foreach (var authorizationId in authorizationIds)
     {
-      authorizations.AddKey(authorizationId);
+      var authorization = new OpenIddictDynamoDbAuthorization
+      {
+        Id = authorizationId!,
+      };
+      authorizations.AddKey(authorization.PartitionKey);
     }
     await authorizations.ExecuteAsync(cancellationToken);
 
     // Add tokens which has invalid authorizations to delete batch
     foreach (var authorization in authorizations.Results.Where(x => x.Status != Statuses.Valid))
     {
-      batchDelete.AddDeleteItems(remainingTokens
-        .Where(x => x.AuthorizationId == authorization.Id));
+      var tokensToDelete = remainingTokens
+        .Where(x => x.AuthorizationId == authorization.Id);
+      batchDelete.AddDeleteItems(tokensToDelete);
+      deleteCount += tokensToDelete.Count();
     }
 
     await batchDelete.ExecuteAsync(cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Authorization, count - deleteCount), cancellationToken);
   }
 
   public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
@@ -579,7 +590,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(token);
 
     // Ensure no one else is updating
-    var databaseApplication = await _context.LoadAsync<TToken>(token.Id, cancellationToken);
+    var databaseApplication = await GetByPartitionKey(token, cancellationToken);
     if (databaseApplication == default || databaseApplication.ConcurrencyToken != token.ConcurrencyToken)
     {
       throw new ArgumentException("Given token is invalid", nameof(token));
@@ -588,5 +599,24 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     token.ConcurrencyToken = Guid.NewGuid().ToString();
 
     await _context.SaveAsync(token, cancellationToken);
+  }
+
+  private async Task<TToken?> GetByPartitionKey(TToken token, CancellationToken cancellationToken)
+  {
+    var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+    {
+      KeyExpression = new Expression
+      {
+        ExpressionStatement = "PartitionKey = :partitionKey",
+        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        {
+          { ":partitionKey", token.PartitionKey },
+        }
+      },
+      Limit = 1,
+    });
+    var result = await search.GetNextSetAsync();
+
+    return result.Any() ? result.First() : default;
   }
 }

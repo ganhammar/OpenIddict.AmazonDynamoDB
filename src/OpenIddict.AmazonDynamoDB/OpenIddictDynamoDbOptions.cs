@@ -5,12 +5,7 @@ namespace OpenIddict.AmazonDynamoDB;
 
 public class OpenIddictDynamoDbOptions
 {
-  public string ApplicationsTableName { get; set; } = Constants.DefaultApplicationTableName;
-  public string ApplicationRedirectsTableName { get; set; } = Constants.DefaultApplicationRedirectsTableName;
-  public string AuthorizationsTableName { get; set; } = Constants.DefaultAuthorizationTableName;
-  public string ScopesTableName { get; set; } = Constants.DefaultScopeTableName;
-  public string ScopeResourcesTableName { get; set; } = Constants.DefaultScopeResourceTableName;
-  public string TokensTableName { get; set; } = Constants.DefaultTokenTableName;
+  public string DefaultTableName { get; set; } = Constants.DefaultTableName;
   public IAmazonDynamoDB? Database { get; set; }
   public ProvisionedThroughput ProvisionedThroughput { get; set; } = new ProvisionedThroughput
   {

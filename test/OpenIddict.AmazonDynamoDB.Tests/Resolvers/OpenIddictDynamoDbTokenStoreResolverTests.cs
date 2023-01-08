@@ -5,32 +5,29 @@ using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection("Sequential")]
+[Collection(Constants.DatabaseCollection)]
 public class OpenIddictDynamoDbTokenStoreResolverTests
 {
   [Fact]
   public void Should_ReturnTokenStore_When_ItHasBeenRegistered()
   {
-    using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+    // Arrange
+    var serviceCollection = new ServiceCollection();
+    serviceCollection.AddSingleton<
+      IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
+      OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
+    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      // Arrange
-      var serviceCollection = new ServiceCollection();
-      serviceCollection.AddSingleton<
-          IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
-          OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
-      serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
-      {
-        Database = database.Client,
-      }));
-      var serviceProvider = serviceCollection.BuildServiceProvider();
-      var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
+      Database = DatabaseFixture.Client,
+    }));
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
 
-      // Act
-      var store = resolver.Get<OpenIddictDynamoDbToken>();
+    // Act
+    var store = resolver.Get<OpenIddictDynamoDbToken>();
 
-      // Assert
-      Assert.NotNull(store);
-    }
+    // Assert
+    Assert.NotNull(store);
   }
 
   [Fact]
@@ -38,7 +35,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
   {
     // Arrange, Act & Assert
     Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbTokenStoreResolver(null!));
+      new OpenIddictDynamoDbTokenStoreResolver(null!));
   }
 
   [Fact]
@@ -51,31 +48,28 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
 
     // Act & Assert
     Assert.Throws<InvalidOperationException>(() =>
-        resolver.Get<OpenIddictDynamoDbToken>());
+      resolver.Get<OpenIddictDynamoDbToken>());
   }
 
   [Fact]
   public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
   {
-    using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+    // Arrange
+    var serviceCollection = new ServiceCollection();
+    serviceCollection.AddSingleton<
+      IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
+      OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
+    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      // Arrange
-      var serviceCollection = new ServiceCollection();
-      serviceCollection.AddSingleton<
-          IOpenIddictTokenStore<OpenIddictDynamoDbToken>,
-          OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
-      serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
-      {
-        Database = database.Client,
-      }));
-      var serviceProvider = serviceCollection.BuildServiceProvider();
-      var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
+      Database = DatabaseFixture.Client,
+    }));
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var resolver = new OpenIddictDynamoDbTokenStoreResolver(serviceProvider);
 
-      // Act & Assert
-      var exception = Assert.Throws<InvalidOperationException>(() =>
-          resolver.Get<OpenIddictDynamoDbAuthorization>());
+    // Act & Assert
+    var exception = Assert.Throws<InvalidOperationException>(() =>
+      resolver.Get<OpenIddictDynamoDbAuthorization>());
 
-      Assert.Equal(OpenIddictResources.GetResourceString(OpenIddictResources.ID0260), exception.Message);
-    }
+    Assert.Equal(OpenIddictResources.GetResourceString(OpenIddictResources.ID0260), exception.Message);
   }
 }

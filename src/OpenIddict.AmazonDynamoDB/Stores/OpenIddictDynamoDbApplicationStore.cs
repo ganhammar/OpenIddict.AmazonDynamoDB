@@ -15,7 +15,7 @@ using OpenIddict.Abstractions;
 namespace OpenIddict.AmazonDynamoDB;
 
 public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictApplicationStore<TApplication>
-  where TApplication : OpenIddictDynamoDbApplication
+  where TApplication : OpenIddictDynamoDbApplication, new()
 {
   private IAmazonDynamoDB _client;
   private IDynamoDBContext _context;
@@ -39,12 +39,10 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
   {
-    var description = await _client.DescribeTableAsync(new DescribeTableRequest
-    {
-      TableName = Constants.DefaultApplicationTableName,
-    });
+    var count = new CountModel(CountType.Application);
+    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
 
-    return description.Table.ItemCount;
+    return count?.Count ?? 0;
   }
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TApplication>, IQueryable<TResult>> query, CancellationToken cancellationToken)
@@ -58,6 +56,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     await _context.SaveAsync(application, cancellationToken);
     await SaveRedirectUris(application, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Application, count + 1), cancellationToken);
   }
 
   private async Task SaveRedirectUris(TApplication application, CancellationToken cancellationToken)
@@ -102,6 +103,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     ArgumentNullException.ThrowIfNull(application);
 
     await _context.DeleteAsync(application, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Application, count - 1), cancellationToken);
   }
 
   public async ValueTask<TApplication?> FindByClientIdAsync(string identifier, CancellationToken cancellationToken)
@@ -132,11 +136,17 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     return application;
   }
 
-  public async ValueTask<TApplication?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
+  public async ValueTask<TApplication?> FindByIdAsync(
+    string identifier, CancellationToken cancellationToken)
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    var application = await _context.LoadAsync<TApplication>(identifier, cancellationToken);
+    var application = new TApplication
+    {
+      Id = identifier,
+    };
+    application = await _context.LoadAsync<TApplication>(
+      application.PartitionKey, application.SortKey, cancellationToken);
 
     if (application != default)
     {
@@ -151,13 +161,13 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     var applicationId = application.Id;
     var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
     {
-      IndexName = "ApplicationId-index",
       KeyExpression = new Expression
       {
-        ExpressionStatement = "ApplicationId = :applicationId",
+        ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
         {
-          { ":applicationId", applicationId },
+          { ":partitionKey", application.PartitionKey },
+          { ":sortKey", "REDIRECT#" },
         }
       },
     });
@@ -586,13 +596,13 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     var applicationId = application.Id;
     var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
     {
-      IndexName = "ApplicationId-index",
       KeyExpression = new Expression
       {
-        ExpressionStatement = "ApplicationId = :applicationId",
+        ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
         {
-          { ":applicationId", applicationId },
+          { ":partitionKey", application.PartitionKey },
+          { ":sortKey", "REDIRECT#" },
         }
       },
     });
@@ -619,7 +629,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       {
         RequestItems = new Dictionary<string, List<WriteRequest>>
         {
-          { Constants.DefaultApplicationRedirectsTableName, writeRequests },
+          { Constants.DefaultTableName, writeRequests },
         },
       };
 

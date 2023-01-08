@@ -2,12 +2,22 @@
 
 namespace OpenIddict.AmazonDynamoDB;
 
-[DynamoDBTable(Constants.DefaultApplicationRedirectsTableName)]
+[DynamoDBTable(Constants.DefaultTableName)]
 public class OpenIddictDynamoDbApplicationRedirect
 {
   [DynamoDBHashKey]
-  public string? RedirectUri { get; set; }
+  public string PartitionKey
+  {
+    get => $"APPLICATION#{ApplicationId}";
+    private set { }
+  }
   [DynamoDBRangeKey]
+  public string? SortKey
+  {
+    get => $"REDIRECT#{RedirectUri}#{RedirectType.ToString()}";
+    set { }
+  }
+  public string? RedirectUri { get; set; }
   public RedirectType RedirectType { get; set; }
   public string? ApplicationId { get; set; }
 }

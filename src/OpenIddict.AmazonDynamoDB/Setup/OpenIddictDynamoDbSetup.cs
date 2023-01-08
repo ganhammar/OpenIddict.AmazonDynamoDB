@@ -32,19 +32,8 @@ public static class OpenIddictDynamoDbSetup
     IAmazonDynamoDB? database = default,
     CancellationToken cancellationToken = default)
   {
-    var promises = new[]
-    {
-      OpenIddictDynamoDbApplicationSetup.EnsureInitializedAsync(
-        openIddictDynamoDbOptions.CurrentValue, database),
-      OpenIddictDynamoDbAuthorizationSetup.EnsureInitializedAsync(
-        openIddictDynamoDbOptions.CurrentValue, database),
-      OpenIddictDynamoDbTokenSetup.EnsureInitializedAsync(
-        openIddictDynamoDbOptions.CurrentValue, database),
-      OpenIddictDynamoDbScopeSetup.EnsureInitializedAsync(
-        openIddictDynamoDbOptions.CurrentValue, database)
-    };
-
-    await Task.WhenAll(promises);
+    await DynamoDbTableSetup.EnsureInitializedAsync(
+      openIddictDynamoDbOptions.CurrentValue, database);
   }
 
   public static void EnsureInitialized(

@@ -91,6 +91,20 @@ public static class DynamoDbTableSetup
             ProjectionType = ProjectionType.ALL,
           },
         },
+        new()
+        {
+          IndexName = "RedirectUri-RedirectType-index",
+          KeySchema = new List<KeySchemaElement>
+          {
+            new KeySchemaElement("RedirectUri", KeyType.HASH),
+            new KeySchemaElement("RedirectType", KeyType.RANGE),
+          },
+          ProvisionedThroughput = provisionedThroughput,
+          Projection = new Projection
+          {
+            ProjectionType = ProjectionType.ALL,
+          },
+        },
         // Scope
         new()
         {
@@ -158,6 +172,8 @@ public static class DynamoDbTableSetup
         // Application
         new("ClientId", ScalarAttributeType.S),
         new("ApplicationId", ScalarAttributeType.S),
+        new("RedirectUri", ScalarAttributeType.S),
+        new("RedirectType", ScalarAttributeType.N),
         // Authorization
         new("Subject", ScalarAttributeType.S),
         new("SearchKey", ScalarAttributeType.S),

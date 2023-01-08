@@ -38,35 +38,23 @@ public class OpenIddictDynamoDbApplicationStoreTests
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
+    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new());
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
 
     // Act
-    await applicationStore.CreateAsync(new(), CancellationToken.None);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
 
     // Assert
-    var count = await applicationStore.CountAsync(CancellationToken.None);
-    Assert.Equal(1, count);
+    var databaseApplication = await context.LoadAsync<OpenIddictDynamoDbApplication>(
+      application.PartitionKey, application.SortKey);
+    Assert.NotNull(databaseApplication);
   }
 
   [Fact]
-  public async Task Should_ReturnZero_When_CountingApplicationsInEmptyDatabase()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act
-    var count = await applicationStore.CountAsync(CancellationToken.None);
-
-    // Assert
-    Assert.Equal(0, count);
-  }
-
-  [Fact]
-  public async Task Should_ReturnOne_When_CountingApplicationsAfterCreatingOne()
+  public async Task Should_IncreaseCount_When_CountingApplicationsAfterCreatingOne()
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
@@ -76,13 +64,14 @@ public class OpenIddictDynamoDbApplicationStoreTests
     {
       ClientId = Guid.NewGuid().ToString(),
     };
+    var beforeCount = await applicationStore.CountAsync(CancellationToken.None);
     await applicationStore.CreateAsync(application, CancellationToken.None);
 
     // Act
     var count = await applicationStore.CountAsync(CancellationToken.None);
 
     // Assert
-    Assert.Equal(1, count);
+    Assert.Equal(beforeCount + 1, count);
   }
 
   [Fact]
@@ -316,7 +305,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-    var redirectUri = "http://test.com/test/redirect";
+    var redirectUri = $"http://test.com/test/redirect/{Guid.NewGuid()}";
     var application = new OpenIddictDynamoDbApplication
     {
       RedirectUris = new List<string> { redirectUri },
@@ -345,7 +334,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-    var redirectUri = "http://test.com/test/redirect";
+    var redirectUri = $"http://test.com/test/redirect/{Guid.NewGuid()}";
     var application = new OpenIddictDynamoDbApplication
     {
       RedirectUris = new List<string>
@@ -413,7 +402,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     var options = TestUtils.GetOptions(new() { Database = _client });
     var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-    var redirectUri = "http://test.com/test/redirect";
+    var redirectUri = $"http://test.com/test/redirect/{Guid.NewGuid()}";
     var application = new OpenIddictDynamoDbApplication
     {
       PostLogoutRedirectUris = new List<string> { redirectUri },
@@ -1722,12 +1711,15 @@ public class OpenIddictDynamoDbApplicationStoreTests
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     var applicationCount = 10;
+    var applicationIds = new List<string>();
     foreach (var index in Enumerable.Range(0, applicationCount))
     {
-      await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication
+      var application = new OpenIddictDynamoDbApplication
       {
         DisplayName = index.ToString(),
-      }, CancellationToken.None);
+      };
+      await applicationStore.CreateAsync(application, CancellationToken.None);
+      applicationIds.Add(application.Id);
     }
 
     // Act
@@ -1739,7 +1731,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
     {
       matchedApplications.Add(application);
     }
-    Assert.Equal(applicationCount, matchedApplications.Count);
+    Assert.True(matchedApplications.Count >= applicationCount);
+    Assert.False(applicationIds.Except(matchedApplications.Select(x => x.Id)).Any());
   }
 
   [Fact]

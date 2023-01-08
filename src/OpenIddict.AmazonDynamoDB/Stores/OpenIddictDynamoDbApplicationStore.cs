@@ -19,6 +19,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 {
   private IAmazonDynamoDB _client;
   private IDynamoDBContext _context;
+  private readonly string _tableName;
 
   public OpenIddictDynamoDbApplicationStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -35,6 +36,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     _client = database ?? options.Database!;
     _context = new DynamoDBContext(_client);
+    _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -189,25 +191,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       throw new ArgumentException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0143), nameof(address));
     }
 
-    return ExecuteAsync(cancellationToken);
-
-    async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-      var applicationRedirect = await _context.LoadAsync<OpenIddictDynamoDbApplicationRedirect>(
-        address, rangeKey: RedirectType.PostLogoutRedirectUri, cancellationToken);
-
-      if (applicationRedirect != default)
-      {
-        var application = await FindByIdAsync(applicationRedirect.ApplicationId!, cancellationToken);
-
-        if (application != default)
-        {
-          await SetRedirectUris(application, cancellationToken);
-
-          yield return application;
-        }
-      }
-    }
+    return FindByRedirectType(address, RedirectType.PostLogoutRedirectUri, cancellationToken);
   }
 
   public IAsyncEnumerable<TApplication> FindByRedirectUriAsync(string address, CancellationToken cancellationToken)
@@ -217,18 +201,46 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       throw new ArgumentException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0143), nameof(address));
     }
 
+    return FindByRedirectType(address, RedirectType.RedirectUri, cancellationToken);
+  }
+
+  private IAsyncEnumerable<TApplication> FindByRedirectType(
+    string address, RedirectType redirectType, CancellationToken cancellationToken)
+  {
     return ExecuteAsync(cancellationToken);
 
     async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var applicationRedirect = await _context.LoadAsync<OpenIddictDynamoDbApplicationRedirect>(
-        address, rangeKey: RedirectType.RedirectUri, cancellationToken);
-
-      if (applicationRedirect != default)
+      var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
       {
-        var application = await FindByIdAsync(applicationRedirect.ApplicationId!, cancellationToken);
+        IndexName = "RedirectUri-RedirectType-index",
+        KeyExpression = new Expression
+        {
+          ExpressionStatement = "RedirectUri = :redirectUri and RedirectType = :redirectType",
+          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          {
+            { ":redirectUri", address },
+            { ":redirectType", (int)redirectType },
+          }
+        },
+      });
+      var applicationRedirects = await search.GetRemainingAsync(cancellationToken);
 
-        if (application != default)
+      if (applicationRedirects.Any())
+      {
+        var applicationIds = applicationRedirects.Select(x => x.ApplicationId);
+        var batch = _context.CreateBatchGet<TApplication>();
+        foreach (var applicationId in applicationIds)
+        {
+          var scope = new TApplication
+          {
+            Id = applicationId!,
+          };
+          batch.AddKey(scope.PartitionKey, scope.SortKey);
+        }
+        await batch.ExecuteAsync(cancellationToken);
+
+        foreach(var application in batch.Results)
         {
           await SetRedirectUris(application, cancellationToken);
 
@@ -581,7 +593,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     ArgumentNullException.ThrowIfNull(application);
 
     // Ensure no one else is updating
-    var databaseApplication = await _context.LoadAsync<TApplication>(application.Id, cancellationToken);
+    var databaseApplication = await _context.LoadAsync<TApplication>(
+      application.PartitionKey, application.SortKey, cancellationToken);
     if (databaseApplication == default || databaseApplication.ConcurrencyToken != application.ConcurrencyToken)
     {
       throw new ArgumentException("Given application is invalid", nameof(application));
@@ -618,8 +631,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
           {
             Key = new Dictionary<string, AttributeValue>
             {
-              { "RedirectUri", new AttributeValue { S = x.RedirectUri } },
-              { "RedirectType", new AttributeValue { N = ((int)x.RedirectType).ToString() } },
+              { "PartitionKey", new AttributeValue { S = x.PartitionKey } },
+              { "SortKey", new AttributeValue { S = x.SortKey } },
             },
           },
         })
@@ -629,7 +642,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       {
         RequestItems = new Dictionary<string, List<WriteRequest>>
         {
-          { Constants.DefaultTableName, writeRequests },
+          { _tableName, writeRequests },
         },
       };
 

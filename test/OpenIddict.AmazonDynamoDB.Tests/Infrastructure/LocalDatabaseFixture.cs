@@ -3,5 +3,5 @@
 public class LocalDatabaseFixture : DatabaseFixture
 {
   public LocalDatabaseFixture()
-    : base(new() { ServiceURL = "http://localhost:8000" }) { }
+    : base(new("test", "test"), new() { ServiceURL = "http://localhost:8000" }) { }
 }

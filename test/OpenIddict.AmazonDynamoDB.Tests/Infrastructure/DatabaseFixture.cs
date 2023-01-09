@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using Amazon.Runtime;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
@@ -14,9 +15,9 @@ public class DatabaseFixture : IDisposable
     CreateTable().GetAwaiter().GetResult();
   }
 
-  protected DatabaseFixture(AmazonDynamoDBConfig? config)
+  protected DatabaseFixture(BasicAWSCredentials credentials, AmazonDynamoDBConfig config)
   {
-    Client = new AmazonDynamoDBClient(config);
+    Client = new AmazonDynamoDBClient(credentials, config);
     CreateTable().GetAwaiter().GetResult();
   }
 

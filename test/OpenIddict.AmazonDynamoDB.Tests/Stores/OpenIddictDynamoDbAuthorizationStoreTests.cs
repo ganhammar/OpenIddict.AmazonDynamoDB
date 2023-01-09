@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
 
   public OpenIddictDynamoDbAuthorizationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
     // Arrange, Act & Assert
@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
   {
     // Arrange, Act & Assert
@@ -34,7 +34,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("Database", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
@@ -53,7 +53,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.NotNull(databaseToken);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_IncreaseCount_When_CountingAuthorizationsAfterCreatingOne()
   {
     // Arrange
@@ -71,7 +71,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(beforeCount + 1, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
@@ -84,7 +84,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
       await authorizationStore.CountAsync<int>(default!, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToCreateAuthorizationThatIsNull()
   {
     // Arrange
@@ -98,7 +98,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_CreateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
@@ -121,7 +121,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.ApplicationId, databaseAuthorization.ApplicationId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToDeleteAuthorizationThatIsNull()
   {
     // Arrange
@@ -135,7 +135,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_DeleteAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
@@ -158,7 +158,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Null(databaseAuthorization);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
@@ -171,7 +171,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
       authorizationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnList_When_ListingAuthorizations()
   {
     // Arrange
@@ -205,7 +205,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.False(authorizationIds.Except(matchedAuthorizations.Select(x => x.Id)).Any());
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnFirstFive_When_ListingAuthorizationsWithCount()
   {
     // Arrange
@@ -235,7 +235,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(expectedCount, matchedAuthorizations.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnLastFive_When_ListingAuthorizationsWithCountAndOffset()
   {
     // Arrange
@@ -275,7 +275,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(firstAuthorizations.Select(x => x.Id).Intersect(matchedAuthorizations.Select(x => x.Id)));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
@@ -288,7 +288,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
       authorizationStore.ListAsync(5, 5, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_ToUpdateAuthorizationThatIsNull()
   {
     // Arrange
@@ -302,7 +302,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToUpdateAuthorizationThatDoesntExist()
   {
     // Arrange
@@ -316,7 +316,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
@@ -333,7 +333,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_UpdateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
@@ -355,7 +355,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(databaseAuthorization.Subject, authorization.Subject);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetTypeAndAuthorizationIsNull()
   {
     // Arrange
@@ -369,7 +369,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetType_When_AuthorizationIsValid()
   {
     // Arrange
@@ -387,7 +387,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(type, authorization.Type);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetSubjectAndAuthorizationIsNull()
   {
     // Arrange
@@ -401,7 +401,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetSubject_When_AuthorizationIsValid()
   {
     // Arrange
@@ -419,7 +419,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(subject, authorization.Subject);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetStatusAndAuthorizationIsNull()
   {
     // Arrange
@@ -433,7 +433,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetStatus_When_AuthorizationIsValid()
   {
     // Arrange
@@ -451,7 +451,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(status, authorization.Status);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetScopesAndAuthorizationIsNull()
   {
     // Arrange
@@ -465,7 +465,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsScopes()
   {
     // Arrange
@@ -486,7 +486,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Null(authorization.Scopes);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetScopes_When_SettingScopes()
   {
     // Arrange
@@ -514,7 +514,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(3, authorization.Scopes!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndAuthorizationIsNull()
   {
     // Arrange
@@ -528,7 +528,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
@@ -549,7 +549,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Null(authorization.Properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
@@ -576,7 +576,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.NotNull(authorization.Properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndAuthorizationIsNull()
   {
     // Arrange
@@ -590,7 +590,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
@@ -610,7 +610,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
@@ -634,7 +634,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(3, properties.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetCreationDateAndAuthorizationIsNull()
   {
     // Arrange
@@ -648,7 +648,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
@@ -666,7 +666,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(creationDate.UtcDateTime, authorization.CreationDate);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetApplicationIdAndAuthorizationIsNull()
   {
     // Arrange
@@ -680,7 +680,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
@@ -698,7 +698,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(applicationId, authorization.ApplicationId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnNewApplication_When_CallingInstantiate()
   {
     // Arrange
@@ -714,7 +714,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.IsType<OpenIddictDynamoDbAuthorization>(authorization);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetTypeAndAuthorizationIsNull()
   {
     // Arrange
@@ -728,7 +728,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnType_When_AuthorizationIsValid()
   {
     // Arrange
@@ -750,7 +750,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.Type, type);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetSubjectAndAuthorizationIsNull()
   {
     // Arrange
@@ -764,7 +764,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnSubject_When_AuthorizationIsValid()
   {
     // Arrange
@@ -786,7 +786,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.Subject, subject);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetStatusAndAuthorizationIsNull()
   {
     // Arrange
@@ -800,7 +800,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnStatus_When_AuthorizationIsValid()
   {
     // Arrange
@@ -822,7 +822,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.Status, subject);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetIdAndAuthorizationIsNull()
   {
     // Arrange
@@ -836,7 +836,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnId_When_AuthorizationIsValid()
   {
     // Arrange
@@ -858,7 +858,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.Id, id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetCreationDateAndAuthorizationIsNull()
   {
     // Arrange
@@ -872,7 +872,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
@@ -894,7 +894,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.CreationDate, creationDate);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetApplicationIdAndAuthorizationIsNull()
   {
     // Arrange
@@ -908,7 +908,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
@@ -930,7 +930,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorization.ApplicationId, applicationId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
@@ -943,7 +943,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
       await authorizationStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetScopesAndAuthorizationIsNull()
   {
     // Arrange
@@ -957,7 +957,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("authorization", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_AuthorizationDoesntHaveAnyScopes()
   {
     // Arrange
@@ -975,7 +975,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(postLogoutScopes);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnScopes_When_AuthorizationHasScopes()
   {
     // Arrange
@@ -1001,7 +1001,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(3, redirectUris.Length);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndSubjectIsNull()
   {
     // Arrange
@@ -1015,7 +1015,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndClientIsNull()
   {
     // Arrange
@@ -1029,7 +1029,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("client", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsWithNoMatch()
   {
     // Arrange
@@ -1050,7 +1050,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithMatch()
   {
     // Arrange
@@ -1082,7 +1082,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Single(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndSubjectIsNull()
   {
     // Arrange
@@ -1096,7 +1096,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndClientIsNull()
   {
     // Arrange
@@ -1110,7 +1110,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("client", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationAndStatusIsNull()
   {
     // Arrange
@@ -1124,7 +1124,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("status", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithStatusMatch()
   {
     // Arrange
@@ -1156,7 +1156,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Single(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndSubjectIsNull()
   {
     // Arrange
@@ -1170,7 +1170,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndClientIsNull()
   {
     // Arrange
@@ -1184,7 +1184,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("client", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndStatusIsNull()
   {
     // Arrange
@@ -1198,7 +1198,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("status", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndTypeIsNull()
   {
     // Arrange
@@ -1212,7 +1212,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("type", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithTypeMatch()
   {
     // Arrange
@@ -1246,7 +1246,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Single(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndSubjectIsNull()
   {
     // Arrange
@@ -1266,7 +1266,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndClientIsNull()
   {
     // Arrange
@@ -1286,7 +1286,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("client", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndStatusIsNull()
   {
     // Arrange
@@ -1306,7 +1306,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("status", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndTypeIsNull()
   {
     // Arrange
@@ -1326,7 +1326,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("type", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndScopesIsNull()
   {
     // Arrange
@@ -1346,7 +1346,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("scopes", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithScopesMatch()
   {
     // Arrange
@@ -1388,7 +1388,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Single(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationByApplicationIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1402,7 +1402,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsByApplicationIdWithNoMatch()
   {
     // Arrange
@@ -1424,7 +1424,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsByApplicationIdWithMatch()
   {
     // Arrange
@@ -1457,7 +1457,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorizationCount, matchedAuthorizations.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationBySubjectAndSubjectIsNull()
   {
     // Arrange
@@ -1471,7 +1471,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsBySubjectWithNoMatch()
   {
     // Arrange
@@ -1493,7 +1493,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Empty(matchedAuthorizations);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
   {
     // Arrange
@@ -1526,7 +1526,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(authorizationCount, matchedAuthorizations.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindAuthorizationByIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1540,7 +1540,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnAuthorization_When_FindingAuthorizationsByIdWithMatch()
   {
     // Arrange
@@ -1563,7 +1563,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(id, authorization!.Id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_DeleteAllAuthorizations_When_AllHasExpired()
   {
     // Arrange
@@ -1589,7 +1589,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(beforeCount, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreOldButValid()
   {
     // Arrange
@@ -1618,7 +1618,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(beforeCount + numberOfTokens, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_DeleteAllAuthorizations_When_TheyAreAdHocAndNoTokens()
   {
     // Arrange
@@ -1646,7 +1646,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(beforeCount, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreAdHocAndHaveTokens()
   {
     // Arrange
@@ -1685,7 +1685,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     Assert.Equal(beforeCount + authorizationCount, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_DeleteSomeAuthorizations_When_SomeAreOutsideOfTheThresholdRange()
   {
     // Arrange

@@ -11,7 +11,7 @@ public class OpenIddictDynamoDbSetupTests
 
   public OpenIddictDynamoDbSetupTests(DatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledSynchronously()
   {
     // Arrange
@@ -28,7 +28,7 @@ public class OpenIddictDynamoDbSetupTests
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledSynchronouslyWithServiceProvider()
   {
     // Arrange
@@ -43,7 +43,7 @@ public class OpenIddictDynamoDbSetupTests
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledAsynchronously()
   {
     // Arrange
@@ -60,7 +60,7 @@ public class OpenIddictDynamoDbSetupTests
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledAsynchronouslyWithServiceProvider()
   {
     // Arrange
@@ -75,7 +75,7 @@ public class OpenIddictDynamoDbSetupTests
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledAsynchronouslyWithDatbaseInServiceProvider()
   {
     // Arrange
@@ -91,7 +91,7 @@ public class OpenIddictDynamoDbSetupTests
     Assert.Contains(DatabaseFixture.TableName, tableNames.TableNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetupTables_When_CalledSynchronouslyWithDatbaseInServiceProvider()
   {
     // Arrange

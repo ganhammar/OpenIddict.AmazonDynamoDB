@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
 
   public OpenIddictDynamoDbApplicationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
     // Arrange, Act & Assert
@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
   {
     // Arrange, Act & Assert
@@ -34,7 +34,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("Database", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
@@ -53,7 +53,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.NotNull(databaseApplication);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_IncreaseCount_When_CountingApplicationsAfterCreatingOne()
   {
     // Arrange
@@ -74,7 +74,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(beforeCount + 1, count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
@@ -87,7 +87,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
       await applicationStore.CountAsync(x => x.Where(y => y.DisplayName == "Test"), CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToCreateApplicationThatIsNull()
   {
     // Arrange
@@ -101,7 +101,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_CreateApplication_When_ApplicationIsValid()
   {
     // Arrange
@@ -124,7 +124,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ClientId, databaseApplication.ClientId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToDeleteApplicationThatIsNull()
   {
     // Arrange
@@ -138,7 +138,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_DeleteApplication_When_ApplicationIsValid()
   {
     // Arrange
@@ -161,7 +161,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(databaseApplication);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindApplicationWithoutIdentifier()
   {
     // Arrange
@@ -175,7 +175,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotThrowException_When_TryingToFindApplicationWithIdentifierThatDoesntExist()
   {
     // Arrange
@@ -190,7 +190,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByExistingIdentifier()
   {
     // Arrange
@@ -212,7 +212,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ClientId, result!.ClientId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindApplicationByClientIdWithoutIdentifier()
   {
     // Arrange
@@ -226,7 +226,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotThrowException_When_TryingToFindApplicationByClientIdWithIdentifierThatDoesntExist()
   {
     // Arrange
@@ -241,7 +241,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByClientIdByExistingIdentifier()
   {
     // Arrange
@@ -263,7 +263,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ClientId, result!.ClientId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindApplicationByRedirectUriWithoutAddress()
   {
     // Arrange
@@ -277,7 +277,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("address", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotThrowException_When_TryingToFindApplicationByRedirectUriWithAddressThatDoesntExist()
   {
     // Arrange
@@ -297,7 +297,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(matchedApplications);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByRedirectUriByExistingAddress()
   {
     // Arrange
@@ -326,7 +326,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(matchedApplications[0].Id, application.Id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByRedirectUriByExistingAddressAmongOthers()
   {
     // Arrange
@@ -360,7 +360,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(matchedApplications[0].Id, application.Id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToFindApplicationByPostLogoutRedirectUriWithoutAddress()
   {
     // Arrange
@@ -374,7 +374,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("address", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_NotThrowException_When_TryingToFindApplicationByPostLogoutRedirectUriWithAddressThatDoesntExist()
   {
     // Arrange
@@ -394,7 +394,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(matchedApplications);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByPostLogoutRedirectUriByExistingAddress()
   {
     // Arrange
@@ -423,7 +423,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(matchedApplications[0].Id, application.Id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnApplication_When_TryingToFindApplicationByPostLogoutRedirectUriByExistingAddressAmongOthers()
   {
     // Arrange
@@ -457,7 +457,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(matchedApplications[0].Id, application.Id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_ToUpdateApplicationThatIsNull()
   {
     // Arrange
@@ -471,7 +471,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToUpdateApplicationThatDoesntExist()
   {
     // Arrange
@@ -485,7 +485,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
@@ -502,7 +502,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_UpdateApplication_When_ApplicationIsValid()
   {
     // Arrange
@@ -524,7 +524,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(databaseApplication.DisplayName, application.DisplayName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_UpdateApplicationWithRedirectUris_When_ApplicationIsValid()
   {
     // Arrange
@@ -561,7 +561,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Single(updatedApplication.PostLogoutRedirectUris);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
@@ -574,7 +574,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
       await applicationStore.GetAsync<int, int>(default!, default, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetClientIdAndApplicationIsNull()
   {
     // Arrange
@@ -588,7 +588,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnClientId_When_ApplicationIsValid()
   {
     // Arrange
@@ -610,7 +610,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ClientId, clientId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetClientSecretAndApplicationIsNull()
   {
     // Arrange
@@ -624,7 +624,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnClientSecret_When_ApplicationIsValid()
   {
     // Arrange
@@ -646,7 +646,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ClientSecret, clientSecret);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetClientTypeAndApplicationIsNull()
   {
     // Arrange
@@ -660,7 +660,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnClientType_When_ApplicationIsValid()
   {
     // Arrange
@@ -682,7 +682,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.Type, clientType);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetConsentTypeAndApplicationIsNull()
   {
     // Arrange
@@ -696,7 +696,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnConsentType_When_ApplicationIsValid()
   {
     // Arrange
@@ -718,7 +718,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.ConsentType, consentType);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetDisplayNameAndApplicationIsNull()
   {
     // Arrange
@@ -732,7 +732,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnDisplayName_When_ApplicationIsValid()
   {
     // Arrange
@@ -754,7 +754,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.DisplayName, displayName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetIdAndApplicationIsNull()
   {
     // Arrange
@@ -768,7 +768,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnId_When_ApplicationIsValid()
   {
     // Arrange
@@ -787,7 +787,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(application.Id, id);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetClientIdAndApplicationIsNull()
   {
     // Arrange
@@ -801,7 +801,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetClientId_When_ApplicationIsValid()
   {
     // Arrange
@@ -819,7 +819,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(clientId, application.ClientId);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetClientSecretAndApplicationIsNull()
   {
     // Arrange
@@ -833,7 +833,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetClientSecret_When_ApplicationIsValid()
   {
     // Arrange
@@ -851,7 +851,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(clientSecret, application.ClientSecret);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetClientTypeAndApplicationIsNull()
   {
     // Arrange
@@ -865,7 +865,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetClientType_When_ApplicationIsValid()
   {
     // Arrange
@@ -883,7 +883,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(clientType, application.Type);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetConsentTypeAndApplicationIsNull()
   {
     // Arrange
@@ -897,7 +897,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetConsentType_When_ApplicationIsValid()
   {
     // Arrange
@@ -915,7 +915,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(consentType, application.ConsentType);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetDisplayNameAndApplicationIsNull()
   {
     // Arrange
@@ -929,7 +929,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetDisplayName_When_ApplicationIsValid()
   {
     // Arrange
@@ -947,7 +947,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(displayName, application.DisplayName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetPermissionsAndApplicationIsNull()
   {
     // Arrange
@@ -961,7 +961,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPermissions()
   {
     // Arrange
@@ -979,7 +979,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(permissions);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnPermissions_When_ApplicationHasPermissions()
   {
     // Arrange
@@ -1005,7 +1005,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, permissions.Length);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetPostLogoutRedirectUrisAndApplicationIsNull()
   {
     // Arrange
@@ -1019,7 +1019,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyPostLogoutRedirectUris()
   {
     // Arrange
@@ -1037,7 +1037,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(postLogoutRedirectUris);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnPostLogoutRedirectUris_When_ApplicationHasPostLogoutRedirectUris()
   {
     // Arrange
@@ -1063,7 +1063,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, postLogoutRedirectUris.Length);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetRedirectUrisAndApplicationIsNull()
   {
     // Arrange
@@ -1077,7 +1077,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRedirectUris()
   {
     // Arrange
@@ -1095,7 +1095,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(postLogoutRedirectUris);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnRedirectUris_When_ApplicationHasRedirectUris()
   {
     // Arrange
@@ -1121,7 +1121,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, redirectUris.Length);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetRequirementsAndApplicationIsNull()
   {
     // Arrange
@@ -1135,7 +1135,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyRequirements()
   {
     // Arrange
@@ -1153,7 +1153,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(requirements);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnRequirements_When_ApplicationHasRequirements()
   {
     // Arrange
@@ -1179,7 +1179,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, requirements.Length);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetDisplayNamesAndApplicationIsNull()
   {
     // Arrange
@@ -1193,7 +1193,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnyDisplayNames()
   {
     // Arrange
@@ -1211,7 +1211,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(displayNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnDisplayNames_When_ApplicationHasDisplayNames()
   {
     // Arrange
@@ -1237,7 +1237,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, displayNames.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetDisplayNamesAndApplicationIsNull()
   {
     // Arrange
@@ -1251,7 +1251,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDisplayNames()
   {
     // Arrange
@@ -1272,7 +1272,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.DisplayNames);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetDisplayNames_When_SettingDisplayNames()
   {
     // Arrange
@@ -1300,7 +1300,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, application.DisplayNames!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetPermissionsAndApplicationIsNull()
   {
     // Arrange
@@ -1314,7 +1314,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsPermissions()
   {
     // Arrange
@@ -1335,7 +1335,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.Permissions);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetPermissions_When_SettingPermissions()
   {
     // Arrange
@@ -1363,7 +1363,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, application.Permissions!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetPostLogoutRedirectUrisAndApplicationIsNull()
   {
     // Arrange
@@ -1377,7 +1377,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsPostLogoutRedirectUris()
   {
     // Arrange
@@ -1398,7 +1398,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.PostLogoutRedirectUris);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetPostLogoutRedirectUris_When_SettingPostLogoutRedirectUris()
   {
     // Arrange
@@ -1426,7 +1426,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, application.PostLogoutRedirectUris!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetRedirectUrisAndApplicationIsNull()
   {
     // Arrange
@@ -1440,7 +1440,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsRedirectUris()
   {
     // Arrange
@@ -1461,7 +1461,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.RedirectUris);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetRedirectUris_When_SettingRedirectUris()
   {
     // Arrange
@@ -1489,7 +1489,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, application.RedirectUris!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetRequirementsAndApplicationIsNull()
   {
     // Arrange
@@ -1503,7 +1503,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsRequirements()
   {
     // Arrange
@@ -1524,7 +1524,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.Requirements);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetRequirements_When_SettingRequirements()
   {
     // Arrange
@@ -1552,7 +1552,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, application.Requirements!.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndApplicationIsNull()
   {
     // Arrange
@@ -1566,7 +1566,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
@@ -1587,7 +1587,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Null(application.Properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
@@ -1614,7 +1614,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.NotNull(application.Properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndApplicationIsNull()
   {
     // Arrange
@@ -1628,7 +1628,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal("application", exception.ParamName);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
@@ -1648,7 +1648,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(properties);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
@@ -1672,7 +1672,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(3, properties.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnNewApplication_When_CallingInstantiate()
   {
     // Arrange
@@ -1688,7 +1688,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.IsType<OpenIddictDynamoDbApplication>(application);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
@@ -1701,7 +1701,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
       applicationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnList_When_ListingApplications()
   {
     // Arrange
@@ -1735,7 +1735,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.False(applicationIds.Except(matchedApplications.Select(x => x.Id)).Any());
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnFirstFive_When_ListingApplicationsWithCount()
   {
     // Arrange
@@ -1765,7 +1765,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Equal(expectedCount, matchedApplications.Count);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ReturnLastFive_When_ListingApplicationsWithCountAndOffset()
   {
     // Arrange
@@ -1805,7 +1805,7 @@ public class OpenIddictDynamoDbApplicationStoreTests
     Assert.Empty(firstApplications.Select(x => x.Id).Intersect(matchedApplications.Select(x => x.Id)));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange

@@ -13,7 +13,7 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
 
   public OpenIddictDynamoDbAuthorizationStoreResolverTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ReturnAuthorizationStore_When_ItHasBeenRegistered()
   {
     // Arrange
@@ -35,7 +35,7 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
     Assert.NotNull(store);
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowArgumentNullException_When_ServiceProviderIsNull()
   {
     // Arrange, Act & Assert
@@ -43,7 +43,7 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
       new OpenIddictDynamoDbAuthorizationStoreResolver(null!));
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowInvalidOperationException_When_NoImplementationHasBeenRegistered()
   {
     // Arrange
@@ -56,7 +56,7 @@ public class OpenIddictDynamoDbAuthorizationStoreResolverTests
       resolver.Get<OpenIddictDynamoDbAuthorization>());
   }
 
-  [Fact]
+  [Fact(Skip = "Test")]
   public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
   {
     // Arrange

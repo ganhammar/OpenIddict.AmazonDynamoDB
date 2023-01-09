@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbScopeStoreTests
 
   public OpenIddictDynamoDbScopeStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
     // Arrange, Act & Assert
@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
   {
     // Arrange, Act & Assert
@@ -34,7 +34,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("Database", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
@@ -53,7 +53,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.NotNull(databaseToken);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
@@ -66,7 +66,7 @@ public class OpenIddictDynamoDbScopeStoreTests
       await scopeStore.CountAsync<int>(default!, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
@@ -79,7 +79,7 @@ public class OpenIddictDynamoDbScopeStoreTests
       scopeStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
@@ -92,7 +92,7 @@ public class OpenIddictDynamoDbScopeStoreTests
       await scopeStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_IncreaseCount_When_CountingScopesAfterCreatingOne()
   {
     // Arrange
@@ -110,7 +110,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(originalCount + 1, count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToCreateScopeThatIsNull()
   {
     // Arrange
@@ -124,7 +124,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_CreateScope_When_ScopeIsValid()
   {
     // Arrange
@@ -146,7 +146,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scope.DisplayName, databaseScope.DisplayName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToDeleteScopeThatIsNull()
   {
     // Arrange
@@ -160,7 +160,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_DeleteScope_When_ScopeIsValid()
   {
     // Arrange
@@ -179,7 +179,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Null(databaseScope);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByIdAndIdentifierIsNull()
   {
     // Arrange
@@ -193,7 +193,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnScope_When_FindingScopesBySubjectWithMatch()
   {
     // Arrange
@@ -216,7 +216,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(id, scope!.Id);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByNameAndNameIsNull()
   {
     // Arrange
@@ -230,7 +230,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("name", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnScope_When_FindingScopesByNameWithMatch()
   {
     // Arrange
@@ -253,7 +253,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(name, scope!.Name);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByNamesAndNamesIsNull()
   {
     // Arrange
@@ -267,7 +267,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("names", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByNamesAndNamesIsMoreThanAHundredItems()
   {
     // Arrange
@@ -281,7 +281,7 @@ public class OpenIddictDynamoDbScopeStoreTests
       scopeStore.FindByNamesAsync(names, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByResourceAndResourceIsNull()
   {
     // Arrange
@@ -295,7 +295,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("resource", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnScope_When_FindingScopesByResourceWithMatch()
   {
     // Arrange
@@ -326,7 +326,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(resource, matchedScopes[0].Resources![0]);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
   {
     // Arrange
@@ -359,7 +359,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scopeCount, matchedScopes.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetDisplayNameAndScopeIsNull()
   {
     // Arrange
@@ -373,7 +373,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnDisplayName_When_ScopeIsValid()
   {
     // Arrange
@@ -395,7 +395,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scope.DisplayName, displayName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetDisplayNamesAndScopeIsNull()
   {
     // Arrange
@@ -409,7 +409,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyList_When_ScopeDoesntHaveAnyDisplayNames()
   {
     // Arrange
@@ -427,7 +427,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Empty(displayNames);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnDisplayNames_When_ScopeHasDisplayNames()
   {
     // Arrange
@@ -453,7 +453,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, displayNames.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetDescriptionAndScopeIsNull()
   {
     // Arrange
@@ -467,7 +467,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnDescription_When_ScopeIsValid()
   {
     // Arrange
@@ -489,7 +489,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scope.Description, description);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetDescriptionsAndScopeIsNull()
   {
     // Arrange
@@ -503,7 +503,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyList_When_ScopeDoesntHaveAnyDescriptions()
   {
     // Arrange
@@ -521,7 +521,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Empty(descriptions);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnDescriptions_When_ScopeHasDescriptions()
   {
     // Arrange
@@ -547,7 +547,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, descriptions.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetNameAndScopeIsNull()
   {
     // Arrange
@@ -561,7 +561,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnName_When_ScopeIsValid()
   {
     // Arrange
@@ -583,7 +583,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scope.Name, name);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetIdAndScopeIsNull()
   {
     // Arrange
@@ -597,7 +597,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnId_When_ScopeIsValid()
   {
     // Arrange
@@ -619,7 +619,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(scope.Id, id);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndScopeIsNull()
   {
     // Arrange
@@ -633,7 +633,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
@@ -653,7 +653,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Empty(properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
@@ -677,7 +677,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, properties.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetResourcesAndScopeIsNull()
   {
     // Arrange
@@ -691,7 +691,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyDictionary_When_ResourcesIsNull()
   {
     // Arrange
@@ -711,7 +711,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Empty(resources);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnNonEmptyDictionary_When_ResourcesExists()
   {
     // Arrange
@@ -740,7 +740,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, resources.Length);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnNewScope_When_CallingInstantiate()
   {
     // Arrange
@@ -756,7 +756,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.IsType<OpenIddictDynamoDbScope>(scope);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnList_When_ListingScopes()
   {
     // Arrange
@@ -790,7 +790,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.False(scopeIds.Except(matchedScopes.Select(x => x.Id)).Any());
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnFirstFive_When_ListingScopesWithCount()
   {
     // Arrange
@@ -820,7 +820,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(expectedCount, matchedScopes.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnLastFive_When_ListingScopesWithCountAndOffset()
   {
     // Arrange
@@ -860,7 +860,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Empty(firstScopes.Select(x => x.Id).Intersect(matchedScopes.Select(x => x.Id)));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
@@ -873,7 +873,7 @@ public class OpenIddictDynamoDbScopeStoreTests
       scopeStore.ListAsync(5, 5, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetDescriptionAndScopeIsNull()
   {
     // Arrange
@@ -887,7 +887,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetDescription_When_ScopeIsValid()
   {
     // Arrange
@@ -905,7 +905,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(description, scope.Description);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetDisplayNameAndScopeIsNull()
   {
     // Arrange
@@ -919,7 +919,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetDisplayName_When_ScopeIsValid()
   {
     // Arrange
@@ -937,7 +937,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(displayName, scope.DisplayName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetNameAndScopeIsNull()
   {
     // Arrange
@@ -951,7 +951,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetName_When_ScopeIsValid()
   {
     // Arrange
@@ -969,7 +969,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(name, scope.Name);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndScopeIsNull()
   {
     // Arrange
@@ -983,7 +983,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
@@ -1004,7 +1004,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Null(scope.Properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
@@ -1031,7 +1031,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.NotNull(scope.Properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetDisplayNamesAndScopeIsNull()
   {
     // Arrange
@@ -1045,7 +1045,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDisplayNames()
   {
     // Arrange
@@ -1066,7 +1066,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Null(scope.DisplayNames);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetDisplayNames_When_SettingDisplayNames()
   {
     // Arrange
@@ -1094,7 +1094,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, scope.DisplayNames!.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetDescriptionsAndScopeIsNull()
   {
     // Arrange
@@ -1108,7 +1108,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetNull_When_SetEmptyDictionaryAsDescriptions()
   {
     // Arrange
@@ -1129,7 +1129,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Null(scope.Descriptions);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetDescriptions_When_SettingDescriptions()
   {
     // Arrange
@@ -1157,7 +1157,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, scope.Descriptions!.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetResourcesAndScopeIsNull()
   {
     // Arrange
@@ -1171,7 +1171,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetNull_When_SetEmptyDictionaryAsResources()
   {
     // Arrange
@@ -1192,7 +1192,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Null(scope.Resources);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetResources_When_SettingResources()
   {
     // Arrange
@@ -1220,7 +1220,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(3, scope.Resources!.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToUpdateScopeThatIsNull()
   {
     // Arrange
@@ -1234,7 +1234,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToUpdateScopeThatDoesntExist()
   {
     // Arrange
@@ -1248,7 +1248,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
@@ -1265,7 +1265,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal("scope", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_UpdateScope_When_ScopeIsValid()
   {
     // Arrange
@@ -1286,7 +1286,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     Assert.Equal(databaseScope.Name, scope.Name);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_UpdateScopeWithResources_When_ResourcesIsSet()
   {
     // Arrange

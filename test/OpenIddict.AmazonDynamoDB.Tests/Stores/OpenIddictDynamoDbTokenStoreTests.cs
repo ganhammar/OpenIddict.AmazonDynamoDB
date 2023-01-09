@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
   public OpenIddictDynamoDbTokenStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
   {
     // Arrange, Act & Assert
@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("optionsMonitor", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_DatabaseIsNotSet()
   {
     // Arrange, Act & Assert
@@ -34,7 +34,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("Database", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
@@ -52,7 +52,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.NotNull(databaseToken);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToCountBasedOnLinq()
   {
     // Arrange
@@ -65,7 +65,7 @@ public class OpenIddictDynamoDbTokenStoreTests
       await tokenStore.CountAsync<int>(default!, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToListBasedOnLinq()
   {
     // Arrange
@@ -78,7 +78,7 @@ public class OpenIddictDynamoDbTokenStoreTests
       tokenStore.ListAsync<int, int>(default!, default, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToGetBasedOnLinq()
   {
     // Arrange
@@ -91,7 +91,7 @@ public class OpenIddictDynamoDbTokenStoreTests
       await tokenStore.GetAsync<int, int>(default!, default!, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnOne_When_CountingTokensAfterCreatingOne()
   {
     // Arrange
@@ -108,7 +108,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.True(count >= 1);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToCreateTokenThatIsNull()
   {
     // Arrange
@@ -122,7 +122,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_CreateToken_When_TokenIsValid()
   {
     // Arrange
@@ -144,7 +144,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Subject, databaseToken.Subject);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToDeleteTokenThatIsNull()
   {
     // Arrange
@@ -158,7 +158,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_DeleteToken_When_TokenIsValid()
   {
     // Arrange
@@ -177,7 +177,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Null(databaseToken);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetPropertiesAndTokenIsNull()
   {
     // Arrange
@@ -191,7 +191,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
@@ -211,7 +211,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Empty(properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
@@ -235,7 +235,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(3, properties.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetIdAndTokenIsNull()
   {
     // Arrange
@@ -251,7 +251,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnId_When_TokenIsValid()
   {
     // Arrange
@@ -273,7 +273,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Id, id);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetAuthorizationIdAndTokenIsNull()
   {
     // Arrange
@@ -289,7 +289,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnAuthorizationId_When_TokenIsValid()
   {
     // Arrange
@@ -311,7 +311,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.AuthorizationId, authorizationId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetCreationDateAndTokenIsNull()
   {
     // Arrange
@@ -327,7 +327,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnCreationDate_When_TokenIsValid()
   {
     // Arrange
@@ -349,7 +349,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.CreationDate, creationDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetExpirationDateAndTokenIsNull()
   {
     // Arrange
@@ -365,7 +365,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnExpirationDate_When_TokenIsValid()
   {
     // Arrange
@@ -387,7 +387,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.ExpirationDate, expirationDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetPayloadAndTokenIsNull()
   {
     // Arrange
@@ -403,7 +403,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnPayload_When_TokenIsValid()
   {
     // Arrange
@@ -425,7 +425,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Payload, expirationDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetRedemptionDateAndTokenIsNull()
   {
     // Arrange
@@ -441,7 +441,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnRedemptionDate_When_TokenIsValid()
   {
     // Arrange
@@ -463,7 +463,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.RedemptionDate, redemptionDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetReferenceIdAndTokenIsNull()
   {
     // Arrange
@@ -479,7 +479,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnReferenceId_When_TokenIsValid()
   {
     // Arrange
@@ -501,7 +501,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.ReferenceId, referenceId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetApplicationIdAndTokenIsNull()
   {
     // Arrange
@@ -517,7 +517,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnApplicationId_When_TokenIsValid()
   {
     // Arrange
@@ -539,7 +539,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.ApplicationId, referenceId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetStatusAndTokenIsNull()
   {
     // Arrange
@@ -555,7 +555,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnStatus_When_TokenIsValid()
   {
     // Arrange
@@ -577,7 +577,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Status, status);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetSubjectAndTokenIsNull()
   {
     // Arrange
@@ -593,7 +593,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnSubject_When_TokenIsValid()
   {
     // Arrange
@@ -615,7 +615,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Subject, subject);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToGetTypeAndTokenIsNull()
   {
     // Arrange
@@ -631,7 +631,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnType_When_TokenIsValid()
   {
     // Arrange
@@ -653,7 +653,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(token.Type, type);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnNewToken_When_CallingInstantiate()
   {
     // Arrange
@@ -669,7 +669,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.IsType<OpenIddictDynamoDbToken>(token);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnList_When_ListingTokens()
   {
     // Arrange
@@ -703,7 +703,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.False(tokenIds.Except(matchedTokens.Select(x => x.Id)).Any());
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnFirstFive_When_ListingTokensWithCount()
   {
     // Arrange
@@ -733,7 +733,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(expectedCount, matchedTokens.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnLastFive_When_ListingTokensWithCountAndOffset()
   {
     // Arrange
@@ -773,7 +773,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Empty(firstTokens.Select(x => x.Id).Intersect(matchedTokens.Select(x => x.Id)));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowNotSupported_When_TryingToFetchWithOffsetWithoutFirstFetchingPreviousPages()
   {
     // Arrange
@@ -786,7 +786,7 @@ public class OpenIddictDynamoDbTokenStoreTests
       tokenStore.ListAsync(5, 5, CancellationToken.None));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetPropertiesAndTokenIsNull()
   {
     // Arrange
@@ -800,7 +800,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
@@ -821,7 +821,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Null(token.Properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
@@ -848,7 +848,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.NotNull(token.Properties);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_ToUpdateTokenThatIsNull()
   {
     // Arrange
@@ -862,7 +862,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToUpdateTokenThatDoesntExist()
   {
     // Arrange
@@ -876,7 +876,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_ConcurrencyTokenHasChanged()
   {
     // Arrange
@@ -893,7 +893,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_UpdateToken_When_TokenIsValid()
   {
     // Arrange
@@ -914,7 +914,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(databaseToken.Subject, token.Subject);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetApplicationIdAndTokenIsNull()
   {
     // Arrange
@@ -928,7 +928,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetApplicationId_When_TokenIsValid()
   {
     // Arrange
@@ -946,7 +946,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.ApplicationId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetAuthorizationIdAndTokenIsNull()
   {
     // Arrange
@@ -960,7 +960,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetAuthorizationId_When_TokenIsValid()
   {
     // Arrange
@@ -978,7 +978,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.AuthorizationId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetCreationDateAndTokenIsNull()
   {
     // Arrange
@@ -992,7 +992,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetCreationDate_When_TokenIsValid()
   {
     // Arrange
@@ -1010,7 +1010,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value.UtcDateTime, token.CreationDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetExpirationDateAndTokenIsNull()
   {
     // Arrange
@@ -1024,7 +1024,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetExpirationDate_When_TokenIsValid()
   {
     // Arrange
@@ -1042,7 +1042,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value.UtcDateTime, token.ExpirationDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetRedemptionDateAndTokenIsNull()
   {
     // Arrange
@@ -1056,7 +1056,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetRedemptionDate_When_TokenIsValid()
   {
     // Arrange
@@ -1074,7 +1074,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value.UtcDateTime, token.RedemptionDate);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetPayloadAndTokenIsNull()
   {
     // Arrange
@@ -1088,7 +1088,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetPayload_When_TokenIsValid()
   {
     // Arrange
@@ -1106,7 +1106,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.Payload);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetStatusAndTokenIsNull()
   {
     // Arrange
@@ -1120,7 +1120,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetStatus_When_TokenIsValid()
   {
     // Arrange
@@ -1138,7 +1138,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.Status);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetSubjectAndTokenIsNull()
   {
     // Arrange
@@ -1152,7 +1152,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetSubject_When_TokenIsValid()
   {
     // Arrange
@@ -1170,7 +1170,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.Subject);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetTypeAndTokenIsNull()
   {
     // Arrange
@@ -1184,7 +1184,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetType_When_TokenIsValid()
   {
     // Arrange
@@ -1202,7 +1202,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.Type);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToSetReferenceIdAndTokenIsNull()
   {
     // Arrange
@@ -1216,7 +1216,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("token", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_SetReferenceId_When_TokenIsValid()
   {
     // Arrange
@@ -1288,7 +1288,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(expectedNullParameterName, exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyList_When_FindingTokensWithNoMatch()
   {
     // Arrange
@@ -1309,7 +1309,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Empty(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingTokensWithMatch()
   {
     // Arrange
@@ -1340,7 +1340,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Single(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffMany_When_FindingTokensWithMatch()
   {
     // Arrange
@@ -1374,7 +1374,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(applicationCount, matchedTokens.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyList_When_FindingTokensWithStatusAndNoMatch()
   {
     // Arrange
@@ -1395,7 +1395,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Empty(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingTokensWithStatusAndMatch()
   {
     // Arrange
@@ -1428,7 +1428,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Single(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffMany_When_FindingTokensWithStatusAndMatch()
   {
     // Arrange
@@ -1464,7 +1464,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(applicationCount, matchedTokens.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnEmptyList_When_FindingTokensWithStatusAndTypeAndNoMatch()
   {
     // Arrange
@@ -1485,7 +1485,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Empty(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingTokensWithStatusAndTypeAndMatch()
   {
     // Arrange
@@ -1520,7 +1520,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Single(matchedTokens);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnListOffMany_When_FindingTokensWithStatusAndTypeAndMatch()
   {
     // Arrange
@@ -1558,7 +1558,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(applicationCount, matchedTokens.Count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindTokenByIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1572,7 +1572,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnToken_When_FindingTokensByIdWithMatch()
   {
     // Arrange
@@ -1595,7 +1595,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(id, token!.Id);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindTokenByApplicationIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1609,7 +1609,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnToken_When_FindingTokensByApplicationIdWithMatch()
   {
     // Arrange
@@ -1637,7 +1637,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(id, matchedTokens[0].ApplicationId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindTokenBySubjectAndIdentifierIsNull()
   {
     // Arrange
@@ -1651,7 +1651,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("subject", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnToken_When_FindingTokensBySubjectWithMatch()
   {
     // Arrange
@@ -1679,7 +1679,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(subject, matchedTokens[0].Subject);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindTokenByAuthorizationIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1693,7 +1693,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnToken_When_FindingTokensByAuthorizationIdWithMatch()
   {
     // Arrange
@@ -1721,7 +1721,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(authorizationId, matchedTokens[0].AuthorizationId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ThrowException_When_TryingToFindTokenByReferenceIdAndIdentifierIsNull()
   {
     // Arrange
@@ -1735,7 +1735,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal("identifier", exception.ParamName);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_ReturnToken_When_FindingTokensByReferenceIdWithMatch()
   {
     // Arrange
@@ -1758,7 +1758,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(referenceId, token!.ReferenceId);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_DeleteAllTokens_When_AllTokensHasExpired()
   {
     // Arrange
@@ -1784,7 +1784,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(beforeCount - 10, count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_NotDeleteAnyTokens_When_TheyAreOldButNotExpired()
   {
     // Arrange
@@ -1820,7 +1820,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(beforeCount, count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_DeleteAllTokens_When_TheyHaveNoValidAuthorizations()
   {
     // Arrange
@@ -1855,7 +1855,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(beforeCount - 10, count);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public async Task Should_DeleteSomeTokens_When_SomeAreOutsideOfTheThresholdRange()
   {
     // Arrange

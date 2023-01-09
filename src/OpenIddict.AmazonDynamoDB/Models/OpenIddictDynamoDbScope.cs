@@ -2,10 +2,21 @@
 
 namespace OpenIddict.AmazonDynamoDB;
 
-[DynamoDBTable(Constants.DefaultScopeTableName)]
+[DynamoDBTable(Constants.DefaultTableName)]
 public class OpenIddictDynamoDbScope
 {
   [DynamoDBHashKey]
+  public string PartitionKey
+  {
+    get => $"SCOPE#{Id}";
+    private set { }
+  }
+  [DynamoDBRangeKey]
+  public string? SortKey
+  {
+    get => $"#SCOPE#{Id}";
+    set { }
+  }
   public virtual string Id { get; set; } = Guid.NewGuid().ToString();
   public virtual string? ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
   public virtual string? Description { get; set; }

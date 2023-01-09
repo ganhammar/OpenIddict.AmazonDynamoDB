@@ -54,46 +54,11 @@ public class OpenIddictDynamoDbBuilder
     return this;
   }
 
-  public OpenIddictDynamoDbBuilder SetApplicationsTableName(string name)
+  public OpenIddictDynamoDbBuilder SetDefaultTableName(string name)
   {
     ArgumentNullException.ThrowIfNull(name);
 
-    return Configure(options => options.ApplicationsTableName = name);
-  }
-
-  public OpenIddictDynamoDbBuilder SetApplicationRedirectsTableName(string name)
-  {
-    ArgumentNullException.ThrowIfNull(name);
-
-    return Configure(options => options.ApplicationRedirectsTableName = name);
-  }
-
-  public OpenIddictDynamoDbBuilder SetAuthorizationsTableName(string name)
-  {
-    ArgumentNullException.ThrowIfNull(name);
-
-    return Configure(options => options.AuthorizationsTableName = name);
-  }
-
-  public OpenIddictDynamoDbBuilder SetScopesTableName(string name)
-  {
-    ArgumentNullException.ThrowIfNull(name);
-
-    return Configure(options => options.ScopesTableName = name);
-  }
-
-  public OpenIddictDynamoDbBuilder SetScopeResourcesTableName(string name)
-  {
-    ArgumentNullException.ThrowIfNull(name);
-
-    return Configure(options => options.ScopeResourcesTableName = name);
-  }
-
-  public OpenIddictDynamoDbBuilder SetTokensTableName(string name)
-  {
-    ArgumentNullException.ThrowIfNull(name);
-
-    return Configure(options => options.TokensTableName = name);
+    return Configure(options => options.DefaultTableName = name);
   }
 
   public OpenIddictDynamoDbBuilder UseDatabase(IAmazonDynamoDB database)

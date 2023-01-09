@@ -4,6 +4,10 @@ on:
   - push
   - workflow_dispatch
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
     name: 'CI: Restore, Build & Test'
@@ -11,13 +15,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Setup DynamoDB Local
-        run: |
-          docker run -d -p 8000:8000 amazon/dynamodb-local
       - name: Setup .NET Core SDKs
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: 6.0.x
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-north-1
+          role-to-assume: ${{ secrets.DEPLOY_ROLE }}
+          role-session-name: OIDCSession
+      - name: Setup DynamoDB Local
+        run: docker run -d -p 8000:8000 amazon/dynamodb-local
 
       - name: Restore
         run: dotnet restore
@@ -46,8 +56,7 @@ jobs:
       - name: Setup .NET Core SDKs
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: |
-            6.0.x
+          dotnet-version: 6.0.x
 
       - name: Pack
         run: |

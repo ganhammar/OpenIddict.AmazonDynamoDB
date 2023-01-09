@@ -2,10 +2,21 @@
 
 namespace OpenIddict.AmazonDynamoDB;
 
-[DynamoDBTable(Constants.DefaultApplicationTableName)]
+[DynamoDBTable(Constants.DefaultTableName)]
 public class OpenIddictDynamoDbApplication
 {
   [DynamoDBHashKey]
+  public string PartitionKey
+  {
+    get => $"APPLICATION#{Id}";
+    private set { }
+  }
+  [DynamoDBRangeKey]
+  public string? SortKey
+  {
+    get => $"#USER#{Id}";
+    set { }
+  }
   public virtual string Id { get; set; } = Guid.NewGuid().ToString();
   public virtual string? ClientId { get; set; }
   public virtual string? ClientSecret { get; set; }

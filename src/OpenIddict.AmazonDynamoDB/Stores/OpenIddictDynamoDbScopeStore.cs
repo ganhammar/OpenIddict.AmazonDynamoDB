@@ -15,10 +15,11 @@ using OpenIddict.Abstractions;
 namespace OpenIddict.AmazonDynamoDB;
 
 public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope>
-    where TScope : OpenIddictDynamoDbScope
+    where TScope : OpenIddictDynamoDbScope, new()
 {
   private IAmazonDynamoDB _client;
   private IDynamoDBContext _context;
+  private readonly string _tableName;
 
   public OpenIddictDynamoDbScopeStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -35,16 +36,15 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     _client = database ?? options.Database!;
     _context = new DynamoDBContext(_client);
+    _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
   {
-    var description = await _client.DescribeTableAsync(new DescribeTableRequest
-    {
-      TableName = Constants.DefaultScopeTableName,
-    });
+    var count = new CountModel(CountType.Scope);
+    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
 
-    return description.Table.ItemCount;
+    return count?.Count ?? 0;
   }
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TScope>, IQueryable<TResult>> query, CancellationToken cancellationToken)
@@ -77,15 +77,14 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
   private async Task SetResources(TScope scope, CancellationToken cancellationToken)
   {
-    var scopeId = scope.Id;
     var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeResource>(new QueryOperationConfig
     {
       KeyExpression = new Expression
       {
-        ExpressionStatement = "ScopeId = :scopeId",
+        ExpressionStatement = "PartitionKey = :partitionKey",
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
         {
-          { ":scopeId", scopeId },
+          { ":partitionKey", scope.PartitionKey },
         },
       },
     });
@@ -104,6 +103,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     await _context.SaveAsync(scope, cancellationToken);
     await SaveResources(scope, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Scope, count + 1), cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TScope scope, CancellationToken cancellationToken)
@@ -111,13 +113,20 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     ArgumentNullException.ThrowIfNull(scope);
 
     await _context.DeleteAsync(scope, cancellationToken);
+
+    var count = await CountAsync(cancellationToken);
+    await _context.SaveAsync(new CountModel(CountType.Scope, count - 1), cancellationToken);
   }
 
   public async ValueTask<TScope?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    var scope = await _context.LoadAsync<TScope>(identifier, cancellationToken);
+    var scope = new TScope
+    {
+      Id = identifier,
+    };
+    scope = await _context.LoadAsync<TScope>(scope.PartitionKey, scope.SortKey, cancellationToken);
     await SetResources(scope, cancellationToken);
 
     return scope;
@@ -212,7 +221,11 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
       var batch = _context.CreateBatchGet<TScope>();
       foreach (var scopeId in scopeIds)
       {
-        batch.AddKey(scopeId);
+        var scope = new TScope
+        {
+          Id = scopeId!,
+        };
+        batch.AddKey(scope.PartitionKey, scope.SortKey);
       }
       await batch.ExecuteAsync(cancellationToken);
 
@@ -484,7 +497,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     ArgumentNullException.ThrowIfNull(scope);
 
     // Ensure no one else is updating
-    var databaseApplication = await _context.LoadAsync<TScope>(scope.Id, cancellationToken);
+    var databaseApplication = await _context.LoadAsync<TScope>(scope.PartitionKey, scope.SortKey, cancellationToken);
     if (databaseApplication == default || databaseApplication.ConcurrencyToken != scope.ConcurrencyToken)
     {
       throw new ArgumentException("Given scope is invalid", nameof(scope));
@@ -496,21 +509,26 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     // Update scope resouces
     // Fetch all resources
+    var scopeResource = new OpenIddictDynamoDbScopeResource
+    {
+      ScopeId = scope.Id,
+    };
     var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeResource>(new QueryOperationConfig
     {
       KeyExpression = new Expression
       {
-        ExpressionStatement = "ScopeId = :scopeId",
+        ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
         {
-          { ":scopeId", scope.Id },
+          { ":partitionKey", scopeResource.PartitionKey },
+          { ":sortKey", "RESOURCE#" },
         }
       },
     });
 
     var resources = await search.GetRemainingAsync(cancellationToken);
 
-    // Remove previously stored redirects
+    // Remove previously stored scope resources
     if (resources?.Any() == true)
     {
       var writeRequests = resources
@@ -519,10 +537,10 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
           DeleteRequest = new DeleteRequest
           {
             Key = new Dictionary<string, AttributeValue>
-              {
-                { "ScopeId", new AttributeValue { S = x.ScopeId } },
-                { "ScopeResource", new AttributeValue { S = x.ScopeResource } },
-              },
+            {
+              { "PartitionKey", new AttributeValue { S = x.PartitionKey } },
+              { "SortKey", new AttributeValue { S = x.SortKey } },
+            },
           },
         })
         .ToList();
@@ -531,7 +549,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
       {
         RequestItems = new Dictionary<string, List<WriteRequest>>
         {
-          { Constants.DefaultScopeResourceTableName, writeRequests },
+          { _tableName, writeRequests },
         },
       };
 

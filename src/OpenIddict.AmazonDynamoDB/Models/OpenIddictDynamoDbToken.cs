@@ -2,15 +2,27 @@
 
 namespace OpenIddict.AmazonDynamoDB;
 
-[DynamoDBTable(Constants.DefaultTokenTableName)]
+[DynamoDBTable(Constants.DefaultTableName)]
 public class OpenIddictDynamoDbToken
 {
+  [DynamoDBHashKey]
+  public string PartitionKey
+  {
+    get => $"TOKEN#{Id}";
+    private set { }
+  }
+  [DynamoDBRangeKey]
+  public string? SortKey
+  {
+    get => $"#TOKEN#{Id}";
+    set { }
+  }
   public virtual string? ApplicationId { get; set; }
   public virtual string? AuthorizationId { get; set; }
-  public virtual string? ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
+  public virtual string? ConcurrencyToken { get; set; }
+    = Guid.NewGuid().ToString();
   public virtual DateTime? CreationDate { get; set; }
   public virtual DateTime? ExpirationDate { get; set; }
-  [DynamoDBHashKey]
   public virtual string Id { get; set; } = Guid.NewGuid().ToString();
   public virtual string? Payload { get; set; }
   public virtual string? Properties { get; set; }
@@ -21,7 +33,7 @@ public class OpenIddictDynamoDbToken
   public virtual string? Type { get; set; }
   public string? SearchKey
   {
-    get => $"{ApplicationId}#{Status}#{Type}";
+    get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
     set { }
   }
 }

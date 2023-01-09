@@ -1,36 +1,37 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Amazon.DynamoDBv2;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
-using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection("Sequential")]
+[Collection(Constants.DatabaseCollection)]
 public class OpenIddictDynamoDbScopeStoreResolverTests
 {
+  public readonly IAmazonDynamoDB _client;
+
+  public OpenIddictDynamoDbScopeStoreResolverTests(DatabaseFixture fixture) => _client = fixture.Client;
+
   [Fact]
   public void Should_ReturnScopeStore_When_ItHasBeenRegistered()
   {
-    using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+    // Arrange
+    var serviceCollection = new ServiceCollection();
+    serviceCollection.AddSingleton<
+      IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
+      OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
+    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      // Arrange
-      var serviceCollection = new ServiceCollection();
-      serviceCollection.AddSingleton<
-          IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
-          OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-      serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
-      {
-        Database = database.Client,
-      }));
-      var serviceProvider = serviceCollection.BuildServiceProvider();
-      var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
+      Database = _client,
+    }));
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
 
-      // Act
-      var store = resolver.Get<OpenIddictDynamoDbScope>();
+    // Act
+    var store = resolver.Get<OpenIddictDynamoDbScope>();
 
-      // Assert
-      Assert.NotNull(store);
-    }
+    // Assert
+    Assert.NotNull(store);
   }
 
   [Fact]
@@ -38,7 +39,7 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
   {
     // Arrange, Act & Assert
     Assert.Throws<ArgumentNullException>(() =>
-        new OpenIddictDynamoDbScopeStoreResolver(null!));
+      new OpenIddictDynamoDbScopeStoreResolver(null!));
   }
 
   [Fact]
@@ -51,31 +52,28 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
 
     // Act & Assert
     Assert.Throws<InvalidOperationException>(() =>
-        resolver.Get<OpenIddictDynamoDbScope>());
+      resolver.Get<OpenIddictDynamoDbScope>());
   }
 
   [Fact]
   public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
   {
-    using (var database = DynamoDbLocalServerUtils.CreateDatabase())
+    // Arrange
+    var serviceCollection = new ServiceCollection();
+    serviceCollection.AddSingleton<
+      IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
+      OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
+    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
     {
-      // Arrange
-      var serviceCollection = new ServiceCollection();
-      serviceCollection.AddSingleton<
-          IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
-          OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-      serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
-      {
-        Database = database.Client,
-      }));
-      var serviceProvider = serviceCollection.BuildServiceProvider();
-      var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
+      Database = _client,
+    }));
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var resolver = new OpenIddictDynamoDbScopeStoreResolver(serviceProvider);
 
-      // Act & Assert
-      var exception = Assert.Throws<InvalidOperationException>(() =>
-          resolver.Get<OpenIddictDynamoDbAuthorization>());
+    // Act & Assert
+    var exception = Assert.Throws<InvalidOperationException>(() =>
+      resolver.Get<OpenIddictDynamoDbAuthorization>());
 
-      Assert.Equal(OpenIddictResources.GetResourceString(OpenIddictResources.ID0259), exception.Message);
-    }
+    Assert.Equal(OpenIddictResources.GetResourceString(OpenIddictResources.ID0259), exception.Message);
   }
 }

@@ -240,7 +240,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
         }
         await batch.ExecuteAsync(cancellationToken);
 
-        foreach(var application in batch.Results)
+        foreach (var application in batch.Results)
         {
           await SetRedirectUris(application, cancellationToken);
 

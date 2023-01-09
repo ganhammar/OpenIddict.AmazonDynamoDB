@@ -1,4 +1,4 @@
-namespace OpenIddict.AmazonDynamoDB.Tests;
+﻿namespace OpenIddict.AmazonDynamoDB.Tests;
 
 public class LocalDatabaseFixture : DatabaseFixture
 {

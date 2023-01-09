@@ -13,7 +13,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
 
   public OpenIddictDynamoDbApplicationStoreResolverTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ReturnApplicationStore_When_ItHasBeenRegistered()
   {
     // Arrange

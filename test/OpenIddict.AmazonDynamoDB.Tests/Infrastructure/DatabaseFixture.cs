@@ -11,8 +11,8 @@ public class DatabaseFixture : IDisposable
 
   public DatabaseFixture()
   {
-    // Client = new AmazonDynamoDBClient();
-    // CreateTable().GetAwaiter().GetResult();
+    Client = new AmazonDynamoDBClient();
+    CreateTable().GetAwaiter().GetResult();
   }
 
   protected DatabaseFixture(BasicAWSCredentials credentials, AmazonDynamoDBConfig config)
@@ -32,7 +32,7 @@ public class DatabaseFixture : IDisposable
 
   public void Dispose()
   {
-    if (_disposed || Client == default)
+    if (_disposed)
     {
       return;
     }

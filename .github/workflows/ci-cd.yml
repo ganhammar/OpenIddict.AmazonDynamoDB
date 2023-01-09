@@ -36,7 +36,7 @@ jobs:
       - name: Lint
         run: dotnet format --verify-no-changes --no-restore
       - name: Test
-        run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+        run: dotnet test --logger:"console;verbosity=detailed" --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
       - name: Publish Code Coverage
         uses: codecov/codecov-action@v3
         with:

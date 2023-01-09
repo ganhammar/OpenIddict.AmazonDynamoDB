@@ -6,12 +6,12 @@ using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.LocalDatabaseCollection)]
+[Collection(Constants.DatabaseCollection)]
 public class OpenIddictDynamoDbApplicationStoreResolverTests
 {
   public readonly IAmazonDynamoDB _client;
 
-  public OpenIddictDynamoDbApplicationStoreResolverTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+  public OpenIddictDynamoDbApplicationStoreResolverTests(DatabaseFixture fixture) => _client = fixture.Client;
 
   [Fact]
   public void Should_ReturnApplicationStore_When_ItHasBeenRegistered()

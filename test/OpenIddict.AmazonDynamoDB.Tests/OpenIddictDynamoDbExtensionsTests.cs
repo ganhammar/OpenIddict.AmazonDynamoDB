@@ -5,7 +5,7 @@ namespace OpenIddict.AmazonDynamoDB.Tests;
 
 public class OpenIddictDynamoDbExtensionsTests
 {
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowException_When_CallingUseDynamoDbAndBuilderIsNull()
   {
     // Arrange, Act & Assert

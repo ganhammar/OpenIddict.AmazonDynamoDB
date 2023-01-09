@@ -7,12 +7,12 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.LocalDatabaseCollection)]
+[Collection(Constants.DatabaseCollection)]
 public class OpenIddictDynamoDbAuthorizationStoreTests
 {
   public readonly IAmazonDynamoDB _client;
 
-  public OpenIddictDynamoDbAuthorizationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+  public OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()

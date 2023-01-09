@@ -7,12 +7,12 @@ using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
-[Collection(Constants.LocalDatabaseCollection)]
+[Collection(Constants.DatabaseCollection)]
 public class OpenIddictDynamoDbApplicationStoreTests
 {
   public readonly IAmazonDynamoDB _client;
 
-  public OpenIddictDynamoDbApplicationStoreTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
+  public OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()

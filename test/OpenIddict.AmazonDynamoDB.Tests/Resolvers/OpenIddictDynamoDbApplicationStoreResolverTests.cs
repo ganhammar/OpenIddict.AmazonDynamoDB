@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
-using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 

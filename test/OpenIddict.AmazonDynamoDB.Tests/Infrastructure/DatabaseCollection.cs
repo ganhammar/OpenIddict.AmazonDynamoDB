@@ -1,5 +1,4 @@
-﻿using Xunit;
-
+﻿
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [CollectionDefinition(Constants.DatabaseCollection)]

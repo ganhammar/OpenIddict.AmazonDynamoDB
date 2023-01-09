@@ -1,6 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 

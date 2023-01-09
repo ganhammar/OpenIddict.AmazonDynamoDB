@@ -18,11 +18,10 @@ public static class DynamoDbTableSetup
     ArgumentNullException.ThrowIfNull(options);
     ArgumentNullException.ThrowIfNull(dynamoDb);
 
-    if (options.DefaultTableName != Constants.DefaultTableName &&
-      AWSConfigsDynamoDB.Context.TableAliases.Any(x => x.Key == Constants.DefaultTableName) == false)
+    if (options.DefaultTableName != Constants.DefaultTableName)
     {
-      AWSConfigsDynamoDB.Context.AddAlias(new TableAlias(
-        Constants.DefaultTableName, options.DefaultTableName));
+      AWSConfigsDynamoDB.Context.TableAliases
+        .TryAdd(Constants.DefaultTableName, options.DefaultTableName);
     }
 
     return SetupTable(options, dynamoDb, cancellationToken);

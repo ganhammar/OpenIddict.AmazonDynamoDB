@@ -8,11 +8,16 @@ public class DatabaseFixture : IDisposable
   public readonly AmazonDynamoDBClient Client;
   private bool _disposed;
 
-  public DatabaseFixture(AmazonDynamoDBConfig? config = default)
+  public DatabaseFixture()
+  {
+    Client = new AmazonDynamoDBClient();
+    CreateTable().GetAwaiter().GetResult();
+  }
+
+  protected DatabaseFixture(AmazonDynamoDBConfig? config)
   {
     Client = new AmazonDynamoDBClient(config);
     CreateTable().GetAwaiter().GetResult();
-    var tables = Client.ListTablesAsync().GetAwaiter().GetResult();
   }
 
   private async Task CreateTable()

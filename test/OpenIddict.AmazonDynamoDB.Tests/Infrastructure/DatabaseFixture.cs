@@ -32,7 +32,7 @@ public class DatabaseFixture : IDisposable
 
   public void Dispose()
   {
-    if (_disposed)
+    if (_disposed || Client == default)
     {
       return;
     }

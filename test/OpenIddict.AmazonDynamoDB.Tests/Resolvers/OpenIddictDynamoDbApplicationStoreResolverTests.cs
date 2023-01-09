@@ -35,7 +35,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
     Assert.NotNull(store);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_ServiceProviderIsNull()
   {
     // Arrange, Act & Assert
@@ -43,7 +43,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
       new OpenIddictDynamoDbApplicationStoreResolver(null!));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowInvalidOperationException_When_NoImplementationHasBeenRegistered()
   {
     // Arrange
@@ -56,7 +56,7 @@ public class OpenIddictDynamoDbApplicationStoreResolverTests
       resolver.Get<OpenIddictDynamoDbApplication>());
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
   {
     // Arrange

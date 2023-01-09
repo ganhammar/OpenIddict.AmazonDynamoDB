@@ -13,7 +13,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
 
   public OpenIddictDynamoDbTokenStoreResolverTests(LocalDatabaseFixture fixture) => _client = fixture.Client;
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ReturnTokenStore_When_ItHasBeenRegistered()
   {
     // Arrange
@@ -35,7 +35,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
     Assert.NotNull(store);
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowArgumentNullException_When_ServiceProviderIsNull()
   {
     // Arrange, Act & Assert
@@ -43,7 +43,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
       new OpenIddictDynamoDbTokenStoreResolver(null!));
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowInvalidOperationException_When_NoImplementationHasBeenRegistered()
   {
     // Arrange
@@ -56,7 +56,7 @@ public class OpenIddictDynamoDbTokenStoreResolverTests
       resolver.Get<OpenIddictDynamoDbToken>());
   }
 
-  [Fact(Skip = "Test")]
+  [Fact]
   public void Should_ThrowInvalidOperationException_When_TypeIsNotCorrectType()
   {
     // Arrange

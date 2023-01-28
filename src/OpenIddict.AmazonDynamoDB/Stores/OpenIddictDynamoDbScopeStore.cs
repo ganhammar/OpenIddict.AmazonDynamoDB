@@ -28,6 +28,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     ArgumentNullException.ThrowIfNull(optionsMonitor);
 
     var options = optionsMonitor.CurrentValue;
+    DynamoDbTableSetup.EnsureAliasCreated(options);
 
     if (options.Database == default && database == default)
     {

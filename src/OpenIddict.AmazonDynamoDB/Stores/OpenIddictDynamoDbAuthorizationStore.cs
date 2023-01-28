@@ -27,6 +27,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(optionsMonitor);
 
     var options = optionsMonitor.CurrentValue;
+    DynamoDbTableSetup.EnsureAliasCreated(options);
 
     if (options.Database == default && database == default)
     {

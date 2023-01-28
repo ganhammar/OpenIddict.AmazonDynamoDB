@@ -27,6 +27,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(optionsMonitor);
 
     var options = optionsMonitor.CurrentValue;
+    DynamoDbTableSetup.EnsureAliasCreated(options);
 
     if (options.Database == default && database == default)
     {

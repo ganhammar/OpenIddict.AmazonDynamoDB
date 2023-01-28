@@ -17,13 +17,18 @@ public static class DynamoDbTableSetup
     ArgumentNullException.ThrowIfNull(options);
     ArgumentNullException.ThrowIfNull(dynamoDb);
 
+    EnsureAliasCreated(options);
+
+    return SetupTable(options, dynamoDb, cancellationToken);
+  }
+
+  public static void EnsureAliasCreated(OpenIddictDynamoDbOptions options)
+  {
     if (options.DefaultTableName != Constants.DefaultTableName)
     {
       AWSConfigsDynamoDB.Context.TableAliases
         .TryAdd(Constants.DefaultTableName, options.DefaultTableName);
     }
-
-    return SetupTable(options, dynamoDb, cancellationToken);
   }
 
   private static async Task SetupTable(

@@ -1,4 +1,4 @@
-namespace OpenIddict.AmazonDynamoDB;
+﻿namespace OpenIddict.AmazonDynamoDB;
 
 public class EmptyAsyncEnumerable<T> : IAsyncEnumerable<T>
 {

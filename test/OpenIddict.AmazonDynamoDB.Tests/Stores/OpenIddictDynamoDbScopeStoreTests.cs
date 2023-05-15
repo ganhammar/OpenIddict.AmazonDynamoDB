@@ -326,7 +326,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   }
 
   [Fact]
-  public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
+  public async Task Should_ReturnListOffOne_When_FindingScopesByNameWithMatch()
   {
     // Arrange
     var context = new DynamoDBContext(_client);
@@ -356,6 +356,28 @@ public class OpenIddictDynamoDbScopeStoreTests
       matchedScopes.Add(scope);
     }
     Assert.Equal(scopeCount, matchedScopes.Count);
+  }
+
+  [Fact]
+  public async Task Should_ReturnEmptyList_When_FindingScopesByNameWithEmptyList()
+  {
+    // Arrange
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act
+    var scopes = scopeStore.FindByNamesAsync(
+      new List<string>().ToImmutableArray(), CancellationToken.None);
+
+    // Assert
+    var matchedScopes = new List<OpenIddictDynamoDbScope>();
+    await foreach (var scope in scopes)
+    {
+      matchedScopes.Add(scope);
+    }
+    Assert.Empty(matchedScopes);
   }
 
   [Fact]

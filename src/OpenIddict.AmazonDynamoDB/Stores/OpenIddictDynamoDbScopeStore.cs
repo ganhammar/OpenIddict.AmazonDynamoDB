@@ -174,6 +174,10 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     {
       throw new NotSupportedException("Cannot fetch more than 100 scopes at a time");
     }
+    else if (names is { Length: 0 })
+    {
+      return AsyncEnumerable.Empty<TScope>();
+    }
 
     return ExecuteAsync(cancellationToken);
 

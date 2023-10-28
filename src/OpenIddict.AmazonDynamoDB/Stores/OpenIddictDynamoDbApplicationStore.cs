@@ -251,7 +251,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     }
   }
 
-  public ValueTask<TResult> GetAsync<TState, TResult>(Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)
+  public ValueTask<TResult?> GetAsync<TState, TResult>(Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query, TState state, CancellationToken cancellationToken)
   {
     throw new NotSupportedException();
   }

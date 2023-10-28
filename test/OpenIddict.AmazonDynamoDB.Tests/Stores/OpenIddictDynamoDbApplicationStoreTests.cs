@@ -556,8 +556,8 @@ public class OpenIddictDynamoDbApplicationStoreTests
     var updatedApplication = await applicationStore.FindByIdAsync(application.Id, CancellationToken.None);
     Assert.NotNull(updatedApplication);
     Assert.Equal(updatedApplication!.RedirectUris!.First(), redirectUri);
-    Assert.Single(updatedApplication.RedirectUris);
-    Assert.Single(updatedApplication.PostLogoutRedirectUris);
+    Assert.Single(updatedApplication.RedirectUris!);
+    Assert.Single(updatedApplication.PostLogoutRedirectUris!);
   }
 
   [Fact]

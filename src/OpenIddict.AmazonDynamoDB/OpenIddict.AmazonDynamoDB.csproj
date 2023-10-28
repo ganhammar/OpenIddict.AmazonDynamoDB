@@ -12,6 +12,7 @@
     <Description>DynamoDB integration for OpenIddict</Description>
     <PackageTags>OpenIddict, DynamoDB</PackageTags>
     <PackageId>Community.OpenIddict.AmazonDynamoDB</PackageId>
+    <PackageReadmeFile>../../README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

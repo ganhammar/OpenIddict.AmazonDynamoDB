@@ -14,7 +14,7 @@ public class OpenIddictDynamoDbApplicationRedirect
   [DynamoDBRangeKey]
   public string? SortKey
   {
-    get => $"REDIRECT#{RedirectUri}#{RedirectType.ToString()}";
+    get => $"REDIRECT#{RedirectUri}#{RedirectType}";
     set { }
   }
   public string? RedirectUri { get; set; }

@@ -28,6 +28,5 @@ public class OpenIddictDynamoDbScope
   [DynamoDBProperty("ScopeName")]
   public virtual string? Name { get; set; }
   public virtual string? Properties { get; set; }
-  [DynamoDBIgnore]
   public virtual List<string>? Resources { get; set; } = new List<string>();
 }

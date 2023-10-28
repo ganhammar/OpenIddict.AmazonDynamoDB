@@ -26,10 +26,8 @@ public class OpenIddictDynamoDbApplication
   public virtual Dictionary<string, string>? DisplayNames { get; set; }
     = new Dictionary<string, string>();
   public virtual List<string>? Permissions { get; set; } = new List<string>();
-  [DynamoDBIgnore]
   public virtual List<string>? PostLogoutRedirectUris { get; set; } = new List<string>();
   public virtual string? Properties { get; set; }
-  [DynamoDBIgnore]
   public virtual List<string>? RedirectUris { get; set; } = new List<string>();
   public virtual List<string>? Requirements { get; set; } = new List<string>();
   public virtual string? Type { get; set; }

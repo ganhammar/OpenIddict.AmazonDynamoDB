@@ -57,8 +57,8 @@ public static class DynamoDbTableSetup
           IndexName = "ApplicationId-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("ApplicationId", KeyType.HASH),
-            new KeySchemaElement("SortKey", KeyType.RANGE),
+            new("ApplicationId", KeyType.HASH),
+            new("SortKey", KeyType.RANGE),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -71,8 +71,8 @@ public static class DynamoDbTableSetup
           IndexName = "Subject-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("Subject", KeyType.HASH),
-            new KeySchemaElement("SearchKey", KeyType.RANGE),
+            new("Subject", KeyType.HASH),
+            new("SearchKey", KeyType.RANGE),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -86,7 +86,7 @@ public static class DynamoDbTableSetup
           IndexName = "ClientId-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("ClientId", KeyType.HASH),
+            new("ClientId", KeyType.HASH),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -99,8 +99,8 @@ public static class DynamoDbTableSetup
           IndexName = "RedirectUri-RedirectType-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("RedirectUri", KeyType.HASH),
-            new KeySchemaElement("RedirectType", KeyType.RANGE),
+            new("RedirectUri", KeyType.HASH),
+            new("RedirectType", KeyType.RANGE),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -114,7 +114,7 @@ public static class DynamoDbTableSetup
           IndexName = "Name-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("ScopeName", KeyType.HASH),
+            new("ScopeName", KeyType.HASH),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -124,10 +124,11 @@ public static class DynamoDbTableSetup
         },
         new()
         {
-          IndexName = "Resource-index",
+          IndexName = "ScopeId-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("ScopeResource", KeyType.HASH),
+            new("ScopeId", KeyType.HASH),
+            new("PartitionKey", KeyType.RANGE),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -141,7 +142,7 @@ public static class DynamoDbTableSetup
           IndexName = "AuthorizationId-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("AuthorizationId", KeyType.HASH),
+            new("AuthorizationId", KeyType.HASH),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -154,7 +155,7 @@ public static class DynamoDbTableSetup
           IndexName = "ReferenceId-index",
           KeySchema = new List<KeySchemaElement>
           {
-            new KeySchemaElement("ReferenceId", KeyType.HASH),
+            new("ReferenceId", KeyType.HASH),
           },
           ProvisionedThroughput = provisionedThroughput,
           Projection = new Projection
@@ -182,7 +183,8 @@ public static class DynamoDbTableSetup
         new("SearchKey", ScalarAttributeType.S),
         // Scope
         new("ScopeName", ScalarAttributeType.S),
-        new("ScopeResource", ScalarAttributeType.S),
+        // Scope Lookup
+        new("ScopeId", ScalarAttributeType.S),
         // Token
         new("AuthorizationId", ScalarAttributeType.S),
         new("ReferenceId", ScalarAttributeType.S),

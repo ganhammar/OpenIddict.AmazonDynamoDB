@@ -131,11 +131,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     var applications = await search.GetRemainingAsync(cancellationToken);
     var application = applications?.FirstOrDefault();
 
-    if (application != default)
-    {
-      await SetRedirectUris(application, cancellationToken);
-    }
-
     return application;
   }
 
@@ -151,38 +146,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     application = await _context.LoadAsync<TApplication>(
       application.PartitionKey, application.SortKey, cancellationToken);
 
-    if (application != default)
-    {
-      await SetRedirectUris(application, cancellationToken);
-    }
-
     return application;
-  }
-
-  private async Task SetRedirectUris(TApplication application, CancellationToken cancellationToken)
-  {
-    var applicationId = application.Id;
-    var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
-    {
-      KeyExpression = new Expression
-      {
-        ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
-        {
-          { ":partitionKey", application.PartitionKey },
-          { ":sortKey", "REDIRECT#" },
-        }
-      },
-    });
-    var applicationRedirects = await search.GetRemainingAsync(cancellationToken);
-    application.RedirectUris = applicationRedirects
-      .Where(x => x.RedirectType == RedirectType.RedirectUri)
-      .Select(x => x.RedirectUri!)
-      .ToList();
-    application.PostLogoutRedirectUris = applicationRedirects
-      .Where(x => x.RedirectType == RedirectType.PostLogoutRedirectUri)
-      .Select(x => x.RedirectUri!)
-      .ToList();
   }
 
   public IAsyncEnumerable<TApplication> FindByPostLogoutRedirectUriAsync(string address, CancellationToken cancellationToken)
@@ -243,8 +207,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
         foreach (var application in batch.Results)
         {
-          await SetRedirectUris(application, cancellationToken);
-
           yield return application;
         }
       }

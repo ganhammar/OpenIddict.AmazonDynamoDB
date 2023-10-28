@@ -30,7 +30,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     var exception = Assert.Throws<ArgumentNullException>(() =>
       new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(TestUtils.GetOptions(new())));
 
-    Assert.Equal("Database", exception.ParamName);
+    Assert.Equal("options.Database", exception.ParamName);
   }
 
   [Fact]
@@ -267,20 +267,6 @@ public class OpenIddictDynamoDbScopeStoreTests
   }
 
   [Fact]
-  public async Task Should_ThrowException_When_TryingToFindScopeByNamesAndNamesIsMoreThanAHundredItems()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var names = Enumerable.Range(0, 101).Select(index => index.ToString()).ToImmutableArray();
-    var exception = Assert.Throws<NotSupportedException>(() =>
-      scopeStore.FindByNamesAsync(names, CancellationToken.None));
-  }
-
-  [Fact]
   public async Task Should_ThrowException_When_TryingToFindScopeByResourceAndResourceIsNull()
   {
     // Arrange
@@ -306,6 +292,7 @@ public class OpenIddictDynamoDbScopeStoreTests
     var resource = $"some-resource-{Guid.NewGuid()}";
     await scopeStore.CreateAsync(new OpenIddictDynamoDbScope
     {
+      Name = "some-scope-name",
       Resources = new List<string>
       {
         resource,
@@ -326,7 +313,7 @@ public class OpenIddictDynamoDbScopeStoreTests
   }
 
   [Fact]
-  public async Task Should_ReturnListOffOne_When_FindingScopesByNameWithMatch()
+  public async Task Should_ReturnCompleteListOfScopes_When_FindingScopesByNameWithMatches()
   {
     // Arrange
     var context = new DynamoDBContext(_client);

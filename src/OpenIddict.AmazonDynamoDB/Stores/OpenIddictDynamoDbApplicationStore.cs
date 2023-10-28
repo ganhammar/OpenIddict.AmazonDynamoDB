@@ -30,9 +30,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     var options = optionsMonitor.CurrentValue;
     DynamoDbTableSetup.EnsureAliasCreated(options);
 
-    if (options.Database == default && database == default)
+    if (database == default)
     {
-      throw new ArgumentNullException(nameof(options.Database));
+      ArgumentNullException.ThrowIfNull(options.Database);
     }
 
     _client = database ?? options.Database!;
@@ -115,13 +115,13 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    var search = _context.FromQueryAsync<TApplication>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<TApplication>(new()
     {
       IndexName = "ClientId-index",
       KeyExpression = new Expression
       {
         ExpressionStatement = "ClientId = :clientId",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":clientId", identifier },
         }
@@ -176,13 +176,13 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new()
       {
         IndexName = "RedirectUri-RedirectType-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "RedirectUri = :redirectUri and RedirectType = :redirectType",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":redirectUri", address },
             { ":redirectType", (int)redirectType },
@@ -497,7 +497,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     }
 
     using var stream = new MemoryStream();
-    using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+    using var writer = new Utf8JsonWriter(stream, new()
     {
       Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
       Indented = false
@@ -570,12 +570,12 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     // Update application redirects
     // Fetch all redirects
     var applicationId = application.Id;
-    var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new()
     {
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":partitionKey", application.PartitionKey },
           { ":sortKey", "REDIRECT#" },

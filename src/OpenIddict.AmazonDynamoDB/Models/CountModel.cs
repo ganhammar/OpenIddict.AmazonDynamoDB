@@ -15,13 +15,13 @@ internal class CountModel
   [DynamoDBHashKey]
   public string PartitionKey
   {
-    get => $"COUNT#{Type.ToString()}";
+    get => $"COUNT#{Type}";
     private set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey
   {
-    get => $"#COUNT#{Type.ToString()}";
+    get => $"#COUNT#{Type}";
     set { }
   }
 

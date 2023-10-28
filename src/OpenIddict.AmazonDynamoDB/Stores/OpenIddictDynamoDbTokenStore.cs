@@ -78,13 +78,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TToken>(new()
       {
         IndexName = "Subject-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":subject", subject },
             { ":searchKey", searchKey },
@@ -136,13 +136,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TToken>(new()
       {
         IndexName = "ApplicationId-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "ApplicationId = :applicationId",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":applicationId", identifier },
           }
@@ -166,13 +166,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TToken>(new()
       {
         IndexName = "AuthorizationId-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "AuthorizationId = :authorizationId",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":authorizationId", identifier },
           }
@@ -199,13 +199,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<TToken>(new()
     {
       IndexName = "ReferenceId-index",
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "ReferenceId = :referenceId",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":referenceId", identifier },
         }
@@ -224,13 +224,13 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TToken>(new()
       {
         IndexName = "Subject-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "Subject = :subject",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":subject", subject },
           }
@@ -605,19 +605,19 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
   private async Task<TToken?> GetByPartitionKey(TToken token, CancellationToken cancellationToken)
   {
-    var search = _context.FromQueryAsync<TToken>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<TToken>(new()
     {
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "PartitionKey = :partitionKey",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":partitionKey", token.PartitionKey },
         }
       },
       Limit = 1,
     });
-    var result = await search.GetNextSetAsync();
+    var result = await search.GetNextSetAsync(cancellationToken);
 
     return result.Any() ? result.First() : default;
   }

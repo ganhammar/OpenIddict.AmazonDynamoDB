@@ -77,13 +77,13 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TAuthorization>(new()
       {
         IndexName = "Subject-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":subject", subject },
             { ":searchKey", searchKey },
@@ -172,13 +172,13 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TAuthorization>(new()
       {
         IndexName = "ApplicationId-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "ApplicationId = :applicationId",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":applicationId", identifier },
           }
@@ -209,13 +209,13 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<TAuthorization>(new()
       {
         IndexName = "Subject-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "Subject = :subject",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":subject", subject },
           }
@@ -407,19 +407,19 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     // Add authorizations which is ad hoc and has no tokens
     foreach (var authorization in remainingAdHocAuthorizations)
     {
-      var tokensQuery = _context.FromQueryAsync<OpenIddictDynamoDbToken>(new QueryOperationConfig
+      var tokensQuery = _context.FromQueryAsync<OpenIddictDynamoDbToken>(new()
       {
         IndexName = "AuthorizationId-index",
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "AuthorizationId = :authorizationId",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":authorizationId", authorization.Id },
           }
         },
       });
-      var tokens = await tokensQuery.GetRemainingAsync();
+      var tokens = await tokensQuery.GetRemainingAsync(cancellationToken);
 
       if (tokens.Any() == false)
       {
@@ -556,19 +556,19 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
   private async Task<TAuthorization?> GetByPartitionKey(TAuthorization token, CancellationToken cancellationToken)
   {
-    var search = _context.FromQueryAsync<TAuthorization>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<TAuthorization>(new()
     {
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "PartitionKey = :partitionKey",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":partitionKey", token.PartitionKey },
         }
       },
       Limit = 1,
     });
-    var result = await search.GetNextSetAsync();
+    var result = await search.GetNextSetAsync(cancellationToken);
 
     return result.Any() ? result.First() : default;
   }

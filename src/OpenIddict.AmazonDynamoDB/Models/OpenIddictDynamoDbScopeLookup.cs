@@ -31,9 +31,3 @@ public class OpenIddictDynamoDbScopeLookup
   public string? LookupSeparator { get; set; }
   public string? ScopeId { get; set; }
 }
-
-public enum LookupType
-{
-  Resource,
-  Name
-}

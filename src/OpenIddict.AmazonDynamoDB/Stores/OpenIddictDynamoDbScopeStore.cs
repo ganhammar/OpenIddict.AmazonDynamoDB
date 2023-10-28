@@ -91,13 +91,13 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
   {
     ArgumentNullException.ThrowIfNull(name);
 
-    var search = _context.FromQueryAsync<TScope>(new QueryOperationConfig
+    var search = _context.FromQueryAsync<TScope>(new()
     {
       IndexName = "Name-index",
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "ScopeName = :name",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":name", name },
         },
@@ -156,12 +156,12 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
       var lookup = new OpenIddictDynamoDbScopeLookup(resource, LookupType.Resource);
-      var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeLookup>(new QueryOperationConfig
+      var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeLookup>(new()
       {
-        KeyExpression = new Expression
+        KeyExpression = new()
         {
           ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
-          ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+          ExpressionAttributeValues = new()
           {
             { ":partitionKey", lookup.PartitionKey },
             { ":sortKey", lookup.SortKey },
@@ -475,10 +475,10 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeLookup>(new()
     {
       IndexName = "ScopeId-index",
-      KeyExpression = new Expression
+      KeyExpression = new()
       {
         ExpressionStatement = "ScopeId = :scopeId and begins_with(PartitionKey, :partitionKey)",
-        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+        ExpressionAttributeValues = new()
         {
           { ":scopeId", scope.Id },
           { ":partitionKey", "SCOPELOOKUP#" },

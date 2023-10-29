@@ -29,9 +29,9 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     var options = optionsMonitor.CurrentValue;
     DynamoDbTableSetup.EnsureAliasCreated(options);
 
-    if (options.Database == default && database == default)
+    if (database == default)
     {
-      throw new ArgumentNullException(nameof(options.Database));
+      ArgumentNullException.ThrowIfNull(options.Database);
     }
 
     _client = database ?? options.Database!;
@@ -406,7 +406,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     var filter = new ScanFilter();
     filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
     {
-      new AttributeValue(threshold.UtcDateTime.ToString("o")),
+      new(threshold.UtcDateTime.ToString("o")),
     });
     var search = _context.FromScanAsync<TToken>(new ScanOperationConfig
     {
@@ -599,6 +599,33 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     }
 
     token.ConcurrencyToken = Guid.NewGuid().ToString();
+
+    if (new[] { Statuses.Inactive, Statuses.Valid }.Contains(token.Status) == false)
+    {
+      token.TTL = DateTime.UtcNow.AddMinutes(5);
+    }
+    else
+    {
+      token.TTL = token.ExpirationDate;
+    }
+
+    // If token is set to be deleted, also mark the corresponding authorization for deletion
+    if (token.TTL != default)
+    {
+      var authorization = new OpenIddictDynamoDbAuthorization
+      {
+        Id = token.AuthorizationId!,
+      };
+      authorization = await _context.LoadAsync<OpenIddictDynamoDbAuthorization>(
+        authorization.PartitionKey, authorization.SortKey, cancellationToken);
+
+      if (authorization != default)
+      {
+        authorization.TTL = token.TTL;
+
+        await _context.SaveAsync(authorization, cancellationToken);
+      }
+    }
 
     await _context.SaveAsync(token, cancellationToken);
   }

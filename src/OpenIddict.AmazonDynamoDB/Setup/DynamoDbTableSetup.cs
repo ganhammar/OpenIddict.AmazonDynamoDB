@@ -2,12 +2,13 @@
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using OpenIddict.AmazonDynamoDB.Migration;
 
 namespace OpenIddict.AmazonDynamoDB;
 
 public static class DynamoDbTableSetup
 {
-  public static Task EnsureInitializedAsync(
+  public static async Task EnsureInitializedAsync(
     OpenIddictDynamoDbOptions options,
     IAmazonDynamoDB? database = default,
     CancellationToken cancellationToken = default)
@@ -19,7 +20,8 @@ public static class DynamoDbTableSetup
 
     EnsureAliasCreated(options);
 
-    return SetupTable(options, dynamoDb, cancellationToken);
+    await SetupTable(options, dynamoDb, cancellationToken);
+    await Migrate(options, dynamoDb, cancellationToken);
   }
 
   public static void EnsureAliasCreated(OpenIddictDynamoDbOptions options)
@@ -200,5 +202,13 @@ public static class DynamoDbTableSetup
       database,
       options.DefaultTableName,
       cancellationToken);
+  }
+
+  private static async Task Migrate(
+    OpenIddictDynamoDbOptions options,
+    IAmazonDynamoDB database,
+    CancellationToken cancellationToken)
+  {
+    await UpdateScopeIndexes.Migrate(options, database, cancellationToken);
   }
 }

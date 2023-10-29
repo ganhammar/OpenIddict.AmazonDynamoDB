@@ -30,7 +30,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var exception = Assert.Throws<ArgumentNullException>(() =>
       new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(TestUtils.GetOptions(new())));
 
-    Assert.Equal("Database", exception.ParamName);
+    Assert.Equal("options.Database", exception.ParamName);
   }
 
   [Fact]

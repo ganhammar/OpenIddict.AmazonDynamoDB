@@ -29,9 +29,9 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     var options = optionsMonitor.CurrentValue;
     DynamoDbTableSetup.EnsureAliasCreated(options);
 
-    if (options.Database == default && database == default)
+    if (database == default)
     {
-      throw new ArgumentNullException(nameof(options.Database));
+      ArgumentNullException.ThrowIfNull(options.Database);
     }
 
     _client = database ?? options.Database!;
@@ -379,7 +379,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     var filter = new ScanFilter();
     filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
     {
-      new AttributeValue(threshold.UtcDateTime.ToString("o")),
+      new(threshold.UtcDateTime.ToString("o")),
     });
     var search = _context.FromScanAsync<TAuthorization>(new ScanOperationConfig
     {
@@ -550,6 +550,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     }
 
     authorization.ConcurrencyToken = Guid.NewGuid().ToString();
+
+    if (authorization.Status != Statuses.Valid)
+    {
+      authorization.TTL = DateTime.UtcNow.AddMinutes(5);
+    }
 
     await _context.SaveAsync(authorization, cancellationToken);
   }

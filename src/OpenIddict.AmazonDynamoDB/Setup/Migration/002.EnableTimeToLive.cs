@@ -11,7 +11,7 @@ public static class EnableTimeToLive
   {
     var ttlSettings = await database.DescribeTimeToLiveAsync(options.DefaultTableName, cancellationToken);
 
-    if (new[] { TimeToLiveStatus.ENABLED, TimeToLiveStatus.ENABLING }.Contains(ttlSettings.TimeToLiveDescription.TimeToLiveStatus) == false)
+    if (new[] { TimeToLiveStatus.ENABLED, TimeToLiveStatus.ENABLING }.Contains(ttlSettings.TimeToLiveDescription.TimeToLiveStatus) == true)
     {
       return;
     }

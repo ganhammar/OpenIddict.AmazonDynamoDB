@@ -33,7 +33,7 @@ public static class OpenIddictDynamoDbSetup
     CancellationToken cancellationToken = default)
   {
     await DynamoDbTableSetup.EnsureInitializedAsync(
-      openIddictDynamoDbOptions.CurrentValue, database);
+      openIddictDynamoDbOptions.CurrentValue, database, cancellationToken);
   }
 
   public static void EnsureInitialized(

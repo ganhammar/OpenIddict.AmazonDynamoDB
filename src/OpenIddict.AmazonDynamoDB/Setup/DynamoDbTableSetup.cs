@@ -46,7 +46,7 @@ public static class DynamoDbTableSetup
 
     var provisionedThroughput = options.BillingMode != BillingMode.PAY_PER_REQUEST
       ? options.ProvisionedThroughput : default;
-    var response = await database.CreateTableAsync(new CreateTableRequest
+    var response = await database.CreateTableAsync(new()
     {
       TableName = options.DefaultTableName,
       ProvisionedThroughput = provisionedThroughput,
@@ -210,5 +210,6 @@ public static class DynamoDbTableSetup
     CancellationToken cancellationToken)
   {
     await UpdateScopeIndexes.Migrate(options, database, cancellationToken);
+    await EnableTimeToLive.Migrate(options, database, cancellationToken);
   }
 }

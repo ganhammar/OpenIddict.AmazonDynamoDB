@@ -371,7 +371,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     throw new NotSupportedException();
   }
 
-  // TODO: Use DynamoDB expirations instead
+  // Should not be needed to run, TTL should handle the pruning
   public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
     var deleteCount = 0;

@@ -36,6 +36,6 @@ public class OpenIddictDynamoDbToken
     get => $"APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}";
     set { }
   }
-  [DynamoDBProperty("ttl")]
+  [DynamoDBProperty("ttl", storeAsEpoch: true)]
   public DateTime? TTL { get; set; }
 }

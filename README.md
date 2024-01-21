@@ -31,7 +31,7 @@ services
     });
 ```
 
-Finally you need to ensure that tables and indexes has been added:
+Finally, you need to ensure that tables and indexes have been added:
 
 ```c#
 OpenIddictDynamoDbSetup.EnsureInitialized(serviceProvider);

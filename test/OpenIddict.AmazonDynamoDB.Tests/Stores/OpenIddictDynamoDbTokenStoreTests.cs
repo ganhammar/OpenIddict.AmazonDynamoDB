@@ -987,7 +987,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await tokenStore.SetCreationDateAsync(default!, default, CancellationToken.None));
+      await tokenStore.SetCreationDateAsync(default!, default, CancellationToken.None));
     Assert.Equal("token", exception.ParamName);
   }
 
@@ -1019,7 +1019,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await tokenStore.SetExpirationDateAsync(default!, default, CancellationToken.None));
+      await tokenStore.SetExpirationDateAsync(default!, default, CancellationToken.None));
     Assert.Equal("token", exception.ParamName);
   }
 
@@ -1147,7 +1147,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await tokenStore.SetSubjectAsync(default!, default, CancellationToken.None));
+      await tokenStore.SetSubjectAsync(default!, default, CancellationToken.None));
     Assert.Equal("token", exception.ParamName);
   }
 
@@ -1211,7 +1211,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        await tokenStore.SetReferenceIdAsync(default!, default, CancellationToken.None));
+      await tokenStore.SetReferenceIdAsync(default!, default, CancellationToken.None));
     Assert.Equal("token", exception.ParamName);
   }
 
@@ -1237,7 +1237,7 @@ public class OpenIddictDynamoDbTokenStoreTests
   [InlineData(default!, "test", "subject")]
   [InlineData("test", default!, "client")]
   public async Task Should_ThrowException_When_TryingToFindAndRequiredVariablesIsNotSet(
-      string subject, string client, string expectedNullParameterName)
+    string? subject, string? client, string expectedNullParameterName)
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
@@ -1246,7 +1246,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        tokenStore.FindAsync(subject, client, CancellationToken.None));
+      tokenStore.FindAsync(subject!, client!, CancellationToken.None));
     Assert.Equal(expectedNullParameterName, exception.ParamName);
   }
 
@@ -1255,7 +1255,7 @@ public class OpenIddictDynamoDbTokenStoreTests
   [InlineData("test", default!, "test", "client")]
   [InlineData("test", "test", default!, "status")]
   public async Task Should_ThrowException_When_TryingToFindWithStatusAndRequiredVariablesIsNotSet(
-      string subject, string client, string status, string expectedNullParameterName)
+    string? subject, string? client, string? status, string expectedNullParameterName)
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
@@ -1264,7 +1264,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        tokenStore.FindAsync(subject, client, status, CancellationToken.None));
+      tokenStore.FindAsync(subject!, client!, status!, CancellationToken.None));
     Assert.Equal(expectedNullParameterName, exception.ParamName);
   }
 
@@ -1274,7 +1274,7 @@ public class OpenIddictDynamoDbTokenStoreTests
   [InlineData("test", "test", default!, "test", "status")]
   [InlineData("test", "test", "test", default!, "type")]
   public async Task Should_ThrowException_When_TryingToFindWithStatusAndTypeAndRequiredVariablesIsNotSet(
-      string subject, string client, string status, string type, string expectedNullParameterName)
+    string? subject, string? client, string? status, string? type, string expectedNullParameterName)
   {
     // Arrange
     var options = TestUtils.GetOptions(new() { Database = _client });
@@ -1283,7 +1283,7 @@ public class OpenIddictDynamoDbTokenStoreTests
 
     // Act & Assert
     var exception = Assert.Throws<ArgumentNullException>(() =>
-        tokenStore.FindAsync(subject, client, status, type, CancellationToken.None));
+      tokenStore.FindAsync(subject!, client!, status!, type!, CancellationToken.None));
     Assert.Equal(expectedNullParameterName, exception.ParamName);
   }
 
@@ -1291,7 +1291,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnEmptyList_When_FindingTokensWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1312,7 +1311,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffOne_When_FindingTokensWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1343,7 +1341,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffMany_When_FindingTokensWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1377,7 +1374,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnEmptyList_When_FindingTokensWithStatusAndNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1398,7 +1394,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffOne_When_FindingTokensWithStatusAndMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1431,7 +1426,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffMany_When_FindingTokensWithStatusAndMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1488,7 +1482,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffOne_When_FindingTokensWithStatusAndTypeAndMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1523,7 +1516,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnListOffMany_When_FindingTokensWithStatusAndTypeAndMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);

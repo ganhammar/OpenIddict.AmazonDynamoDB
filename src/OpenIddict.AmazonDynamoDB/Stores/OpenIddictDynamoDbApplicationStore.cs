@@ -10,6 +10,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 
 namespace OpenIddict.AmazonDynamoDB;
@@ -342,6 +343,42 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     return new(application.Requirements.ToImmutableArray());
   }
 
+  public ValueTask<string?> GetApplicationTypeAsync(TApplication application, CancellationToken cancellationToken)
+  {
+    ArgumentNullException.ThrowIfNull(application);
+
+    return new(application.ApplicationType);
+  }
+
+  public ValueTask<JsonWebKeySet?> GetJsonWebKeySetAsync(TApplication application, CancellationToken cancellationToken)
+  {
+    if (application is null)
+    {
+      throw new ArgumentNullException(nameof(application));
+    }
+
+    if (application.JsonWebKeySet is null)
+    {
+      return new(result: null);
+    }
+
+    return new(JsonWebKeySet.Create(application.JsonWebKeySet));
+  }
+
+  public ValueTask<ImmutableDictionary<string, string>> GetSettingsAsync(TApplication application, CancellationToken cancellationToken)
+  {
+    ArgumentNullException.ThrowIfNull(application);
+
+    if (application.Settings is not { Count: > 0 })
+    {
+      return new(ImmutableDictionary.Create<string, string>());
+    }
+
+    return new(application.Settings.ToImmutableDictionary(
+      pair => pair.Key,
+      pair => pair.Value));
+  }
+
   public ValueTask<TApplication> InstantiateAsync(CancellationToken cancellationToken)
   {
     try
@@ -547,6 +584,46 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     }
 
     application.Requirements = requirements.ToList();
+
+    return default;
+  }
+
+  public ValueTask SetApplicationTypeAsync(TApplication application, string? type, CancellationToken cancellationToken)
+  {
+    ArgumentNullException.ThrowIfNull(application);
+
+    application.ApplicationType = type;
+
+    return default;
+  }
+
+  public ValueTask SetJsonWebKeySetAsync(TApplication application, JsonWebKeySet? set, CancellationToken cancellationToken)
+  {
+    if (application is null)
+    {
+      throw new ArgumentNullException(nameof(application));
+    }
+
+    application.JsonWebKeySet = set is not null ? JsonSerializer.Serialize(set) : null;
+
+    return default;
+  }
+
+  public ValueTask SetSettingsAsync(TApplication application, ImmutableDictionary<string, string> settings, CancellationToken cancellationToken)
+  {
+    if (application is null)
+    {
+      throw new ArgumentNullException(nameof(application));
+    }
+
+    if (settings is not { Count: > 0 })
+    {
+      application.Settings = null;
+
+      return default;
+    }
+
+    application.Settings = settings.ToDictionary(x => x.Key, x => x.Value); ;
 
     return default;
   }

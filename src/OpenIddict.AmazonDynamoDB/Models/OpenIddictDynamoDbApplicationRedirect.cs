@@ -9,7 +9,7 @@ public class OpenIddictDynamoDbApplicationRedirect
   public string PartitionKey
   {
     get => $"APPLICATION#{ApplicationId}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

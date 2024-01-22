@@ -7,7 +7,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;

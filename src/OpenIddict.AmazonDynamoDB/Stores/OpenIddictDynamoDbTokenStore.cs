@@ -399,7 +399,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   }
 
   // Should not be needed to run, TTL should handle the pruning
-  public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+  public async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
     var deleteCount = 0;
     // Get all tokens which is older than threshold
@@ -461,6 +461,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     var count = await CountAsync(cancellationToken);
     await _context.SaveAsync(new CountModel(CountType.Token, count - deleteCount), cancellationToken);
+
+    return deleteCount;
   }
 
   public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
@@ -647,5 +649,10 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     var result = await search.GetNextSetAsync(cancellationToken);
 
     return result.Any() ? result.First() : default;
+  }
+
+  public ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
   }
 }

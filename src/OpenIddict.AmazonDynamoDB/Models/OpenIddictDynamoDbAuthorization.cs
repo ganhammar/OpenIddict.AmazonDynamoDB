@@ -9,7 +9,7 @@ public class OpenIddictDynamoDbAuthorization
   public string PartitionKey
   {
     get => $"AUTHORIZATION#{Id}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

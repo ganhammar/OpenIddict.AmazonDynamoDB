@@ -18,7 +18,7 @@ public class OpenIddictDynamoDbScopeLookup
   public string PartitionKey
   {
     get => $"SCOPELOOKUP#{LookupValue}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

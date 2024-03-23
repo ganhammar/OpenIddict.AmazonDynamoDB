@@ -141,6 +141,31 @@ public class OpenIddictDynamoDbTokenStoreTests
     var databaseToken = await context.LoadAsync<OpenIddictDynamoDbToken>(token.PartitionKey, token.SortKey);
     Assert.NotNull(databaseToken);
     Assert.Equal(token.Subject, databaseToken.Subject);
+    Assert.Null(token.TTL);
+  }
+
+  [Fact]
+  public async Task Should_CreateTokenWithTTL_When_TokenHasAnExpirationDate()
+  {
+    // Arrange
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var token = new OpenIddictDynamoDbToken
+    {
+      Subject = Guid.NewGuid().ToString(),
+      ExpirationDate = DateTime.UtcNow.AddHours(1),
+    };
+
+    // Act
+    await tokenStore.CreateAsync(token, CancellationToken.None);
+
+    // Assert
+    var databaseToken = await context.LoadAsync<OpenIddictDynamoDbToken>(token.PartitionKey, token.SortKey);
+    Assert.NotNull(databaseToken);
+    Assert.Equal(token.Subject, databaseToken.Subject);
+    Assert.Equal(token.TTL, token.ExpirationDate);
   }
 
   [Fact]
@@ -1567,7 +1592,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnToken_When_FindingTokensByIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1604,7 +1628,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnToken_When_FindingTokensByApplicationIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1646,7 +1669,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnToken_When_FindingTokensBySubjectWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1688,7 +1710,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnToken_When_FindingTokensByAuthorizationIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1730,7 +1751,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_ReturnToken_When_FindingTokensByReferenceIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1753,12 +1773,11 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_DeleteAllTokens_When_AllTokensHasExpired()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
-    foreach (var index in Enumerable.Range(0, 10))
+    foreach (var _ in Enumerable.Range(0, 10))
     {
       await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
       {
@@ -1779,14 +1798,13 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_NotDeleteAnyTokens_When_TheyAreOldButNotExpired()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     var numberOfTokens = 10;
-    foreach (var index in Enumerable.Range(0, numberOfTokens))
+    foreach (var _ in Enumerable.Range(0, numberOfTokens))
     {
       var authorization = new OpenIddictDynamoDbAuthorization
       {
@@ -1815,7 +1833,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_DeleteAllTokens_When_TheyHaveNoValidAuthorizations()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
@@ -1850,7 +1867,6 @@ public class OpenIddictDynamoDbTokenStoreTests
   public async Task Should_DeleteSomeTokens_When_SomeAreOutsideOfTheThresholdRange()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
@@ -1879,5 +1895,57 @@ public class OpenIddictDynamoDbTokenStoreTests
     // Assert
     var count = await tokenStore.CountAsync(CancellationToken.None);
     Assert.Equal(beforeCount - 5, count);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToRevokeByAuthorizationIdAndIdentifierIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+        await tokenStore.RevokeByAuthorizationIdAsync(default!, CancellationToken.None));
+    Assert.Equal("identifier", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_RevokeTokens_When_TryingToRevokeByAuthorizationId()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var authorizationId = Guid.NewGuid().ToString();
+    foreach (var _ in Enumerable.Range(0, 10))
+    {
+      var authorization = new OpenIddictDynamoDbAuthorization
+      {
+        Id = authorizationId,
+        Status = Statuses.Valid,
+      };
+      await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+      await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+      {
+        AuthorizationId = authorizationId,
+        Status = Statuses.Valid,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var matchedTokensCount = await tokenStore.RevokeByAuthorizationIdAsync(authorizationId, CancellationToken.None);
+
+    // Assert
+    Assert.Equal(10, matchedTokensCount);
+    var tokens = tokenStore.FindByAuthorizationIdAsync(authorizationId, CancellationToken.None);
+    await foreach (var token in tokens)
+    {
+      Assert.Equal(Statuses.Inactive, token.Status);
+      Assert.NotNull(token.TTL);
+    }
   }
 }

@@ -9,7 +9,7 @@ public class OpenIddictDynamoDbToken
   public string PartitionKey
   {
     get => $"TOKEN#{Id}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

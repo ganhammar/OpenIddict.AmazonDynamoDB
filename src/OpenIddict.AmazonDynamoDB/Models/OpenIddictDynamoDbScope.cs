@@ -9,7 +9,7 @@ public class OpenIddictDynamoDbScope
   public string PartitionKey
   {
     get => $"SCOPE#{Id}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

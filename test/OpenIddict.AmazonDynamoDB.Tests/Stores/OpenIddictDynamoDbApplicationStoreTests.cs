@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Microsoft.IdentityModel.Tokens;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
@@ -1815,5 +1817,273 @@ public class OpenIddictDynamoDbApplicationStoreTests
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
       applicationStore.ListAsync(5, 5, CancellationToken.None));
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToGetApplicationTypeAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.GetApplicationTypeAsync(default!, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_ReturnApplicationType_When_ApplicationIsValid()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication
+    {
+      ApplicationType = ApplicationTypes.Web,
+    };
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var applicationType = await applicationStore.GetApplicationTypeAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(applicationType);
+    Assert.Equal(application.ApplicationType, applicationType);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToSetApplicationTypeAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.SetApplicationTypeAsync(default!, default, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_SetApplicationType_When_ApplicationIsValid()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+
+    // Act
+    var applicationType = Guid.NewGuid().ToString();
+    await applicationStore.SetApplicationTypeAsync(application, applicationType, CancellationToken.None);
+
+    // Assert
+    Assert.Equal(applicationType, application.ApplicationType);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToGetJsonWebKeySetAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.GetJsonWebKeySetAsync(default!, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_ReturnJsonWebKeySet_When_ApplicationIsValid()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication
+    {
+      JsonWebKeySet = "{\"e\":\"AQAB\",\"n\":\"nZD7QWmIwj-3N_RZ1qJjX6CdibU87y2l02yMay4KunambalP9g0fU9yZLwLX9WYJINcXZDUf6QeZ-SSbblET-h8Q4OvfSQ7iuu0WqcvBGy8M0qoZ7I-NiChw8dyybMJHgpiP_AyxpCQnp3bQ6829kb3fopbb4cAkOilwVRBYPhRLboXma0cwcllJHPLvMp1oGa7Ad8osmmJhXhM9qdFFASg_OCQdPnYVzp8gOFeOGwlXfSFEgt5vgeU25E-ycUOREcnP7BnMUk7wpwYqlE537LWGOV5z_1Dqcqc9LmN-z4HmNV7b23QZW4_mzKIOY4IqjmnUGgLU9ycFj5YGDCts7Q\",\"alg\":\"RS256\",\"kid\":\"8f796169-0ac4-48a3-a202-fa4f3d814fcd\",\"kty\":\"RSA\",\"use\":\"sig\"}",
+    };
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var jsonWebKeySet = await applicationStore.GetJsonWebKeySetAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(jsonWebKeySet);
+  }
+
+  [Fact]
+  public async Task Should_ReturnNullResult_When_JsonWebKeySetIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var jsonWebKeySet = await applicationStore.GetJsonWebKeySetAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.Null(jsonWebKeySet);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToSetJsonWebKeySetAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.SetJsonWebKeySetAsync(default!, default, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_SetJsonWebKeySet_When_ApplicationIsValid()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+
+    // Act
+    var jsonWebKeySet = JsonWebKeySet.Create("{\"e\":\"AQAB\",\"n\":\"nZD7QWmIwj-3N_RZ1qJjX6CdibU87y2l02yMay4KunambalP9g0fU9yZLwLX9WYJINcXZDUf6QeZ-SSbblET-h8Q4OvfSQ7iuu0WqcvBGy8M0qoZ7I-NiChw8dyybMJHgpiP_AyxpCQnp3bQ6829kb3fopbb4cAkOilwVRBYPhRLboXma0cwcllJHPLvMp1oGa7Ad8osmmJhXhM9qdFFASg_OCQdPnYVzp8gOFeOGwlXfSFEgt5vgeU25E-ycUOREcnP7BnMUk7wpwYqlE537LWGOV5z_1Dqcqc9LmN-z4HmNV7b23QZW4_mzKIOY4IqjmnUGgLU9ycFj5YGDCts7Q\",\"alg\":\"RS256\",\"kid\":\"8f796169-0ac4-48a3-a202-fa4f3d814fcd\",\"kty\":\"RSA\",\"use\":\"sig\"}");
+    await applicationStore.SetJsonWebKeySetAsync(application, jsonWebKeySet, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(application.JsonWebKeySet);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToGetSettingsAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.GetSettingsAsync(default!, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_ReturnEmptyList_When_ApplicationDoesntHaveAnySettings()
+  {
+    // Arrange
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var settings = await applicationStore.GetSettingsAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.Empty(settings);
+  }
+
+  [Fact]
+  public async Task Should_ReturnSettings_When_ApplicationHasSettings()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication
+    {
+      Settings = new Dictionary<string, string>
+      {
+        { "sv-SE", "Testar" },
+        { "es-ES", "Testado" },
+        { "en-US", "Testing" },
+      },
+    };
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var settings = await applicationStore.GetSettingsAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.Equal(3, settings.Count);
+  }
+
+  [Fact]
+  public async Task Should_ThrowException_When_TryingToSetSettingsAndApplicationIsNull()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+      await applicationStore.SetSettingsAsync(default!, default!, CancellationToken.None));
+    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_SetNull_When_SetEmptyDictionaryAsSettings()
+  {
+    // Arrange
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    await applicationStore.SetSettingsAsync(
+      application,
+      ImmutableDictionary.Create<string, string>(),
+      CancellationToken.None);
+
+    // Assert
+    Assert.Null(application.Settings);
+  }
+
+  [Fact]
+  public async Task Should_SetSettings_When_SettingSettings()
+  {
+    // Arrange
+    var context = new DynamoDBContext(_client);
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    var settings = new Dictionary<string, string>
+    {
+      { "Toast", "Testar" },
+      { "Toastado", "Testado" },
+      { "Toasting", "Testing" },
+    };
+    await applicationStore.SetSettingsAsync(
+      application,
+      settings.ToImmutableDictionary(x => x.Key, x => x.Value),
+      CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(application.Settings);
+    Assert.Equal(3, application.Settings!.Count);
   }
 }

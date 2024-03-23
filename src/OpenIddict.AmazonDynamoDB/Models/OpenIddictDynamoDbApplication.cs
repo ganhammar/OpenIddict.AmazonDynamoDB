@@ -9,7 +9,7 @@ public class OpenIddictDynamoDbApplication
   public string PartitionKey
   {
     get => $"APPLICATION#{Id}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey
@@ -31,4 +31,8 @@ public class OpenIddictDynamoDbApplication
   public virtual List<string>? RedirectUris { get; set; } = new List<string>();
   public virtual List<string>? Requirements { get; set; } = new List<string>();
   public virtual string? Type { get; set; }
+  public virtual string? ApplicationType { get; set; }
+  public virtual string? JsonWebKeySet { get; set; }
+  public virtual Dictionary<string, string>? Settings { get; set; }
+    = new Dictionary<string, string>();
 }

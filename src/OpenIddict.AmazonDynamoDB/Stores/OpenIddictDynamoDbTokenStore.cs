@@ -661,7 +661,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     ArgumentNullException.ThrowIfNull(identifier);
 
     var tokens = FindByAuthorizationIdAsync(identifier, cancellationToken);
-    
+
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
     await foreach (var token in tokens)
     {

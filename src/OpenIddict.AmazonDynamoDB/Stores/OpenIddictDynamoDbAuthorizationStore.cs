@@ -372,7 +372,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   }
 
   // Should not be needed to run, TTL should handle the pruning
-  public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+  public async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
     var deleteCount = 0;
     // Get all authorizations which is older than threshold
@@ -432,6 +432,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     var count = await CountAsync(cancellationToken);
     await _context.SaveAsync(new CountModel(CountType.Authorization, count - deleteCount), cancellationToken);
+
+    return deleteCount;
   }
 
   public ValueTask SetApplicationIdAsync(TAuthorization authorization, string? identifier, CancellationToken cancellationToken)

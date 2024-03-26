@@ -16,7 +16,7 @@ internal class CountModel
   public string PartitionKey
   {
     get => $"COUNT#{Type}";
-    private set { }
+    set { }
   }
   [DynamoDBRangeKey]
   public string? SortKey

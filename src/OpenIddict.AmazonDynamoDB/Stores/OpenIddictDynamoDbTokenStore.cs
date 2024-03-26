@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -55,6 +56,10 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(token);
 
+    if (token.ExpirationDate != default)
+    {
+      token.TTL = token.ExpirationDate;
+    }
     await _context.SaveAsync(token, cancellationToken);
 
     var count = await CountAsync(cancellationToken);
@@ -399,7 +404,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   }
 
   // Should not be needed to run, TTL should handle the pruning
-  public async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+  public async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
   {
     var deleteCount = 0;
     // Get all tokens which is older than threshold
@@ -461,6 +466,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     var count = await CountAsync(cancellationToken);
     await _context.SaveAsync(new CountModel(CountType.Token, count - deleteCount), cancellationToken);
+
+    return deleteCount;
   }
 
   public ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
@@ -647,5 +654,30 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     var result = await search.GetNextSetAsync(cancellationToken);
 
     return result.Any() ? result.First() : default;
+  }
+
+  public async ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
+  {
+    ArgumentNullException.ThrowIfNull(identifier);
+
+    var tokens = FindByAuthorizationIdAsync(identifier, cancellationToken);
+
+    var matchedTokens = new List<OpenIddictDynamoDbToken>();
+    await foreach (var token in tokens)
+    {
+      matchedTokens.Add(token);
+    }
+
+    var batchUpdate = _context.CreateBatchWrite<OpenIddictDynamoDbToken>();
+    foreach (var token in matchedTokens)
+    {
+      token.Status = Statuses.Inactive;
+      token.TTL = DateTime.UtcNow.AddMinutes(5);
+      batchUpdate.AddPutItem(token);
+    }
+
+    await batchUpdate.ExecuteAsync(cancellationToken);
+
+    return matchedTokens.Count;
   }
 }

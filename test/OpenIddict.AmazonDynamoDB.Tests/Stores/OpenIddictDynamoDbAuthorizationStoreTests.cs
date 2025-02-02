@@ -1000,6 +1000,41 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_ReturnListAll_When_FindingTokensWithoutParameters()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var suffix = Guid.NewGuid().ToString();
+    var count = 10;
+
+    foreach (var index in Enumerable.Range(0, count))
+    {
+      await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+      {
+        Subject = $"{index}-{suffix}",
+        ApplicationId = index.ToString(),
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var authorizations = authorizationStore.FindAsync(null, null, null, null, null, CancellationToken.None);
+
+    // Assert
+    var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
+    await foreach (var authorization in authorizations)
+    {
+      if (authorization.Subject?.EndsWith(suffix) == true)
+      {
+        matchedAuthorizations.Add(authorization);
+      }
+    }
+    Assert.Equal(count, matchedAuthorizations.Count);
+  }
+
+  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithMatch()
   {
     // Arrange

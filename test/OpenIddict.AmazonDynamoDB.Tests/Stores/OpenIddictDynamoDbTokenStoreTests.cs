@@ -1307,6 +1307,41 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_ReturnListAll_When_FindingTokensWithoutParameters()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var suffix = Guid.NewGuid().ToString();
+    var count = 10;
+
+    foreach (var index in Enumerable.Range(0, count))
+    {
+      await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+      {
+        Subject = $"{index}-{suffix}",
+        ApplicationId = index.ToString(),
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var tokens = tokenStore.FindAsync(null, null, null, null, CancellationToken.None);
+
+    // Assert
+    var matchedTokens = new List<OpenIddictDynamoDbToken>();
+    await foreach (var token in tokens)
+    {
+      if (token.Subject?.EndsWith(suffix) == true)
+      {
+        matchedTokens.Add(token);
+      }
+    }
+    Assert.Equal(count, matchedTokens.Count);
+  }
+
+  [Fact]
   public async Task Should_ReturnListOffMany_When_FindingTokensWithMatch()
   {
     // Arrange

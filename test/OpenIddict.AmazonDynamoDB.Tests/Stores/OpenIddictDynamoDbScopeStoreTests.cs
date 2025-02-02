@@ -7,11 +7,9 @@ using Amazon.DynamoDBv2.DataModel;
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbScopeStoreTests
+public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()

@@ -1,16 +1,13 @@
 ﻿using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbScopeStoreResolverTests
+public class OpenIddictDynamoDbScopeStoreResolverTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbScopeStoreResolverTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public void Should_ReturnScopeStore_When_ItHasBeenRegistered()
@@ -20,7 +17,7 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
     serviceCollection.AddSingleton<
       IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
       OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
+    serviceCollection.AddSingleton(TestUtils.GetOptions(new()
     {
       Database = _client,
     }));
@@ -63,7 +60,7 @@ public class OpenIddictDynamoDbScopeStoreResolverTests
     serviceCollection.AddSingleton<
       IOpenIddictScopeStore<OpenIddictDynamoDbScope>,
       OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>();
-    serviceCollection.AddSingleton<IOptionsMonitor<OpenIddictDynamoDbOptions>>(TestUtils.GetOptions(new()
+    serviceCollection.AddSingleton(TestUtils.GetOptions(new()
     {
       Database = _client,
     }));

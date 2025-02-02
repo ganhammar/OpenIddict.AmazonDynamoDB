@@ -18,8 +18,8 @@ namespace OpenIddict.AmazonDynamoDB;
 public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken>
     where TToken : OpenIddictDynamoDbToken, new()
 {
-  private IAmazonDynamoDB _client;
-  private IDynamoDBContext _context;
+  private readonly IAmazonDynamoDB _client;
+  private readonly DynamoDBContext _context;
 
   public OpenIddictDynamoDbTokenStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -106,29 +106,26 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     }
   }
 
-  public IAsyncEnumerable<TToken> FindAsync(string subject, string client, CancellationToken cancellationToken)
+  public IAsyncEnumerable<TToken> FindAsync(
+    string? subject, string? client,
+    string? status, string? type, CancellationToken cancellationToken)
   {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
-  }
-
-  public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-    ArgumentNullException.ThrowIfNull(status);
-
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
-  }
-
-  public IAsyncEnumerable<TToken> FindAsync(string subject, string client, string status, string type, CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-    ArgumentNullException.ThrowIfNull(status);
-    ArgumentNullException.ThrowIfNull(type);
+    if (string.IsNullOrEmpty(subject))
+    {
+      return ListAsync(null, null, cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(client) && string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type))
+    {
+      return FindBySubjectAndSearchKey(subject, "APPLICATION#", cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type))
+    {
+      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(type))
+    {
+      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
+    }
 
     return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
   }
@@ -653,7 +650,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     });
     var result = await search.GetNextSetAsync(cancellationToken);
 
-    return result.Any() ? result.First() : default;
+    return result.Count != 0 ? result.First() : default;
   }
 
   public async ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -679,5 +676,42 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     await batchUpdate.ExecuteAsync(cancellationToken);
 
     return matchedTokens.Count;
+  }
+
+  public ValueTask<long> RevokeAsync(string? subject, string? client, string? status, string? type, CancellationToken cancellationToken)
+  {
+    var tokens = FindAsync(subject, client, status, type, cancellationToken);
+    return RevokeAsync(tokens, cancellationToken);
+  }
+
+  public ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken = default)
+  {
+    var tokens = FindByApplicationIdAsync(identifier, cancellationToken);
+    return RevokeAsync(tokens, cancellationToken);
+  }
+
+  public ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken = default)
+  {
+    var tokens = FindBySubjectAsync(subject, cancellationToken);
+    return RevokeAsync(tokens, cancellationToken);
+  }
+
+  private async ValueTask<long> RevokeAsync(IAsyncEnumerable<TToken> tokens, CancellationToken cancellationToken)
+  {
+    var result = 0L;
+    var batch = _context.CreateBatchWrite<TToken>();
+
+    await foreach (var token in tokens)
+    {
+      token.Status = Statuses.Revoked;
+      token.TTL = DateTime.UtcNow.AddMinutes(5);
+
+      batch.AddPutItem(token);
+      result++;
+    }
+
+    await batch.ExecuteAsync(cancellationToken);
+
+    return result;
   }
 }

@@ -23,16 +23,14 @@ public class OpenIddictDynamoDbApplication
   public virtual string ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
   public virtual string? ConsentType { get; set; }
   public virtual string? DisplayName { get; set; }
-  public virtual Dictionary<string, string>? DisplayNames { get; set; }
-    = new Dictionary<string, string>();
-  public virtual List<string>? Permissions { get; set; } = new List<string>();
-  public virtual List<string>? PostLogoutRedirectUris { get; set; } = new List<string>();
+  public virtual Dictionary<string, string>? DisplayNames { get; set; } = [];
+  public virtual List<string>? Permissions { get; set; } = [];
+  public virtual List<string>? PostLogoutRedirectUris { get; set; } = [];
   public virtual string? Properties { get; set; }
-  public virtual List<string>? RedirectUris { get; set; } = new List<string>();
-  public virtual List<string>? Requirements { get; set; } = new List<string>();
+  public virtual List<string>? RedirectUris { get; set; } = [];
+  public virtual List<string>? Requirements { get; set; } = [];
   public virtual string? Type { get; set; }
   public virtual string? ApplicationType { get; set; }
   public virtual string? JsonWebKeySet { get; set; }
-  public virtual Dictionary<string, string>? Settings { get; set; }
-    = new Dictionary<string, string>();
+  public virtual Dictionary<string, string>? Settings { get; set; } = [];
 }

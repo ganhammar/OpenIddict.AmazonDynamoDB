@@ -4,11 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbSetupTests
+public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbSetupTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public async Task Should_SetupTables_When_CalledSynchronously()
@@ -79,7 +77,7 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton<IAmazonDynamoDB>(_client);
+    services.AddSingleton(_client);
     CreateBuilder(services);
 
     // Act
@@ -95,7 +93,7 @@ public class OpenIddictDynamoDbSetupTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton<IAmazonDynamoDB>(_client);
+    services.AddSingleton(_client);
     CreateBuilder(services);
 
     // Act

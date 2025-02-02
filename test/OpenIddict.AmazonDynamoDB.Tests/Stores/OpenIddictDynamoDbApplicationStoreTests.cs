@@ -9,11 +9,9 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbApplicationStoreTests
+public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()

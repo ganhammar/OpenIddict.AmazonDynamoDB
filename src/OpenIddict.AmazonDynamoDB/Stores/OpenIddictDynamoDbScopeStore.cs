@@ -17,7 +17,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     where TScope : OpenIddictDynamoDbScope, new()
 {
   private readonly IAmazonDynamoDB _client;
-  private readonly IDynamoDBContext _context;
+  private readonly DynamoDBContext _context;
   private readonly string _tableName;
 
   public OpenIddictDynamoDbScopeStore(

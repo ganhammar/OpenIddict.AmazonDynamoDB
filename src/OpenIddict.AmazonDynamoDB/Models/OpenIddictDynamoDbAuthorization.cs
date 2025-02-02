@@ -24,7 +24,7 @@ public class OpenIddictDynamoDbAuthorization
     = Guid.NewGuid().ToString();
   public virtual DateTime? CreationDate { get; set; }
   public virtual string? Properties { get; set; }
-  public virtual List<string>? Scopes { get; set; } = new List<string>();
+  public virtual List<string>? Scopes { get; set; } = [];
   public virtual string? Status { get; set; }
   public virtual string? Subject { get; set; }
   public virtual string? Type { get; set; }

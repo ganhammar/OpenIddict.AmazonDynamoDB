@@ -18,8 +18,8 @@ namespace OpenIddict.AmazonDynamoDB;
 public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictApplicationStore<TApplication>
   where TApplication : OpenIddictDynamoDbApplication, new()
 {
-  private IAmazonDynamoDB _client;
-  private IDynamoDBContext _context;
+  private readonly IAmazonDynamoDB _client;
+  private readonly DynamoDBContext _context;
   private readonly string _tableName;
 
   public OpenIddictDynamoDbApplicationStore(

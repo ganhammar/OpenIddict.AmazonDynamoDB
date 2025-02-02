@@ -7,11 +7,9 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbTokenStoreTests
+public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
@@ -1258,60 +1256,6 @@ public class OpenIddictDynamoDbTokenStoreTests
     Assert.Equal(value, token.ReferenceId);
   }
 
-  [Theory]
-  [InlineData(default!, "test", "subject")]
-  [InlineData("test", default!, "client")]
-  public async Task Should_ThrowException_When_TryingToFindAndRequiredVariablesIsNotSet(
-    string? subject, string? client, string expectedNullParameterName)
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      tokenStore.FindAsync(subject!, client!, CancellationToken.None));
-    Assert.Equal(expectedNullParameterName, exception.ParamName);
-  }
-
-  [Theory]
-  [InlineData(default!, "test", "test", "subject")]
-  [InlineData("test", default!, "test", "client")]
-  [InlineData("test", "test", default!, "status")]
-  public async Task Should_ThrowException_When_TryingToFindWithStatusAndRequiredVariablesIsNotSet(
-    string? subject, string? client, string? status, string expectedNullParameterName)
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      tokenStore.FindAsync(subject!, client!, status!, CancellationToken.None));
-    Assert.Equal(expectedNullParameterName, exception.ParamName);
-  }
-
-  [Theory]
-  [InlineData(default!, "test", "test", "test", "subject")]
-  [InlineData("test", default!, "test", "test", "client")]
-  [InlineData("test", "test", default!, "test", "status")]
-  [InlineData("test", "test", "test", default!, "type")]
-  public async Task Should_ThrowException_When_TryingToFindWithStatusAndTypeAndRequiredVariablesIsNotSet(
-    string? subject, string? client, string? status, string? type, string expectedNullParameterName)
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      tokenStore.FindAsync(subject!, client!, status!, type!, CancellationToken.None));
-    Assert.Equal(expectedNullParameterName, exception.ParamName);
-  }
-
   [Fact]
   public async Task Should_ReturnEmptyList_When_FindingTokensWithNoMatch()
   {
@@ -1321,7 +1265,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act
-    var tokens = tokenStore.FindAsync("test", "test", CancellationToken.None);
+    var tokens = tokenStore.FindAsync("test", "test", null, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1345,13 +1289,13 @@ public class OpenIddictDynamoDbTokenStoreTests
     {
       await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
       {
-        Subject = $"{index.ToString()}-{uniqueKey}",
-        ApplicationId = $"{index.ToString()}-{uniqueKey}",
+        Subject = $"{index}-{uniqueKey}",
+        ApplicationId = $"{index}-{uniqueKey}",
       }, CancellationToken.None);
     }
 
     // Act
-    var tokens = tokenStore.FindAsync($"5-{uniqueKey}", $"5-{uniqueKey}", CancellationToken.None);
+    var tokens = tokenStore.FindAsync($"5-{uniqueKey}", $"5-{uniqueKey}", null, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1384,7 +1328,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
-    var tokens = tokenStore.FindAsync(subject, applicationId, CancellationToken.None);
+    var tokens = tokenStore.FindAsync(subject, applicationId, null, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1404,7 +1348,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act
-    var tokens = tokenStore.FindAsync("test", "test", "test", CancellationToken.None);
+    var tokens = tokenStore.FindAsync("test", "test", "test", null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1436,7 +1380,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
-    var tokens = tokenStore.FindAsync("5", "5", status, CancellationToken.None);
+    var tokens = tokenStore.FindAsync("5", "5", status, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1471,7 +1415,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
-    var tokens = tokenStore.FindAsync(subject, applicationId, status, CancellationToken.None);
+    var tokens = tokenStore.FindAsync(subject, applicationId, status, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1563,7 +1507,7 @@ public class OpenIddictDynamoDbTokenStoreTests
     }
 
     // Act
-    var tokens = tokenStore.FindAsync(subject, applicationId, status, CancellationToken.None);
+    var tokens = tokenStore.FindAsync(subject, applicationId, status, null, CancellationToken.None);
 
     // Assert
     var matchedTokens = new List<OpenIddictDynamoDbToken>();
@@ -1947,5 +1891,128 @@ public class OpenIddictDynamoDbTokenStoreTests
       Assert.Equal(Statuses.Inactive, token.Status);
       Assert.NotNull(token.TTL);
     }
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_Revoking()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = Statuses.Valid;
+    var suffix = Guid.NewGuid().ToString();
+
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var match = $"{5}{suffix}";
+    var revokeCount = await tokenStore.RevokeAsync(
+      match,
+      match,
+      status,
+      null,
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = tokenStore.FindAsync(match, match, Statuses.Revoked, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_RevokingByApplicationId()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = Statuses.Valid;
+    var suffix = Guid.NewGuid().ToString();
+
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var match = $"{5}{suffix}";
+    var revokeCount = await tokenStore.RevokeByApplicationIdAsync(
+      match,
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = tokenStore.FindAsync(match, match, Statuses.Revoked, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_RevokingBySubject()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = Statuses.Valid;
+    var suffix = Guid.NewGuid().ToString();
+
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var match = $"{5}{suffix}";
+    var revokeCount = await tokenStore.RevokeBySubjectAsync(
+      match,
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = tokenStore.FindAsync(match, match, Statuses.Revoked, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
   }
 }

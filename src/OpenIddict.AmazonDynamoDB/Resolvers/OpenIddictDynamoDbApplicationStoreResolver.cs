@@ -4,13 +4,10 @@ using OpenIddict.Abstractions;
 
 namespace OpenIddict.AmazonDynamoDB;
 
-public class OpenIddictDynamoDbApplicationStoreResolver : IOpenIddictApplicationStoreResolver
+public class OpenIddictDynamoDbApplicationStoreResolver(IServiceProvider provider) : IOpenIddictApplicationStoreResolver
 {
-  private readonly ConcurrentDictionary<Type, Type> _cache = new ConcurrentDictionary<Type, Type>();
-  private readonly IServiceProvider _provider;
-
-  public OpenIddictDynamoDbApplicationStoreResolver(IServiceProvider provider)
-    => _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+  private readonly ConcurrentDictionary<Type, Type> _cache = new();
+  private readonly IServiceProvider _provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
   public IOpenIddictApplicationStore<TApplication> Get<TApplication>() where TApplication : class
   {

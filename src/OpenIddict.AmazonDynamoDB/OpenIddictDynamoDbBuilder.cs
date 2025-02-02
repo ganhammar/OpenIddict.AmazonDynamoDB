@@ -5,13 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Core;
 
 namespace OpenIddict.AmazonDynamoDB;
-public class OpenIddictDynamoDbBuilder
+public class OpenIddictDynamoDbBuilder(IServiceCollection services)
 {
-  public OpenIddictDynamoDbBuilder(IServiceCollection services)
-    => Services = services ?? throw new ArgumentNullException(nameof(services));
-
   [EditorBrowsable(EditorBrowsableState.Never)]
-  public IServiceCollection Services { get; }
+  public IServiceCollection Services { get; } = services ?? throw new ArgumentNullException(nameof(services));
 
   public OpenIddictDynamoDbBuilder Configure(Action<OpenIddictDynamoDbOptions> configuration)
   {

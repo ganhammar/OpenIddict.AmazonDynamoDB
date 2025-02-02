@@ -7,11 +7,9 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
 [Collection(Constants.DatabaseCollection)]
-public class OpenIddictDynamoDbAuthorizationStoreTests
+public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
 {
-  public readonly IAmazonDynamoDB _client;
-
-  public OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture) => _client = fixture.Client;
+  public readonly IAmazonDynamoDB _client = fixture.Client;
 
   [Fact]
   public void Should_ThrowArgumentNullException_When_OptionsIsNotSet()
@@ -208,7 +206,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnFirstFive_When_ListingAuthorizationsWithCount()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -372,7 +369,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetType_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -404,7 +400,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetSubject_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -436,7 +431,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetStatus_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -468,7 +462,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetNull_When_SetEmptyListAsScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -489,7 +482,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetScopes_When_SettingScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -593,7 +585,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -613,7 +604,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -651,7 +641,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -683,7 +672,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_SetApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -701,7 +689,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnNewApplication_When_CallingInstantiate()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -731,7 +718,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnType_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -767,7 +753,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnSubject_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -803,7 +788,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnStatus_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -839,7 +823,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -875,7 +858,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnCreationDate_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -911,7 +893,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnApplicationId_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -960,7 +941,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_AuthorizationDoesntHaveAnyScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -978,18 +958,17 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnScopes_When_AuthorizationHasScopes()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var authorization = new OpenIddictDynamoDbAuthorization
     {
-      Scopes = new List<string>
-      {
+      Scopes =
+      [
         "get",
         "set",
         "delete",
-      },
+      ],
     };
     await authorizationStore.CreateAsync(authorization, CancellationToken.None);
 
@@ -1001,44 +980,15 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   }
 
   [Fact]
-  public async Task Should_ThrowException_When_TryingToFindAuthorizationAndSubjectIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(default!, "test", CancellationToken.None));
-    Assert.Equal("subject", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindAuthorizationAndClientIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", default!, CancellationToken.None));
-    Assert.Equal("client", exception.ParamName);
-  }
-
-  [Fact]
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act
-    var authorizations = authorizationStore.FindAsync("test", "test", CancellationToken.None);
+    var authorizations = authorizationStore.FindAsync("test", "test", null, null, null, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1053,7 +1003,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1063,14 +1012,14 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     {
       await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
       {
-        Subject = $"{index.ToString()}-{uniqueKey}",
-        ApplicationId = $"{index.ToString()}-{uniqueKey}",
+        Subject = $"{index}-{uniqueKey}",
+        ApplicationId = $"{index}-{uniqueKey}",
       }, CancellationToken.None);
     }
 
     // Act
     var authorizations = authorizationStore
-      .FindAsync($"5-{uniqueKey}", $"5-{uniqueKey}", CancellationToken.None);
+      .FindAsync($"5-{uniqueKey}", $"5-{uniqueKey}", null, null, null, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1082,52 +1031,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   }
 
   [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndSubjectIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(default!, "test", "test", CancellationToken.None));
-    Assert.Equal("subject", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithStatusAuthorizationAndClientIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", default!, "test", CancellationToken.None));
-    Assert.Equal("client", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindAuthorizationAndStatusIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", "test", default!, CancellationToken.None));
-    Assert.Equal("status", exception.ParamName);
-  }
-
-  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithStatusMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1144,7 +1050,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     }
 
     // Act
-    var authorizations = authorizationStore.FindAsync("5", "5", status, CancellationToken.None);
+    var authorizations = authorizationStore.FindAsync("5", "5", status, null, null, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1156,66 +1062,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   }
 
   [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndSubjectIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(default!, "test", "test", "test", CancellationToken.None));
-    Assert.Equal("subject", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndClientIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", default!, "test", "test", CancellationToken.None));
-    Assert.Equal("client", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndStatusIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", "test", default!, "test", CancellationToken.None));
-    Assert.Equal("status", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithTypeAuthorizationAndTypeIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync("test", "test", "test", default!, CancellationToken.None));
-    Assert.Equal("type", exception.ParamName);
-  }
-
-  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithTypeMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1234,7 +1083,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     }
 
     // Act
-    var authorizations = authorizationStore.FindAsync("5", "5", status, type, CancellationToken.None);
+    var authorizations = authorizationStore.FindAsync("5", "5", status, type, null, CancellationToken.None);
 
     // Assert
     var matchedAuthorizations = new List<OpenIddictDynamoDbAuthorization>();
@@ -1246,110 +1095,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   }
 
   [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndSubjectIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(
-        default!,
-        "test",
-        "test",
-        "test",
-        new[] { "get" }.ToImmutableArray(),
-        CancellationToken.None));
-    Assert.Equal("subject", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndClientIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(
-        "test",
-        default!,
-        "test",
-        "test",
-        new[] { "get" }.ToImmutableArray(),
-        CancellationToken.None));
-    Assert.Equal("client", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndStatusIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(
-        "test",
-        "test",
-        default!,
-        "test",
-        new[] { "get" }.ToImmutableArray(),
-        CancellationToken.None));
-    Assert.Equal("status", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndTypeIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(
-        "test",
-        "test",
-        "test",
-        default!,
-        new[] { "get" }.ToImmutableArray(),
-        CancellationToken.None));
-    Assert.Equal("type", exception.ParamName);
-  }
-
-  [Fact]
-  public async Task Should_ThrowException_When_TryingToFindWithScopesAuthorizationAndScopesIsNull()
-  {
-    // Arrange
-    var options = TestUtils.GetOptions(new() { Database = _client });
-    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
-    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-
-    // Act & Assert
-    var exception = Assert.Throws<ArgumentNullException>(() =>
-      authorizationStore.FindAsync(
-        "test",
-        "test",
-        "test",
-        "test",
-        default!,
-        CancellationToken.None));
-    Assert.Equal("scopes", exception.ParamName);
-  }
-
-  [Fact]
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsWithScopesMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1427,7 +1175,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsByApplicationIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1474,7 +1221,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsBySubjectWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1496,7 +1242,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnListOffOne_When_FindingAuthorizationsBySubjectWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1543,7 +1288,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_ReturnAuthorization_When_FindingAuthorizationsByIdWithMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1566,13 +1310,12 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteAllAuthorizations_When_AllHasExpired()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
-    foreach (var index in Enumerable.Range(0, 10))
+    foreach (var _ in Enumerable.Range(0, 10))
     {
       await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
       {
@@ -1592,7 +1335,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreOldButValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1600,7 +1342,7 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
     var numberOfTokens = 10;
-    foreach (var index in Enumerable.Range(0, numberOfTokens))
+    foreach (var _ in Enumerable.Range(0, numberOfTokens))
     {
       await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
       {
@@ -1621,13 +1363,12 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteAllAuthorizations_When_TheyAreAdHocAndNoTokens()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
     var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
 
-    foreach (var index in Enumerable.Range(0, 10))
+    foreach (var _ in Enumerable.Range(0, 10))
     {
       await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
       {
@@ -1649,7 +1390,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_NotDeleteAnyAuthorizations_When_TheyAreAdHocAndHaveTokens()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
@@ -1688,7 +1428,6 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
   public async Task Should_DeleteSomeAuthorizations_When_SomeAreOutsideOfTheThresholdRange()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1709,5 +1448,128 @@ public class OpenIddictDynamoDbAuthorizationStoreTests
     // Assert
     var count = await authorizationStore.CountAsync(CancellationToken.None);
     Assert.Equal(beforeCount + 5, count);
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_Revoking()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = "some-status";
+    var type = "some-type";
+    var suffix = "-revoke-all";
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+        Type = type,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var revokeCount = await authorizationStore.RevokeAsync(
+      $"5{suffix}",
+      $"5{suffix}",
+      status,
+      type,
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = authorizationStore.FindAsync($"5{suffix}", $"5{suffix}", Statuses.Revoked, type, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_RevokingByApplicationId()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = "some-status";
+    var type = "some-type";
+    var suffix = "-revoke-by-application-id";
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+        Type = type,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var revokeCount = await authorizationStore.RevokeByApplicationIdAsync(
+      $"5{suffix}",
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = authorizationStore.FindAsync($"5{suffix}", $"5{suffix}", Statuses.Revoked, type, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
+  }
+
+  [Fact]
+  public async Task Should_RevokeAllMatches_When_RevokingBySubject()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+
+    var status = "some-status";
+    var type = "some-type";
+    var suffix = "-revoke-by-subject";
+    foreach (var index in Enumerable.Range(0, 10))
+    {
+      await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+      {
+        Subject = $"{index}{suffix}",
+        ApplicationId = $"{index}{suffix}",
+        Status = status,
+        Type = type,
+      }, CancellationToken.None);
+    }
+
+    // Act
+    var revokeCount = await authorizationStore.RevokeBySubjectAsync(
+      $"5{suffix}",
+      CancellationToken.None);
+
+    // Assert
+    Assert.Equal(1, revokeCount);
+    var authorizations = authorizationStore.FindAsync($"5{suffix}", $"5{suffix}", Statuses.Revoked, type, null, CancellationToken.None);
+    var matchCount = 0;
+    await foreach (var authorization in authorizations)
+    {
+      Assert.Equal(Statuses.Revoked, authorization.Status);
+      Assert.NotNull(authorization.TTL);
+      matchCount++;
+    }
+    Assert.Equal(1, matchCount);
   }
 }

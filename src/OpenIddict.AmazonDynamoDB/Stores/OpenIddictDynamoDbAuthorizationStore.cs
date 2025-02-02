@@ -17,8 +17,8 @@ namespace OpenIddict.AmazonDynamoDB;
 public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictAuthorizationStore<TAuthorization>
     where TAuthorization : OpenIddictDynamoDbAuthorization, new()
 {
-  private IAmazonDynamoDB _client;
-  private IDynamoDBContext _context;
+  private readonly IAmazonDynamoDB _client;
+  private readonly DynamoDBContext _context;
 
   public OpenIddictDynamoDbAuthorizationStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -100,42 +100,12 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     }
   }
 
-  public IAsyncEnumerable<TAuthorization> FindAsync(
-    string subject, string client, CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
-  }
-
-  public IAsyncEnumerable<TAuthorization> FindAsync(
-    string subject, string client, string status, CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-    ArgumentNullException.ThrowIfNull(status);
-
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
-  }
-
-  public IAsyncEnumerable<TAuthorization> FindAsync(
-    string subject, string client, string status, string type, CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-    ArgumentNullException.ThrowIfNull(status);
-    ArgumentNullException.ThrowIfNull(type);
-
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
-  }
-
-  public IAsyncEnumerable<TAuthorization> FindAsync(
+  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSearchKeyAndScopes(
     string subject,
     string client,
     string status,
     string type,
-    ImmutableArray<string> scopes,
+    ImmutableArray<string>? scopes,
     CancellationToken cancellationToken)
   {
     ArgumentNullException.ThrowIfNull(subject);
@@ -156,12 +126,41 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
       await foreach (var authorization in authorizations)
       {
-        if (Enumerable.All(scopes, scope => authorization.Scopes!.Contains(scope)))
+        if (Enumerable.All<string>(scopes, scope => authorization.Scopes!.Contains(scope)))
         {
           yield return authorization;
         }
       }
     }
+  }
+
+  public IAsyncEnumerable<TAuthorization> FindAsync(
+    string? subject, string? client,
+    string? status, string? type,
+    ImmutableArray<string>? scopes, CancellationToken cancellationToken)
+  {
+    if (string.IsNullOrEmpty(subject))
+    {
+      return ListAsync(null, null, cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(client) && string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type) && scopes == null)
+    {
+      return FindBySubjectAndSearchKey(subject, "APPLICATION#", cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type) && scopes == null)
+    {
+      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
+    }
+    else if (string.IsNullOrEmpty(type) && scopes == null)
+    {
+      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
+    }
+    else if (scopes == null)
+    {
+      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
+    }
+
+    return FindBySubjectAndSearchKeyAndScopes(subject, client!, status!, type!, scopes, cancellationToken);
   }
 
   public IAsyncEnumerable<TAuthorization> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -284,7 +283,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     if (authorization.Scopes is not { Count: > 0 })
     {
-      return new(ImmutableArray.Create<string>());
+      return new([]);
     }
 
     return new(authorization.Scopes.ToImmutableArray());
@@ -421,7 +420,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       });
       var tokens = await tokensQuery.GetRemainingAsync(cancellationToken);
 
-      if (tokens.Any() == false)
+      if (tokens.Count != 0 == false)
       {
         batchDelete.AddDeleteItem(authorization);
         deleteCount++;
@@ -504,7 +503,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       return default;
     }
 
-    authorization.Scopes = scopes.ToList();
+    authorization.Scopes = [..scopes];
 
     return default;
   }
@@ -577,6 +576,43 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     });
     var result = await search.GetNextSetAsync(cancellationToken);
 
-    return result.Any() ? result.First() : default;
+    return result.Count != 0 ? result.First() : default;
+  }
+
+  public ValueTask<long> RevokeAsync(string? subject, string? client, string? status, string? type, CancellationToken cancellationToken)
+  {
+    var authorizations = FindAsync(subject, client, status, type, null, cancellationToken);
+    return RevokeAsync(authorizations, cancellationToken);
+  }
+
+  public ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
+  {
+    var authorizations = FindByApplicationIdAsync(identifier, cancellationToken);
+    return RevokeAsync(authorizations, cancellationToken);
+  }
+
+  public ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken)
+  {
+    var authorizations = FindBySubjectAsync(subject, cancellationToken);
+    return RevokeAsync(authorizations, cancellationToken);
+  }
+
+  private async ValueTask<long> RevokeAsync(IAsyncEnumerable<TAuthorization> authorizations, CancellationToken cancellationToken)
+  {
+    var result = 0L;
+    var batch = _context.CreateBatchWrite<TAuthorization>();
+
+    await foreach (var authorization in authorizations)
+    {
+      authorization.Status = Statuses.Revoked;
+      authorization.TTL = DateTime.UtcNow.AddMinutes(5);
+
+      batch.AddPutItem(authorization);
+      result++;
+    }
+
+    await batch.ExecuteAsync(cancellationToken);
+
+    return result;
   }
 }

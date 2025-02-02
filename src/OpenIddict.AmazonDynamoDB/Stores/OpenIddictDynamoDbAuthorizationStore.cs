@@ -503,7 +503,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       return default;
     }
 
-    authorization.Scopes = [..scopes];
+    authorization.Scopes = [.. scopes];
 
     return default;
   }

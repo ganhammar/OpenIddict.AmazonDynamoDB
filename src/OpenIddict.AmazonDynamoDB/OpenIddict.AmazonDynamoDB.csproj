@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.405.13" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
     <PackageReference Include="OpenIddict.Abstractions" Version="6.0.0" />
     <PackageReference Include="OpenIddict.Core" Version="6.0.0" />
   </ItemGroup>

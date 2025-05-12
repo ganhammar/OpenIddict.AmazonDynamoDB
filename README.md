@@ -12,23 +12,24 @@ You can install the latest version via [Nuget](https://www.nuget.org/packages/Op
 > dotnet add package Community.OpenIddict.AmazonDynamoDB
 ```
 
-Then you use the stores by calling `AddDynamoDbStores` on `OpenIddictBuilder`:
+Then you use the stores by calling `UseDynamoDb` on `OpenIddictCoreBuilder`:
 
 ```c#
 services
     .AddOpenIddict()
-    .AddCore()
-    .UseDynamoDb()
-    .Configure(options =>
-    {
-        options.BillingMode = BillingMode.PROVISIONED; // Default is BillingMode.PAY_PER_REQUEST
-        options.ProvisionedThroughput = new ProvisionedThroughput
-        {
-            ReadCapacityUnits = 5, // Default is 1
-            WriteCapacityUnits = 5, // Default is 1
-        };
-        options.UsersTableName = "CustomOpenIddictTable"; // Default is openiddict
-    });
+    .AddCore(options => {
+        options.UseDynamoDb()
+            .Configure(options =>
+            {
+                options.BillingMode = BillingMode.PROVISIONED; // Default is BillingMode.PAY_PER_REQUEST
+                options.ProvisionedThroughput = new ProvisionedThroughput
+                {
+                    ReadCapacityUnits = 5, // Default is 1
+                    WriteCapacityUnits = 5, // Default is 1
+                };
+                options.UsersTableName = "CustomOpenIddictTable"; // Default is openiddict
+            });
+    }); 
 ```
 
 Finally, you need to ensure that tables and indexes have been added:

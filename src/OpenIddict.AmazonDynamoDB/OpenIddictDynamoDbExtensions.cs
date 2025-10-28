@@ -14,10 +14,10 @@ public static class OpenIddictDynamoDbExtensions
       .SetDefaultTokenEntity<OpenIddictDynamoDbToken>()
       .SetDefaultScopeEntity<OpenIddictDynamoDbScope>();
 
-    builder.ReplaceApplicationStoreResolver<OpenIddictDynamoDbApplicationStoreResolver>(ServiceLifetime.Singleton)
-      .ReplaceAuthorizationStoreResolver<OpenIddictDynamoDbAuthorizationStoreResolver>(ServiceLifetime.Singleton)
-      .ReplaceScopeStoreResolver<OpenIddictDynamoDbScopeStoreResolver>(ServiceLifetime.Singleton)
-      .ReplaceTokenStoreResolver<OpenIddictDynamoDbTokenStoreResolver>(ServiceLifetime.Singleton);
+    builder.ReplaceApplicationStore<OpenIddictDynamoDbApplication, OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>>(ServiceLifetime.Singleton)
+      .ReplaceAuthorizationStore<OpenIddictDynamoDbAuthorization, OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>>(ServiceLifetime.Singleton)
+      .ReplaceScopeStore<OpenIddictDynamoDbScope, OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>>(ServiceLifetime.Singleton)
+      .ReplaceTokenStore<OpenIddictDynamoDbToken, OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>(ServiceLifetime.Singleton);
 
     builder.Services.TryAddSingleton(typeof(OpenIddictDynamoDbApplicationStore<>));
     builder.Services.TryAddSingleton(typeof(OpenIddictDynamoDbAuthorizationStore<>));

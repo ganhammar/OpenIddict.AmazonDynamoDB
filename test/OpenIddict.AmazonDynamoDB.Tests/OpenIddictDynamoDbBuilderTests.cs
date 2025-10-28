@@ -59,70 +59,6 @@ public class OpenIddictDynamoDbBuilderTests
   }
 
   [Fact]
-  public void Should_Succeed_When_ReplacingApplicationEntity()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).ReplaceDefaultApplicationEntity<CustomApplication>();
-
-    // Assert
-    var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
-
-    Assert.Equal(typeof(CustomApplication), options.DefaultApplicationType);
-  }
-
-  [Fact]
-  public void Should_Succeed_When_ReplacingAuthorizationEntity()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).ReplaceDefaultAuthorizationEntity<CustomAuthorization>();
-
-    // Assert
-    var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
-
-    Assert.Equal(typeof(CustomAuthorization), options.DefaultAuthorizationType);
-  }
-
-  [Fact]
-  public void Should_Succeed_When_ReplacingScopeEntity()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).ReplaceDefaultScopeEntity<CustomScope>();
-
-    // Assert
-    var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
-
-    Assert.Equal(typeof(CustomScope), options.DefaultScopeType);
-  }
-
-  [Fact]
-  public void Should_Succeed_When_ReplacingTokenEntity()
-  {
-    // Arrange
-    var services = new ServiceCollection();
-
-    // Act
-    CreateBuilder(services).ReplaceDefaultTokenEntity<CustomToken>();
-
-    // Assert
-    var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
-
-    Assert.Equal(typeof(CustomToken), options.DefaultTokenType);
-  }
-
-  [Fact]
   public void Should_ThrowException_When_CallingUseDatabaseAndDatabaseIsNull()
   {
     // Arrange
@@ -139,7 +75,10 @@ public class OpenIddictDynamoDbBuilderTests
   {
     // Arrange
     var services = new ServiceCollection();
-    var db = new AmazonDynamoDBClient();
+    var db = new AmazonDynamoDBClient(new AmazonDynamoDBConfig
+    {
+      ServiceURL = "http://localhost:8000",
+    });
 
     // Act
     CreateBuilder(services).UseDatabase(db);

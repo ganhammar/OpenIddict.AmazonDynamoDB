@@ -3,6 +3,7 @@ name: 'CI/CD'
 on:
   - push
   - workflow_dispatch
+  - pull_request
 
 permissions:
   id-token: write
@@ -22,7 +23,17 @@ jobs:
             8.0.x
             9.0.x
 
+      - name: Check if PR is from a fork
+        id: check_fork
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "is_pull_request=true" >> $GITHUB_ENV
+          else
+            echo "is_pull_request=false" >> $GITHUB_ENV
+          fi
+
       - name: Configure AWS Credentials
+        if: env.is_pull_request == 'false'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-north-1
@@ -37,14 +48,18 @@ jobs:
         run: dotnet build --no-restore
       - name: Lint
         run: dotnet format --verify-no-changes --no-restore
-      - name: Test
+      - name: Test (Main)
+        if: env.is_pull_request == 'false'
         run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+      - name: Test (PR)
+        if: env.is_pull_request == 'true'
+        run: dotnet test ./test/OpenIddict.AmazonDynamoDB.Tests --no-build
       - name: Publish Code Coverage
         uses: codecov/codecov-action@v5
-        if: ${{ github.actor != 'dependabot[bot]' }}
+        if: ${{ github.actor != 'dependabot[bot]' && env.is_pull_request == 'false' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: test/OpenIddict.AmazonDynamoDB.Tests/TestResults/coverage.info
+          files: test/**/TestResults/coverage.info
           fail_ci_if_error: false
 
   publish:
@@ -64,8 +79,7 @@ jobs:
             9.0.x
 
       - name: Pack
-        run: |
-          dotnet pack
+        run: dotnet pack
 
       - name: Publish
         run: |

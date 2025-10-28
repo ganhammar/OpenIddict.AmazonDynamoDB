@@ -75,7 +75,10 @@ public class OpenIddictDynamoDbBuilderTests
   {
     // Arrange
     var services = new ServiceCollection();
-    var db = new AmazonDynamoDBClient();
+    var db = new AmazonDynamoDBClient(new AmazonDynamoDBConfig
+    {
+      ServiceURL = "http://localhost:8000",
+    });
 
     // Act
     CreateBuilder(services).UseDatabase(db);

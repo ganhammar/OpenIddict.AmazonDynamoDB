@@ -35,7 +35,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new());
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
@@ -99,7 +101,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_CreateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -136,7 +140,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_DeleteAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -172,7 +178,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnList_When_ListingAuthorizations()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -235,7 +243,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnLastFive_When_ListingAuthorizationsWithCountAndOffset()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -333,7 +343,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_UpdateAuthorization_When_AuthorizationIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -523,7 +535,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -544,7 +558,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1188,7 +1204,9 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsByApplicationIdWithNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);

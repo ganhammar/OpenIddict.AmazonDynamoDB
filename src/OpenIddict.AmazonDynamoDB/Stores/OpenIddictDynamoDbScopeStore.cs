@@ -35,7 +35,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     }
 
     _client = database ?? options.Database!;
-    _context = new DynamoDBContext(_client);
+    _context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 

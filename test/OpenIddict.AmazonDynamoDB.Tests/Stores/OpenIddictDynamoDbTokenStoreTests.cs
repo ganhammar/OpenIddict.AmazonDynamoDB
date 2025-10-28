@@ -35,7 +35,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_GetDatabaseFromServiceProvider_When_DatabaseIsNullInOptions()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new());
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options, _client);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options, _client);
@@ -123,7 +125,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_CreateToken_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -146,7 +150,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_CreateTokenWithTTL_When_TokenHasAnExpirationDate()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -184,7 +190,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_DeleteToken_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -217,7 +225,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnEmptyDictionary_When_PropertiesIsNull()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -237,7 +247,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnNonEmptyDictionary_When_PropertiesExists()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -277,7 +289,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -315,7 +329,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnAuthorizationId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -353,7 +369,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnCreationDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -391,7 +409,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnExpirationDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -429,7 +449,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnPayload_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -467,7 +489,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnRedemptionDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -505,7 +529,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnReferenceId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -543,7 +569,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnApplicationId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -581,7 +609,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnStatus_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -619,7 +649,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnSubject_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -657,7 +689,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnType_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -679,7 +713,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnNewToken_When_CallingInstantiate()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -695,7 +731,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnList_When_ListingTokens()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -729,7 +767,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnFirstFive_When_ListingTokensWithCount()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -759,7 +799,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnLastFive_When_ListingTokensWithCountAndOffset()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -826,7 +868,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetNull_When_SetEmptyListAsProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -847,7 +891,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetProperties_When_SettingProperties()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -919,7 +965,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_UpdateToken_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -954,7 +1002,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetApplicationId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -986,7 +1036,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetAuthorizationId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1018,7 +1070,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetCreationDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1050,7 +1104,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetExpirationDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1082,7 +1138,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetRedemptionDate_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1114,7 +1172,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetPayload_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1146,7 +1206,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetStatus_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1178,7 +1240,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetSubject_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1210,7 +1274,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetType_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1242,7 +1308,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_SetReferenceId_When_TokenIsValid()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
@@ -1465,7 +1533,9 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   public async Task Should_ReturnEmptyList_When_FindingTokensWithStatusAndTypeAndNoMatch()
   {
     // Arrange
-    var context = new DynamoDBContext(_client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => _client)
+      .Build();
     var options = TestUtils.GetOptions(new() { Database = _client });
     var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);

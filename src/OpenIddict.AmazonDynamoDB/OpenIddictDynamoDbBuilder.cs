@@ -2,7 +2,6 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.DependencyInjection;
-using OpenIddict.Core;
 
 namespace OpenIddict.AmazonDynamoDB;
 public class OpenIddictDynamoDbBuilder(IServiceCollection services)
@@ -15,38 +14,6 @@ public class OpenIddictDynamoDbBuilder(IServiceCollection services)
     ArgumentNullException.ThrowIfNull(configuration);
 
     Services.Configure(configuration);
-
-    return this;
-  }
-
-  public OpenIddictDynamoDbBuilder ReplaceDefaultApplicationEntity<TApplication>()
-    where TApplication : OpenIddictDynamoDbApplication
-  {
-    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultApplicationType = typeof(TApplication));
-
-    return this;
-  }
-
-  public OpenIddictDynamoDbBuilder ReplaceDefaultAuthorizationEntity<TAuthorization>()
-    where TAuthorization : OpenIddictDynamoDbAuthorization
-  {
-    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultAuthorizationType = typeof(TAuthorization));
-
-    return this;
-  }
-
-  public OpenIddictDynamoDbBuilder ReplaceDefaultScopeEntity<TScope>()
-    where TScope : OpenIddictDynamoDbScope
-  {
-    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultScopeType = typeof(TScope));
-
-    return this;
-  }
-
-  public OpenIddictDynamoDbBuilder ReplaceDefaultTokenEntity<TToken>()
-    where TToken : OpenIddictDynamoDbToken
-  {
-    Services.Configure<OpenIddictCoreOptions>(options => options.DefaultTokenType = typeof(TToken));
 
     return this;
   }

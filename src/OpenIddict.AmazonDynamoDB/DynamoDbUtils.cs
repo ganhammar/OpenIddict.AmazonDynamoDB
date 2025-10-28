@@ -41,13 +41,15 @@ internal class DynamoDbUtils
     CancellationToken cancellationToken = default)
   {
     var page = new List<Document>();
-    var context = new DynamoDBContext(client);
+    var context = new DynamoDBContextBuilder()
+      .WithDynamoDBClient(() => client)
+      .Build();
     var table = context.GetTargetTable<T>();
 
     var tableDefinition = await client.DescribeTableAsync(table.TableName, cancellationToken);
     if (size.HasValue == false)
     {
-      size = unchecked((int)tableDefinition.Table.ItemCount);
+      size = unchecked((int)(tableDefinition.Table.ItemCount ?? 0));
     }
 
     var isDone = false;

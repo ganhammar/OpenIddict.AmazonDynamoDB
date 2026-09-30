@@ -54,6 +54,10 @@ The `IServiceProvider` overloads log progress and warnings through the registere
 
 Updates to applications, authorizations, scopes and tokens only succeed if the item hasn't been changed since it was loaded, otherwise an `OpenIddictExceptions.ConcurrencyException` is thrown, as with the Entity Framework Core stores. This is what makes sure that authorization codes and refresh tokens can only be redeemed once when several requests redeem them at the same time.
 
+## Lifetime
+
+Tokens and authorizations are removed by DynamoDB's time to live. Tokens are kept until they expire, and until five minutes after they have been redeemed or revoked. Ad-hoc authorizations are kept until the last of their tokens expires, and permanent authorizations until they are revoked. DynamoDB usually removes expired items within a few days.
+
 
 ## Tests
 

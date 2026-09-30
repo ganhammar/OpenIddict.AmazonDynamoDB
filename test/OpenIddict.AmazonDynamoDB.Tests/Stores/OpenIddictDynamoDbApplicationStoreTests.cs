@@ -207,18 +207,8 @@ public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
     await applicationStore.UpdateAsync(application, CancellationToken.None);
 
     // Assert
-    Assert.Empty(await ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/old/29", CancellationToken.None)));
-    Assert.Single(await ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/new/29", CancellationToken.None)));
-  }
-
-  private static async Task<List<T>> ToListAsync<T>(IAsyncEnumerable<T> items)
-  {
-    var result = new List<T>();
-    await foreach (var item in items)
-    {
-      result.Add(item);
-    }
-    return result;
+    Assert.Empty(await TestUtils.ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/old/29", CancellationToken.None)));
+    Assert.Single(await TestUtils.ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/new/29", CancellationToken.None)));
   }
 
   [Fact]
@@ -1923,6 +1913,88 @@ public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
     // Act & Assert
     Assert.Throws<NotSupportedException>(() =>
       applicationStore.ListAsync<int, int>(default!, default, CancellationToken.None));
+  }
+
+  [Fact]
+  public async Task Should_OnlyListApplications_When_TableContainsOtherItems()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(new()
+    {
+      RedirectUris = ["https://example.com/callback"],
+    }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(applicationStore.ListAsync(default, default, CancellationToken.None));
+    var page = await TestUtils.ToListAsync(applicationStore.ListAsync(3, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "APPLICATION#", "#USER#"), items.Count);
+    Assert.Equal(3, page.Count);
+    Assert.All(page, x => Assert.Contains(items, y => y.Id == x.Id));
+  }
+
+  [Fact]
+  public async Task Should_ListEveryApplication_When_ItemCountOfTableIsOutdated()
+  {
+    // Arrange, DynamoDB only updates the item count of a table about every six hours
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    recorder.OnResponse = response =>
+    {
+      if (response is Amazon.DynamoDBv2.Model.DescribeTableResponse describeTableResponse)
+      {
+        describeTableResponse.Table.ItemCount = 0;
+      }
+    };
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+    await applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(applicationStore.ListAsync(default, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "APPLICATION#", "#USER#"), items.Count);
+  }
+
+  [Fact]
+  public async Task Should_UseConsistentRead_When_FindingApplicationById()
+  {
+    // Arrange, the concurrency token of a stale item would make the next update fail
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var item = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(item, CancellationToken.None);
+    recorder.Requests.Clear();
+
+    // Act
+    var found = await applicationStore.FindByIdAsync(item.Id, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(found);
+    var reads = recorder.Requests
+      .Where(x => x is Amazon.DynamoDBv2.Model.GetItemRequest or Amazon.DynamoDBv2.Model.QueryRequest)
+      .ToList();
+    Assert.NotEmpty(reads);
+    Assert.All(reads, x => Assert.True(x switch
+    {
+      Amazon.DynamoDBv2.Model.GetItemRequest getItem => getItem.ConsistentRead,
+      Amazon.DynamoDBv2.Model.QueryRequest query => query.ConsistentRead,
+      _ => false,
+    }));
   }
 
   [Fact]

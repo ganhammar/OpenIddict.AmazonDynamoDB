@@ -176,6 +176,88 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_OnlyListAuthorizations_When_TableContainsOtherItems()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(new()
+    {
+      RedirectUris = ["https://example.com/callback"],
+    }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(authorizationStore.ListAsync(default, default, CancellationToken.None));
+    var page = await TestUtils.ToListAsync(authorizationStore.ListAsync(3, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "AUTHORIZATION#", "#AUTHORIZATION#"), items.Count);
+    Assert.Equal(3, page.Count);
+    Assert.All(page, x => Assert.Contains(items, y => y.Id == x.Id));
+  }
+
+  [Fact]
+  public async Task Should_ListEveryAuthorization_When_ItemCountOfTableIsOutdated()
+  {
+    // Arrange, DynamoDB only updates the item count of a table about every six hours
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    recorder.OnResponse = response =>
+    {
+      if (response is Amazon.DynamoDBv2.Model.DescribeTableResponse describeTableResponse)
+      {
+        describeTableResponse.Table.ItemCount = 0;
+      }
+    };
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+    await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(authorizationStore.ListAsync(default, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "AUTHORIZATION#", "#AUTHORIZATION#"), items.Count);
+  }
+
+  [Fact]
+  public async Task Should_UseConsistentRead_When_FindingAuthorizationById()
+  {
+    // Arrange, the concurrency token of a stale item would make the next update fail
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var item = new OpenIddictDynamoDbAuthorization();
+    await authorizationStore.CreateAsync(item, CancellationToken.None);
+    recorder.Requests.Clear();
+
+    // Act
+    var found = await authorizationStore.FindByIdAsync(item.Id, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(found);
+    var reads = recorder.Requests
+      .Where(x => x is Amazon.DynamoDBv2.Model.GetItemRequest or Amazon.DynamoDBv2.Model.QueryRequest)
+      .ToList();
+    Assert.NotEmpty(reads);
+    Assert.All(reads, x => Assert.True(x switch
+    {
+      Amazon.DynamoDBv2.Model.GetItemRequest getItem => getItem.ConsistentRead,
+      Amazon.DynamoDBv2.Model.QueryRequest query => query.ConsistentRead,
+      _ => false,
+    }));
+  }
+
+  [Fact]
   public async Task Should_ReturnList_When_ListingAuthorizations()
   {
     // Arrange
@@ -1063,6 +1145,139 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
     // Assert
     Assert.Equal(3, redirectUris.Length);
   }
+
+  [Fact]
+  public async Task Should_OnlyReturnAuthorizations_When_SubjectAndApplicationAlsoHaveTokens()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = await CreateAuthorizationStore();
+    var application = new OpenIddictDynamoDbApplication { RedirectUris = ["https://example.com/callback"] };
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(application, CancellationToken.None);
+    var subject = $"subject-{Guid.NewGuid()}";
+    await new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options).CreateAsync(new()
+    {
+      Subject = subject,
+      ApplicationId = application.Id,
+      Status = Statuses.Valid,
+      Type = AuthorizationTypes.AdHoc,
+    }, CancellationToken.None);
+    await CreateAuthorization(authorizationStore, subject, application.Id, Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+
+    // Act
+    var bySubject = await TestUtils.ToListAsync(authorizationStore.FindBySubjectAsync(subject, CancellationToken.None));
+    var byApplication = await TestUtils.ToListAsync(authorizationStore.FindByApplicationIdAsync(application.Id, CancellationToken.None));
+    var byFilters = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      subject, application.Id, Statuses.Valid, AuthorizationTypes.AdHoc, null, CancellationToken.None));
+    var authorizationCount = await TestUtils.CountItemsAsync(_client, "AUTHORIZATION#", "#AUTHORIZATION#");
+    var revoked = await authorizationStore.RevokeBySubjectAsync(subject, CancellationToken.None);
+
+    // Assert
+    Assert.Single(bySubject);
+    Assert.Single(byApplication);
+    Assert.Single(byFilters);
+    Assert.Equal(1, revoked);
+    Assert.Equal(authorizationCount, await TestUtils.CountItemsAsync(_client, "AUTHORIZATION#", "#AUTHORIZATION#"));
+  }
+
+  [Fact]
+  public async Task Should_FilterByStatus_When_FindingAuthorizationsWithoutClient()
+  {
+    // Arrange
+    var authorizationStore = await CreateAuthorizationStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateAuthorization(authorizationStore, subject, "application-a", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+    await CreateAuthorization(authorizationStore, subject, "application-b", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+    await CreateAuthorization(authorizationStore, subject, "application-a", Statuses.Revoked, AuthorizationTypes.AdHoc, ["a"]);
+
+    // Act
+    var authorizations = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      subject, null, Statuses.Valid, null, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, authorizations.Count);
+    Assert.All(authorizations, x => Assert.Equal(Statuses.Valid, x.Status));
+  }
+
+  [Fact]
+  public async Task Should_FilterByScopes_When_FindingAuthorizationsWithoutClientStatusOrType()
+  {
+    // Arrange
+    var authorizationStore = await CreateAuthorizationStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateAuthorization(authorizationStore, subject, "application-a", Statuses.Valid, AuthorizationTypes.AdHoc, ["a", "b"]);
+    await CreateAuthorization(authorizationStore, subject, "application-b", Statuses.Revoked, AuthorizationTypes.Permanent, ["b"]);
+    await CreateAuthorization(authorizationStore, subject, "application-a", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+
+    // Act
+    var authorizations = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      subject, null, null, null, ["b"], CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, authorizations.Count);
+    Assert.All(authorizations, x => Assert.Contains("b", x.Scopes!));
+  }
+
+  [Fact]
+  public async Task Should_FilterByClient_When_FindingAuthorizationsWithoutSubject()
+  {
+    // Arrange
+    var authorizationStore = await CreateAuthorizationStore();
+    var client = $"application-{Guid.NewGuid()}";
+    await CreateAuthorization(authorizationStore, "subject-a", client, Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+    await CreateAuthorization(authorizationStore, "subject-b", client, Statuses.Valid, AuthorizationTypes.Permanent, ["a"]);
+    await CreateAuthorization(authorizationStore, "subject-a", $"application-{Guid.NewGuid()}", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+
+    // Act
+    var authorizations = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      null, client, null, null, null, CancellationToken.None));
+    var permanent = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      null, client, null, AuthorizationTypes.Permanent, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, authorizations.Count);
+    Assert.All(authorizations, x => Assert.Equal(client, x.ApplicationId));
+    Assert.Equal("subject-b", Assert.Single(permanent).Subject);
+  }
+
+  [Fact]
+  public async Task Should_MatchClientExactly_When_FindingAuthorizations()
+  {
+    // Arrange
+    var authorizationStore = await CreateAuthorizationStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateAuthorization(authorizationStore, subject, "application-1", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+    await CreateAuthorization(authorizationStore, subject, "application-10", Statuses.Valid, AuthorizationTypes.AdHoc, ["a"]);
+
+    // Act
+    var authorizations = await TestUtils.ToListAsync(authorizationStore.FindAsync(
+      subject, "application-1", null, null, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal("application-1", Assert.Single(authorizations).ApplicationId);
+  }
+
+  private async Task<OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>> CreateAuthorizationStore()
+  {
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    return new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+  }
+
+  private static async Task CreateAuthorization(
+    OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization> authorizationStore,
+    string subject,
+    string applicationId,
+    string status,
+    string type,
+    List<string> scopes) => await authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization
+    {
+      Subject = subject,
+      ApplicationId = applicationId,
+      Status = status,
+      Type = type,
+      Scopes = scopes,
+    }, CancellationToken.None);
 
   [Fact]
   public async Task Should_ReturnEmptyList_When_FindingAuthorizationsWithNoMatch()

@@ -880,6 +880,88 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_OnlyListScopes_When_TableContainsOtherItems()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(new()
+    {
+      RedirectUris = ["https://example.com/callback"],
+    }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(scopeStore.ListAsync(default, default, CancellationToken.None));
+    var page = await TestUtils.ToListAsync(scopeStore.ListAsync(3, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "SCOPE#", "#SCOPE#"), items.Count);
+    Assert.Equal(3, page.Count);
+    Assert.All(page, x => Assert.Contains(items, y => y.Id == x.Id));
+  }
+
+  [Fact]
+  public async Task Should_ListEveryScope_When_ItemCountOfTableIsOutdated()
+  {
+    // Arrange, DynamoDB only updates the item count of a table about every six hours
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    recorder.OnResponse = response =>
+    {
+      if (response is Amazon.DynamoDBv2.Model.DescribeTableResponse describeTableResponse)
+      {
+        describeTableResponse.Table.ItemCount = 0;
+      }
+    };
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(scopeStore.ListAsync(default, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "SCOPE#", "#SCOPE#"), items.Count);
+  }
+
+  [Fact]
+  public async Task Should_UseConsistentRead_When_FindingScopeById()
+  {
+    // Arrange, the concurrency token of a stale item would make the next update fail
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var item = new OpenIddictDynamoDbScope();
+    await scopeStore.CreateAsync(item, CancellationToken.None);
+    recorder.Requests.Clear();
+
+    // Act
+    var found = await scopeStore.FindByIdAsync(item.Id, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(found);
+    var reads = recorder.Requests
+      .Where(x => x is Amazon.DynamoDBv2.Model.GetItemRequest or Amazon.DynamoDBv2.Model.QueryRequest)
+      .ToList();
+    Assert.NotEmpty(reads);
+    Assert.All(reads, x => Assert.True(x switch
+    {
+      Amazon.DynamoDBv2.Model.GetItemRequest getItem => getItem.ConsistentRead,
+      Amazon.DynamoDBv2.Model.QueryRequest query => query.ConsistentRead,
+      _ => false,
+    }));
+  }
+
+  [Fact]
   public async Task Should_ReturnList_When_ListingScopes()
   {
     // Arrange

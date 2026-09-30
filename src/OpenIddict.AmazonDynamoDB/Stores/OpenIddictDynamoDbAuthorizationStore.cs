@@ -20,6 +20,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   private readonly IAmazonDynamoDB _client;
   private readonly DynamoDBContext _context;
   private readonly string _tableName;
+  private const string PartitionKeyPrefix = "AUTHORIZATION#";
+  private const string SortKeyPrefix = "#AUTHORIZATION#";
 
   public OpenIddictDynamoDbAuthorizationStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -91,6 +93,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
             { ":searchKey", searchKey },
           }
         },
+        // Tokens are also stored in the Subject-index
+        FilterExpression = DynamoDbUtils.GetPartitionKeyFilter(PartitionKeyPrefix),
       });
 
       var authorizations = await search.GetRemainingAsync(cancellationToken);
@@ -102,67 +106,34 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     }
   }
 
-  private IAsyncEnumerable<TAuthorization> FindBySubjectAndSearchKeyAndScopes(
-    string subject,
-    string client,
-    string status,
-    string type,
-    ImmutableArray<string>? scopes,
-    CancellationToken cancellationToken)
-  {
-    ArgumentNullException.ThrowIfNull(subject);
-    ArgumentNullException.ThrowIfNull(client);
-    ArgumentNullException.ThrowIfNull(status);
-    ArgumentNullException.ThrowIfNull(type);
-
-    if (scopes == null)
-    {
-      throw new ArgumentNullException(nameof(scopes));
-    }
-
-    return ExecuteAsync(cancellationToken);
-
-    async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-      var authorizations = FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
-
-      await foreach (var authorization in authorizations)
-      {
-        if (Enumerable.All<string>(scopes, scope => authorization.Scopes!.Contains(scope)))
-        {
-          yield return authorization;
-        }
-      }
-    }
-  }
-
   public IAsyncEnumerable<TAuthorization> FindAsync(
     string? subject, string? client,
     string? status, string? type,
     ImmutableArray<string>? scopes, CancellationToken cancellationToken)
   {
-    if (string.IsNullOrEmpty(subject))
-    {
-      return ListAsync(null, null, cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(client) && string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type) && scopes == null)
-    {
-      return FindBySubjectAndSearchKey(subject, "APPLICATION#", cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type) && scopes == null)
-    {
-      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(type) && scopes == null)
-    {
-      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
-    }
-    else if (scopes == null)
-    {
-      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
-    }
+    return ExecuteAsync(cancellationToken);
 
-    return FindBySubjectAndSearchKeyAndScopes(subject, client!, status!, type!, scopes, cancellationToken);
+    async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+      // Query by the most selective parameter, the search key prefix can only be used for
+      // leading parameters, so the parameters are always matched exactly afterwards
+      var authorizations = string.IsNullOrEmpty(subject) == false
+        ? FindBySubjectAndSearchKey(subject, DynamoDbUtils.GetSearchKeyPrefix(client, status, type), cancellationToken)
+        : string.IsNullOrEmpty(client) == false
+          ? FindByApplicationIdAsync(client, cancellationToken)
+          : ListAsync(null, null, cancellationToken);
+
+      await foreach (var authorization in authorizations)
+      {
+        if (DynamoDbUtils.IsMatch(authorization.ApplicationId, client)
+          && DynamoDbUtils.IsMatch(authorization.Status, status)
+          && DynamoDbUtils.IsMatch(authorization.Type, type)
+          && (scopes == null || scopes.Value.All(x => authorization.Scopes?.Contains(x) == true)))
+        {
+          yield return authorization;
+        }
+      }
+    }
   }
 
   public IAsyncEnumerable<TAuthorization> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -178,10 +149,12 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
         IndexName = "ApplicationId-index",
         KeyExpression = new()
         {
-          ExpressionStatement = "ApplicationId = :applicationId",
+          // Tokens and redirects are also stored in the ApplicationId-index
+          ExpressionStatement = "ApplicationId = :applicationId and begins_with(SortKey, :sortKey)",
           ExpressionAttributeValues = new()
           {
             { ":applicationId", identifier },
+            { ":sortKey", SortKeyPrefix },
           }
         },
       });
@@ -206,30 +179,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     ArgumentNullException.ThrowIfNull(subject);
 
-    return ExecuteAsync(cancellationToken);
-
-    async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-      var search = _context.FromQueryAsync<TAuthorization>(new()
-      {
-        IndexName = "Subject-index",
-        KeyExpression = new()
-        {
-          ExpressionStatement = "Subject = :subject",
-          ExpressionAttributeValues = new()
-          {
-            { ":subject", subject },
-          }
-        },
-      });
-
-      var authorizations = await search.GetRemainingAsync(cancellationToken);
-
-      foreach (var authorization in authorizations)
-      {
-        yield return authorization;
-      }
-    }
+    return FindBySubjectAndSearchKey(subject, DynamoDbUtils.GetSearchKeyPrefix(null, null, null), cancellationToken);
   }
 
   public ValueTask<string?> GetApplicationIdAsync(TAuthorization authorization, CancellationToken cancellationToken)
@@ -350,7 +300,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var (token, items) = await DynamoDbUtils.Paginate<TAuthorization>(_client, count, initalToken, cancellationToken);
+      var (token, items) = await DynamoDbUtils.Paginate<TAuthorization>(
+        _client, _tableName, PartitionKeyPrefix, SortKeyPrefix, count, initalToken, cancellationToken);
 
       if (count.HasValue)
       {
@@ -572,6 +523,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     var search = _context.FromQueryAsync<TAuthorization>(new()
     {
+      // A stale authorization would fail to update, and could still look valid after being revoked
+      ConsistentRead = true,
       KeyExpression = new()
       {
         ExpressionStatement = "PartitionKey = :partitionKey",

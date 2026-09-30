@@ -20,6 +20,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 {
   private readonly IAmazonDynamoDB _client;
   private readonly DynamoDBContext _context;
+  private readonly string _tableName;
 
   public OpenIddictDynamoDbTokenStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -39,6 +40,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     _context = new DynamoDBContextBuilder()
       .WithDynamoDBClient(() => _client)
       .Build();
+    _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -64,9 +66,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     }
     await _context.SaveAsync(token, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    var newCount = count + 1;
-    await _context.SaveAsync(new CountModel(CountType.Token, newCount), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, 1, cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)
@@ -75,8 +75,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     await _context.DeleteAsync(token, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Token, count - 1), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, -1, cancellationToken);
   }
 
   private IAsyncEnumerable<TToken> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
@@ -463,8 +462,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     await batchDelete.ExecuteAsync(cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Token, count - deleteCount), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, -deleteCount, cancellationToken);
 
     return deleteCount;
   }
@@ -597,13 +595,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(token);
 
-    // Ensure no one else is updating
-    var databaseApplication = await GetByPartitionKey(token, cancellationToken);
-    if (databaseApplication == default || databaseApplication.ConcurrencyToken != token.ConcurrencyToken)
-    {
-      throw new ArgumentException("Given token is invalid", nameof(token));
-    }
-
+    var concurrencyToken = token.ConcurrencyToken;
+    var ttl = token.TTL;
     token.ConcurrencyToken = Guid.NewGuid().ToString();
 
     if (new[] { Statuses.Inactive, Statuses.Valid }.Contains(token.Status) == false)
@@ -613,6 +606,21 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     else
     {
       token.TTL = token.ExpirationDate;
+    }
+
+    try
+    {
+      // Ensure no one else has updated the token since it was loaded, this is also what makes
+      // sure that authorization codes and refresh tokens can only be redeemed once
+      await _context.SaveAsync(token, GetSaveConfig(concurrencyToken), cancellationToken);
+    }
+    catch (ConditionalCheckFailedException exception)
+    {
+      token.ConcurrencyToken = concurrencyToken;
+      token.TTL = ttl;
+
+      throw new OpenIddictExceptions.ConcurrencyException(
+        OpenIddictResources.GetResourceString(OpenIddictResources.ID0247), exception);
     }
 
     // If token is set to be deleted, also mark the corresponding authorization for deletion
@@ -632,8 +640,6 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         await _context.SaveAsync(authorization, cancellationToken);
       }
     }
-
-    await _context.SaveAsync(token, cancellationToken);
   }
 
   private async Task<TToken?> GetByPartitionKey(TToken token, CancellationToken cancellationToken)
@@ -715,5 +721,27 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     await batch.ExecuteAsync(cancellationToken);
 
     return result;
+  }
+
+  private static SaveConfig GetSaveConfig(string? concurrencyToken)
+  {
+    // Only save when the token exists and still has the concurrency token it was loaded with
+    var condition = new ContextExpression();
+
+    if (concurrencyToken == default)
+    {
+      condition.SetFilter<TToken>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && ContextExpression.AttributeNotExists(x.ConcurrencyToken));
+    }
+    else
+    {
+      condition.SetFilter<TToken>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && x.ConcurrencyToken == concurrencyToken);
+    }
+
+    return new()
+    {
+      ConditionalExpression = condition,
+    };
   }
 }

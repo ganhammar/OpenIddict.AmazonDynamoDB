@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
@@ -317,9 +318,78 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act & Assert
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await authorizationStore.UpdateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None));
-    Assert.Equal("authorization", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_AllowOnlyOneUpdate_When_UpdatingAuthorizationConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var authorization = new OpenIddictDynamoDbAuthorization();
+    await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+    var copies = new List<OpenIddictDynamoDbAuthorization>();
+    for (var index = 0; index < 5; index++)
+    {
+      copies.Add((await authorizationStore.FindByIdAsync(authorization.Id, CancellationToken.None))!);
+    }
+
+    // Act
+    var results = await Task.WhenAll(copies.Select(async x =>
+    {
+      try
+      {
+        await authorizationStore.UpdateAsync(x, CancellationToken.None);
+        return true;
+      }
+      catch (OpenIddictExceptions.ConcurrencyException)
+      {
+        return false;
+      }
+    }));
+
+    // Assert
+    Assert.Single(results, x => x);
+  }
+
+  [Fact]
+  public async Task Should_KeepConcurrencyToken_When_AuthorizationUpdateFails()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var authorization = new OpenIddictDynamoDbAuthorization();
+    await authorizationStore.CreateAsync(authorization, CancellationToken.None);
+    var staleConcurrencyToken = Guid.NewGuid().ToString();
+    authorization.ConcurrencyToken = staleConcurrencyToken;
+
+    // Act
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
+      await authorizationStore.UpdateAsync(authorization, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(staleConcurrencyToken, authorization.ConcurrencyToken);
+  }
+
+  [Fact]
+  public async Task Should_CountEveryAuthorization_When_CreatedConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await authorizationStore.CountAsync(CancellationToken.None);
+
+    // Act
+    await Task.WhenAll(Enumerable.Range(0, 10)
+      .Select(_ => authorizationStore.CreateAsync(new OpenIddictDynamoDbAuthorization(), CancellationToken.None).AsTask()));
+
+    // Assert
+    Assert.Equal(beforeCount + 10, await authorizationStore.CountAsync(CancellationToken.None));
   }
 
   [Fact]
@@ -334,9 +404,8 @@ public class OpenIddictDynamoDbAuthorizationStoreTests(DatabaseFixture fixture)
 
     // Act & Assert
     authorization.ConcurrencyToken = Guid.NewGuid().ToString();
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await authorizationStore.UpdateAsync(authorization, CancellationToken.None));
-    Assert.Equal("authorization", exception.ParamName);
   }
 
   [Fact]

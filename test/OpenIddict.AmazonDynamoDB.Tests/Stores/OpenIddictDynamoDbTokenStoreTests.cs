@@ -2,6 +2,8 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
@@ -939,9 +941,111 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act & Assert
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await tokenStore.UpdateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None));
-    Assert.Equal("token", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_AllowOnlyOneUpdate_When_UpdatingTokenConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var token = new OpenIddictDynamoDbToken();
+    await tokenStore.CreateAsync(token, CancellationToken.None);
+    var copies = new List<OpenIddictDynamoDbToken>();
+    for (var index = 0; index < 5; index++)
+    {
+      copies.Add((await tokenStore.FindByIdAsync(token.Id, CancellationToken.None))!);
+    }
+
+    // Act
+    var results = await Task.WhenAll(copies.Select(async x =>
+    {
+      try
+      {
+        await tokenStore.UpdateAsync(x, CancellationToken.None);
+        return true;
+      }
+      catch (OpenIddictExceptions.ConcurrencyException)
+      {
+        return false;
+      }
+    }));
+
+    // Assert
+    Assert.Single(results, x => x);
+  }
+
+  [Fact]
+  public async Task Should_KeepConcurrencyToken_When_TokenUpdateFails()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var token = new OpenIddictDynamoDbToken();
+    await tokenStore.CreateAsync(token, CancellationToken.None);
+    var staleConcurrencyToken = Guid.NewGuid().ToString();
+    token.ConcurrencyToken = staleConcurrencyToken;
+
+    // Act
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
+      await tokenStore.UpdateAsync(token, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(staleConcurrencyToken, token.ConcurrencyToken);
+  }
+
+  [Fact]
+  public async Task Should_RedeemTokenOnce_When_RedeemedConcurrently()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    services.AddLogging();
+    services.AddOpenIddict().AddCore().UseDynamoDb().UseDatabase(_client).SetDefaultTableName(DatabaseFixture.TableName);
+    var serviceProvider = services.BuildServiceProvider();
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(serviceProvider);
+    var tokenStore = serviceProvider.GetRequiredService<OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>>();
+    var tokenManager = serviceProvider.GetRequiredService<IOpenIddictTokenManager>();
+    var token = new OpenIddictDynamoDbToken
+    {
+      Status = Statuses.Valid,
+      Type = TokenTypeHints.RefreshToken,
+      ExpirationDate = DateTime.UtcNow.AddDays(1),
+    };
+    await tokenStore.CreateAsync(token, CancellationToken.None);
+    var copies = new List<OpenIddictDynamoDbToken>();
+    for (var index = 0; index < 5; index++)
+    {
+      copies.Add((await tokenStore.FindByIdAsync(token.Id, CancellationToken.None))!);
+    }
+
+    // Act
+    var results = await Task.WhenAll(copies.Select(x => tokenManager.TryRedeemAsync(x).AsTask()));
+
+    // Assert
+    Assert.Single(results, x => x);
+    var redeemed = await tokenStore.FindByIdAsync(token.Id, CancellationToken.None);
+    Assert.Equal(Statuses.Redeemed, redeemed!.Status);
+  }
+
+  [Fact]
+  public async Task Should_CountEveryToken_When_CreatedConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await tokenStore.CountAsync(CancellationToken.None);
+
+    // Act
+    await Task.WhenAll(Enumerable.Range(0, 10)
+      .Select(_ => tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None).AsTask()));
+
+    // Assert
+    Assert.Equal(beforeCount + 10, await tokenStore.CountAsync(CancellationToken.None));
   }
 
   [Fact]
@@ -956,9 +1060,8 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
 
     // Act & Assert
     token.ConcurrencyToken = Guid.NewGuid().ToString();
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await tokenStore.UpdateAsync(token, CancellationToken.None));
-    Assert.Equal("token", exception.ParamName);
   }
 
   [Fact]

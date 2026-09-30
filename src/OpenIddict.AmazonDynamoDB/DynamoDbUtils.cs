@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -153,45 +154,97 @@ internal class DynamoDbUtils
   public static bool IsAccessDenied(AmazonDynamoDBException exception)
     => exception.ErrorCode == "AccessDeniedException";
 
+  // Scans the items of one entity type, the table also holds the other entity types. The
+  // returned token continues after the last returned item, so that no item is skipped
   public static async Task<(string?, List<T>)> Paginate<T>(
     IAmazonDynamoDB client,
+    string tableName,
+    string partitionKeyPrefix,
+    string sortKeyPrefix,
     int? size = default,
     string? token = default,
     CancellationToken cancellationToken = default)
   {
-    var page = new List<Document>();
     var context = new DynamoDBContextBuilder()
       .WithDynamoDBClient(() => client)
       .Build();
+    // The target table converts attributes such as epoch dates the same way the context does
     var table = context.GetTargetTable<T>();
+    var items = new List<T>();
+    var exclusiveStartKey = token == default
+      ? default
+      : JsonSerializer.Deserialize<Dictionary<string, string>>(token)!
+        .ToDictionary(x => x.Key, x => new AttributeValue { S = x.Value });
 
-    var tableDefinition = await client.DescribeTableAsync(table.TableName, cancellationToken);
-    if (size.HasValue == false)
+    if (size <= 0)
     {
-      size = unchecked((int)(tableDefinition.Table.ItemCount ?? 0));
+      return (token, items);
     }
 
-    var isDone = false;
     do
     {
-      var scan = table.Scan(new ScanOperationConfig
+      var response = await client.ScanAsync(new ScanRequest
       {
-        PaginationToken = token,
-        Limit = Math.Min(100, size.Value),
-      });
+        TableName = tableName,
+        FilterExpression = "begins_with(PartitionKey, :partitionKey) and begins_with(SortKey, :sortKey)",
+        ExpressionAttributeValues = new()
+        {
+          { ":partitionKey", new AttributeValue { S = partitionKeyPrefix } },
+          { ":sortKey", new AttributeValue { S = sortKeyPrefix } },
+        },
+        ExclusiveStartKey = exclusiveStartKey,
+      }, cancellationToken);
 
-      var batch = await scan.GetNextSetAsync(cancellationToken);
+      foreach (var item in response.Items ?? new())
+      {
+        items.Add(context.FromDocument<T>(table.FromAttributeMap(item)));
 
-      var take = batch.Take(size.Value - page.Count);
-      page.AddRange(take);
+        if (items.Count == size)
+        {
+          return (JsonSerializer.Serialize(new Dictionary<string, string>
+          {
+            { "PartitionKey", item["PartitionKey"].S },
+            { "SortKey", item["SortKey"].S },
+          }), items);
+        }
+      }
 
-      isDone = page.Count == size || scan.IsDone;
-      token = scan.PaginationToken;
-    }
-    while (!isDone);
+      exclusiveStartKey = response.LastEvaluatedKey;
+    } while (exclusiveStartKey?.Count > 0);
 
-    var items = page.Select(x => context.FromDocument<T>(x)).ToList();
-
-    return (token, items);
+    return (default, items);
   }
+
+  // SearchKey is APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}, only leading values
+  // can be part of the prefix and each value is followed by its separator to match it exactly
+  public static string GetSearchKeyPrefix(string? client, string? status, string? type)
+  {
+    if (string.IsNullOrEmpty(client))
+    {
+      return "APPLICATION#";
+    }
+    else if (string.IsNullOrEmpty(status))
+    {
+      return $"APPLICATION#{client}#STATUS#";
+    }
+    else if (string.IsNullOrEmpty(type))
+    {
+      return $"APPLICATION#{client}#STATUS#{status}#TYPE#";
+    }
+
+    return $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}";
+  }
+
+  public static bool IsMatch(string? value, string? filter)
+    => string.IsNullOrEmpty(filter) || string.Equals(value, filter, StringComparison.Ordinal);
+
+  public static Expression GetPartitionKeyFilter(string partitionKeyPrefix) => new()
+  {
+    ExpressionStatement = "begins_with(PartitionKey, :partitionKeyPrefix)",
+    ExpressionAttributeValues = new()
+    {
+      { ":partitionKeyPrefix", partitionKeyPrefix },
+    },
+  };
+
 }

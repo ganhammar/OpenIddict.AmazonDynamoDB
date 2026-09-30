@@ -147,8 +147,9 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     {
       Id = identifier,
     };
+    // A stale application would fail to update
     application = await _context.LoadAsync<TApplication>(
-      application.PartitionKey, application.SortKey, cancellationToken);
+      application.PartitionKey, application.SortKey, new LoadConfig { ConsistentRead = true }, cancellationToken);
 
     return application;
   }
@@ -413,7 +414,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var (token, items) = await DynamoDbUtils.Paginate<TApplication>(_client, count, initalToken, cancellationToken);
+      var (token, items) = await DynamoDbUtils.Paginate<TApplication>(
+        _client, _tableName, "APPLICATION#", "#USER#", count, initalToken, cancellationToken);
 
       if (count.HasValue)
       {

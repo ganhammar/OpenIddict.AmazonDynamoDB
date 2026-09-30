@@ -730,6 +730,88 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_OnlyListTokens_When_TableContainsOtherItems()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(new()
+    {
+      RedirectUris = ["https://example.com/callback"],
+    }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(tokenStore.ListAsync(default, default, CancellationToken.None));
+    var page = await TestUtils.ToListAsync(tokenStore.ListAsync(3, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "TOKEN#", "#TOKEN#"), items.Count);
+    Assert.Equal(3, page.Count);
+    Assert.All(page, x => Assert.Contains(items, y => y.Id == x.Id));
+  }
+
+  [Fact]
+  public async Task Should_ListEveryToken_When_ItemCountOfTableIsOutdated()
+  {
+    // Arrange, DynamoDB only updates the item count of a table about every six hours
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    recorder.OnResponse = response =>
+    {
+      if (response is Amazon.DynamoDBv2.Model.DescribeTableResponse describeTableResponse)
+      {
+        describeTableResponse.Table.ItemCount = 0;
+      }
+    };
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+    await tokenStore.CreateAsync(new OpenIddictDynamoDbToken(), CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(tokenStore.ListAsync(default, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "TOKEN#", "#TOKEN#"), items.Count);
+  }
+
+  [Fact]
+  public async Task Should_UseConsistentRead_When_FindingTokenById()
+  {
+    // Arrange, the concurrency token of a stale item would make the next update fail
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var tokenStore = new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var item = new OpenIddictDynamoDbToken();
+    await tokenStore.CreateAsync(item, CancellationToken.None);
+    recorder.Requests.Clear();
+
+    // Act
+    var found = await tokenStore.FindByIdAsync(item.Id, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(found);
+    var reads = recorder.Requests
+      .Where(x => x is Amazon.DynamoDBv2.Model.GetItemRequest or Amazon.DynamoDBv2.Model.QueryRequest)
+      .ToList();
+    Assert.NotEmpty(reads);
+    Assert.All(reads, x => Assert.True(x switch
+    {
+      Amazon.DynamoDBv2.Model.GetItemRequest getItem => getItem.ConsistentRead,
+      Amazon.DynamoDBv2.Model.QueryRequest query => query.ConsistentRead,
+      _ => false,
+    }));
+  }
+
+  [Fact]
   public async Task Should_ReturnList_When_ListingTokens()
   {
     // Arrange
@@ -1425,6 +1507,254 @@ public class OpenIddictDynamoDbTokenStoreTests(DatabaseFixture fixture)
 
     // Assert
     Assert.Equal(value, token.ReferenceId);
+  }
+
+  [Fact]
+  public async Task Should_OnlyReturnTokens_When_SubjectAndApplicationAlsoHaveAuthorizations()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = await CreateTokenStore();
+    var application = new OpenIddictDynamoDbApplication { RedirectUris = ["https://example.com/callback"] };
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(application, CancellationToken.None);
+    var subject = $"subject-{Guid.NewGuid()}";
+    await new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options).CreateAsync(new()
+    {
+      Subject = subject,
+      ApplicationId = application.Id,
+      Status = Statuses.Valid,
+      Type = AuthorizationTypes.AdHoc,
+    }, CancellationToken.None);
+    await CreateToken(tokenStore, subject, application.Id, Statuses.Valid, TokenTypeHints.AccessToken);
+
+    // Act
+    var bySubject = await TestUtils.ToListAsync(tokenStore.FindBySubjectAsync(subject, CancellationToken.None));
+    var byApplication = await TestUtils.ToListAsync(tokenStore.FindByApplicationIdAsync(application.Id, CancellationToken.None));
+    var byFilters = await TestUtils.ToListAsync(tokenStore.FindAsync(subject, application.Id, null, null, CancellationToken.None));
+    var tokenCount = await TestUtils.CountItemsAsync(_client, "TOKEN#", "#TOKEN#");
+    var revoked = await tokenStore.RevokeBySubjectAsync(subject, CancellationToken.None);
+
+    // Assert
+    Assert.Single(bySubject);
+    Assert.Single(byApplication);
+    Assert.Single(byFilters);
+    Assert.Equal(1, revoked);
+    Assert.Equal(tokenCount, await TestUtils.CountItemsAsync(_client, "TOKEN#", "#TOKEN#"));
+  }
+
+  [Fact]
+  public async Task Should_FilterByStatus_When_FindingTokensWithoutClient()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateToken(tokenStore, subject, "application-a", Statuses.Valid, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, subject, "application-b", Statuses.Valid, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, subject, "application-a", Statuses.Revoked, TokenTypeHints.AccessToken);
+
+    // Act
+    var tokens = await TestUtils.ToListAsync(tokenStore.FindAsync(subject, null, Statuses.Valid, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, tokens.Count);
+    Assert.All(tokens, x => Assert.Equal(Statuses.Valid, x.Status));
+  }
+
+  [Fact]
+  public async Task Should_FilterByType_When_FindingTokensWithoutStatus()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateToken(tokenStore, subject, "application-a", Statuses.Valid, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, subject, "application-a", Statuses.Revoked, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, subject, "application-a", Statuses.Valid, TokenTypeHints.RefreshToken);
+
+    // Act
+    var tokens = await TestUtils.ToListAsync(tokenStore.FindAsync(
+      subject, "application-a", null, TokenTypeHints.AccessToken, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, tokens.Count);
+    Assert.All(tokens, x => Assert.Equal(TokenTypeHints.AccessToken, x.Type));
+  }
+
+  [Fact]
+  public async Task Should_FilterByClient_When_FindingTokensWithoutSubject()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var client = $"application-{Guid.NewGuid()}";
+    await CreateToken(tokenStore, "subject-a", client, Statuses.Valid, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, "subject-b", client, Statuses.Revoked, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, "subject-a", $"application-{Guid.NewGuid()}", Statuses.Valid, TokenTypeHints.AccessToken);
+
+    // Act
+    var tokens = await TestUtils.ToListAsync(tokenStore.FindAsync(null, client, null, null, CancellationToken.None));
+    var validTokens = await TestUtils.ToListAsync(tokenStore.FindAsync(null, client, Statuses.Valid, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(2, tokens.Count);
+    Assert.All(tokens, x => Assert.Equal(client, x.ApplicationId));
+    Assert.Equal("subject-a", Assert.Single(validTokens).Subject);
+  }
+
+  [Fact]
+  public async Task Should_MatchClientExactly_When_FindingTokens()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var subject = $"subject-{Guid.NewGuid()}";
+    await CreateToken(tokenStore, subject, "application-1", Statuses.Valid, TokenTypeHints.AccessToken);
+    await CreateToken(tokenStore, subject, "application-10", Statuses.Valid, TokenTypeHints.AccessToken);
+
+    // Act
+    var tokens = await TestUtils.ToListAsync(tokenStore.FindAsync(subject, "application-1", null, null, CancellationToken.None));
+
+    // Assert
+    Assert.Equal("application-1", Assert.Single(tokens).ApplicationId);
+  }
+
+  [Fact]
+  public async Task Should_KeepAuthorization_When_RedeemingTokenWhileOtherTokensAreValid()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var authorization = await CreateAuthorization(AuthorizationTypes.AdHoc);
+    var code = await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddMinutes(5));
+    var refreshToken = await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddDays(14));
+
+    // Act
+    code.Status = Statuses.Redeemed;
+    await tokenStore.UpdateAsync(code, CancellationToken.None);
+
+    // Assert
+    var timeToLive = await GetTimeToLive(authorization);
+    Assert.NotNull(timeToLive);
+    Assert.True(timeToLive >= refreshToken.ExpirationDate!.Value.AddSeconds(-1));
+  }
+
+  [Fact]
+  public async Task Should_ExtendAdHocAuthorization_When_TokenExpiresLater()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var authorization = await CreateAuthorization(AuthorizationTypes.AdHoc);
+    var shortLived = await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddHours(1));
+    var afterFirstToken = await GetTimeToLive(authorization);
+
+    // Act
+    var longLived = await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddDays(14));
+    var afterSecondToken = await GetTimeToLive(authorization);
+    longLived.Status = Statuses.Revoked;
+    await tokenStore.UpdateAsync(longLived, CancellationToken.None);
+    var afterRevocation = await GetTimeToLive(authorization);
+
+    // Assert
+    Assert.True(Math.Abs((afterFirstToken!.Value - shortLived.ExpirationDate!.Value).TotalSeconds) <= 1);
+    Assert.True(Math.Abs((afterSecondToken!.Value - longLived.ExpirationDate!.Value).TotalSeconds) <= 1);
+    Assert.Equal(afterSecondToken, afterRevocation);
+  }
+
+  [Fact]
+  public async Task Should_NotExpirePermanentAuthorization_When_TokensChange()
+  {
+    // Arrange
+    var tokenStore = await CreateTokenStore();
+    var authorization = await CreateAuthorization(AuthorizationTypes.Permanent);
+    var token = await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddHours(1));
+
+    // Act
+    token.Status = Statuses.Redeemed;
+    await tokenStore.UpdateAsync(token, CancellationToken.None);
+
+    // Assert
+    Assert.Null(await GetTimeToLive(authorization));
+  }
+
+  [Fact]
+  public async Task Should_NotExtendRevokedAuthorization_When_TokenIsCreated()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var tokenStore = await CreateTokenStore();
+    var authorizationStore = new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options);
+    var authorization = await CreateAuthorization(AuthorizationTypes.AdHoc);
+    authorization.Status = Statuses.Revoked;
+    await authorizationStore.UpdateAsync(authorization, CancellationToken.None);
+    var afterRevocation = await GetTimeToLive(authorization);
+
+    // Act
+    await CreateToken(tokenStore, authorization.Id, DateTime.UtcNow.AddDays(14));
+
+    // Assert
+    Assert.NotNull(afterRevocation);
+    Assert.Equal(afterRevocation, await GetTimeToLive(authorization));
+  }
+
+  private async Task<OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>> CreateTokenStore()
+  {
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    return new OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken>(options);
+  }
+
+  private static async Task CreateToken(
+    OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken> tokenStore,
+    string subject,
+    string applicationId,
+    string status,
+    string type) => await tokenStore.CreateAsync(new OpenIddictDynamoDbToken
+    {
+      Subject = subject,
+      ApplicationId = applicationId,
+      Status = status,
+      Type = type,
+    }, CancellationToken.None);
+
+  private static async Task<OpenIddictDynamoDbToken> CreateToken(
+    OpenIddictDynamoDbTokenStore<OpenIddictDynamoDbToken> tokenStore,
+    string authorizationId,
+    DateTime expirationDate)
+  {
+    var token = new OpenIddictDynamoDbToken
+    {
+      AuthorizationId = authorizationId,
+      Status = Statuses.Valid,
+      ExpirationDate = expirationDate,
+    };
+    await tokenStore.CreateAsync(token, CancellationToken.None);
+    return token;
+  }
+
+  private async Task<OpenIddictDynamoDbAuthorization> CreateAuthorization(string type)
+  {
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var authorization = new OpenIddictDynamoDbAuthorization
+    {
+      Status = Statuses.Valid,
+      Type = type,
+    };
+    await new OpenIddictDynamoDbAuthorizationStore<OpenIddictDynamoDbAuthorization>(options)
+      .CreateAsync(authorization, CancellationToken.None);
+    return authorization;
+  }
+
+  private async Task<DateTime?> GetTimeToLive(OpenIddictDynamoDbAuthorization authorization)
+  {
+    var response = await _client.GetItemAsync(new()
+    {
+      TableName = DatabaseFixture.TableName,
+      Key = new()
+      {
+        { "PartitionKey", new(authorization.PartitionKey) },
+        { "SortKey", new(authorization.SortKey) },
+      },
+      ConsistentRead = true,
+    });
+    return response.Item.TryGetValue("ttl", out var timeToLive)
+      ? DateTimeOffset.FromUnixTimeSeconds(long.Parse(timeToLive.N)).UtcDateTime
+      : null;
   }
 
   [Fact]

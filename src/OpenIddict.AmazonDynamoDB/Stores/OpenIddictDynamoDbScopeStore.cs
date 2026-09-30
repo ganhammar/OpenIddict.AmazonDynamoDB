@@ -82,7 +82,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     {
       Id = identifier,
     };
-    scope = await _context.LoadAsync<TScope>(scope.PartitionKey, scope.SortKey, cancellationToken);
+    // A stale scope would fail to update
+    scope = await _context.LoadAsync<TScope>(
+      scope.PartitionKey, scope.SortKey, new LoadConfig { ConsistentRead = true }, cancellationToken);
 
     return scope;
   }
@@ -320,7 +322,8 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var (token, items) = await DynamoDbUtils.Paginate<TScope>(_client, count, initalToken, cancellationToken);
+      var (token, items) = await DynamoDbUtils.Paginate<TScope>(
+        _client, _tableName, "SCOPE#", "#SCOPE#", count, initalToken, cancellationToken);
 
       if (count.HasValue)
       {

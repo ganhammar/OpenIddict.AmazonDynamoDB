@@ -1,5 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace OpenIddict.AmazonDynamoDB;
@@ -8,11 +10,7 @@ public static class OpenIddictDynamoDbSetup
 {
   public static void EnsureInitialized(IServiceProvider services)
   {
-    var database = services.GetService<IAmazonDynamoDB>();
-
-    EnsureInitialized(
-      services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>(),
-      database);
+    EnsureInitializedAsync(services).GetAwaiter().GetResult();
   }
 
   public static async Task EnsureInitializedAsync(
@@ -20,10 +18,13 @@ public static class OpenIddictDynamoDbSetup
       CancellationToken cancellationToken = default)
   {
     var database = services.GetService<IAmazonDynamoDB>();
+    var logger = services.GetService<ILoggerFactory>()?.CreateLogger(typeof(OpenIddictDynamoDbSetup))
+      ?? NullLogger.Instance;
 
-    await EnsureInitializedAsync(
-      services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>(),
+    await DynamoDbTableSetup.EnsureInitializedAsync(
+      services.GetRequiredService<IOptionsMonitor<OpenIddictDynamoDbOptions>>().CurrentValue,
       database,
+      logger,
       cancellationToken);
   }
 

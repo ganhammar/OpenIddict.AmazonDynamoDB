@@ -4,6 +4,7 @@ using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
@@ -139,6 +140,85 @@ public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
       await applicationStore.DeleteAsync(default!, CancellationToken.None));
     Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_CountEveryApplication_When_CreatedConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await applicationStore.CountAsync(CancellationToken.None);
+
+    // Act
+    await Task.WhenAll(Enumerable.Range(0, 10)
+      .Select(_ => applicationStore.CreateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None).AsTask()));
+
+    // Assert
+    Assert.Equal(beforeCount + 10, await applicationStore.CountAsync(CancellationToken.None));
+  }
+
+  [Fact]
+  public async Task Should_DeleteRedirects_When_DeletingApplication()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var redirectUri = $"https://{Guid.NewGuid()}.example.com/callback";
+    var application = new OpenIddictDynamoDbApplication
+    {
+      RedirectUris = Enumerable.Range(0, 30).Select(x => $"{redirectUri}/{x}").ToList(),
+      PostLogoutRedirectUris = [$"{redirectUri}/logout"],
+    };
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+
+    // Act
+    await applicationStore.DeleteAsync(application, CancellationToken.None);
+
+    // Assert
+    var items = await _client.QueryAsync(new()
+    {
+      TableName = DatabaseFixture.TableName,
+      KeyConditionExpression = "PartitionKey = :partitionKey",
+      ExpressionAttributeValues = new() { { ":partitionKey", new(application.PartitionKey) } },
+      ConsistentRead = true,
+    });
+    Assert.Empty(items.Items ?? []);
+  }
+
+  [Fact]
+  public async Task Should_ReplaceRedirects_When_UpdatingApplicationWithMoreRedirectsThanFitInOneBatch()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var redirectUri = $"https://{Guid.NewGuid()}.example.com/callback";
+    var application = new OpenIddictDynamoDbApplication
+    {
+      RedirectUris = Enumerable.Range(0, 30).Select(x => $"{redirectUri}/old/{x}").ToList(),
+    };
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+    application.RedirectUris = Enumerable.Range(0, 30).Select(x => $"{redirectUri}/new/{x}").ToList();
+
+    // Act
+    await applicationStore.UpdateAsync(application, CancellationToken.None);
+
+    // Assert
+    Assert.Empty(await ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/old/29", CancellationToken.None)));
+    Assert.Single(await ToListAsync(applicationStore.FindByRedirectUriAsync($"{redirectUri}/new/29", CancellationToken.None)));
+  }
+
+  private static async Task<List<T>> ToListAsync<T>(IAsyncEnumerable<T> items)
+  {
+    var result = new List<T>();
+    await foreach (var item in items)
+    {
+      result.Add(item);
+    }
+    return result;
   }
 
   [Fact]
@@ -497,9 +577,61 @@ public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act & Assert
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await applicationStore.UpdateAsync(new OpenIddictDynamoDbApplication(), CancellationToken.None));
-    Assert.Equal("application", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_AllowOnlyOneUpdate_When_UpdatingApplicationConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+    var copies = new List<OpenIddictDynamoDbApplication>();
+    for (var index = 0; index < 5; index++)
+    {
+      copies.Add((await applicationStore.FindByIdAsync(application.Id, CancellationToken.None))!);
+    }
+
+    // Act
+    var results = await Task.WhenAll(copies.Select(async x =>
+    {
+      try
+      {
+        await applicationStore.UpdateAsync(x, CancellationToken.None);
+        return true;
+      }
+      catch (OpenIddictExceptions.ConcurrencyException)
+      {
+        return false;
+      }
+    }));
+
+    // Assert
+    Assert.Single(results, x => x);
+  }
+
+  [Fact]
+  public async Task Should_KeepConcurrencyToken_When_ApplicationUpdateFails()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var applicationStore = new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var application = new OpenIddictDynamoDbApplication();
+    await applicationStore.CreateAsync(application, CancellationToken.None);
+    var staleConcurrencyToken = Guid.NewGuid().ToString();
+    application.ConcurrencyToken = staleConcurrencyToken;
+
+    // Act
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
+      await applicationStore.UpdateAsync(application, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(staleConcurrencyToken, application.ConcurrencyToken);
   }
 
   [Fact]
@@ -514,9 +646,8 @@ public class OpenIddictDynamoDbApplicationStoreTests(DatabaseFixture fixture)
 
     // Act & Assert
     application.ConcurrencyToken = Guid.NewGuid().ToString();
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await applicationStore.UpdateAsync(application, CancellationToken.None));
-    Assert.Equal("application", exception.ParamName);
   }
 
   [Fact]

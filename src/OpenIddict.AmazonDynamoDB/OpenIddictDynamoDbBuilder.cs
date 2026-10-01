@@ -4,6 +4,7 @@ using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenIddict.AmazonDynamoDB;
+
 public class OpenIddictDynamoDbBuilder(IServiceCollection services)
 {
   [EditorBrowsable(EditorBrowsableState.Never)]

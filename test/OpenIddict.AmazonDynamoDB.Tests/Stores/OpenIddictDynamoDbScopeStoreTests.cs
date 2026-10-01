@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using OpenIddict.Abstractions;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
 
@@ -159,6 +160,80 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
     var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
       await scopeStore.DeleteAsync(default!, CancellationToken.None));
     Assert.Equal("scope", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_CountEveryScope_When_CreatedConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var beforeCount = await scopeStore.CountAsync(CancellationToken.None);
+
+    // Act
+    await Task.WhenAll(Enumerable.Range(0, 10)
+      .Select(_ => scopeStore.CreateAsync(new OpenIddictDynamoDbScope(), CancellationToken.None).AsTask()));
+
+    // Assert
+    Assert.Equal(beforeCount + 10, await scopeStore.CountAsync(CancellationToken.None));
+  }
+
+  [Fact]
+  public async Task Should_DeleteLookups_When_DeletingScope()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var scope = new OpenIddictDynamoDbScope
+    {
+      Name = $"scope-{Guid.NewGuid()}",
+      Resources = Enumerable.Range(0, 30).Select(x => $"resource-{Guid.NewGuid()}").ToList(),
+    };
+    await scopeStore.CreateAsync(scope, CancellationToken.None);
+
+    // Act
+    await scopeStore.DeleteAsync(scope, CancellationToken.None);
+
+    // Assert
+    Assert.Empty(await GetLookups(scope));
+  }
+
+  [Fact]
+  public async Task Should_ReplaceLookups_When_UpdatingScopeWithMoreResourcesThanFitInOneBatch()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var scope = new OpenIddictDynamoDbScope
+    {
+      Name = $"scope-{Guid.NewGuid()}",
+      Resources = Enumerable.Range(0, 30).Select(x => $"resource-{Guid.NewGuid()}").ToList(),
+    };
+    await scopeStore.CreateAsync(scope, CancellationToken.None);
+    scope.Resources = Enumerable.Range(0, 30).Select(x => $"resource-{Guid.NewGuid()}").ToList();
+
+    // Act
+    await scopeStore.UpdateAsync(scope, CancellationToken.None);
+
+    // Assert
+    var lookups = await GetLookups(scope);
+    Assert.Equal(31, lookups.Count);
+    Assert.All(scope.Resources, x => Assert.Contains(lookups, y => y["PartitionKey"].S == $"SCOPELOOKUP#{x}"));
+  }
+
+  private async Task<List<Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>>> GetLookups(OpenIddictDynamoDbScope scope)
+  {
+    var response = await _client.QueryAsync(new()
+    {
+      TableName = DatabaseFixture.TableName,
+      IndexName = "ScopeId-index",
+      KeyConditionExpression = "ScopeId = :scopeId",
+      ExpressionAttributeValues = new() { { ":scopeId", new(scope.Id) } },
+    });
+    return response.Items ?? [];
   }
 
   [Fact]
@@ -805,6 +880,88 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
   }
 
   [Fact]
+  public async Task Should_OnlyListScopes_When_TableContainsOtherItems()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await new OpenIddictDynamoDbApplicationStore<OpenIddictDynamoDbApplication>(options).CreateAsync(new()
+    {
+      RedirectUris = ["https://example.com/callback"],
+    }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(scopeStore.ListAsync(default, default, CancellationToken.None));
+    var page = await TestUtils.ToListAsync(scopeStore.ListAsync(3, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "SCOPE#", "#SCOPE#"), items.Count);
+    Assert.Equal(3, page.Count);
+    Assert.All(page, x => Assert.Contains(items, y => y.Id == x.Id));
+  }
+
+  [Fact]
+  public async Task Should_ListEveryScope_When_ItemCountOfTableIsOutdated()
+  {
+    // Arrange, DynamoDB only updates the item count of a table about every six hours
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    recorder.OnResponse = response =>
+    {
+      if (response is Amazon.DynamoDBv2.Model.DescribeTableResponse describeTableResponse)
+      {
+        describeTableResponse.Table.ItemCount = 0;
+      }
+    };
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+    await scopeStore.CreateAsync(new OpenIddictDynamoDbScope { Name = $"scope-{Guid.NewGuid()}" }, CancellationToken.None);
+
+    // Act
+    var items = await TestUtils.ToListAsync(scopeStore.ListAsync(default, default, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(await TestUtils.CountItemsAsync(_client, "SCOPE#", "#SCOPE#"), items.Count);
+  }
+
+  [Fact]
+  public async Task Should_UseConsistentRead_When_FindingScopeById()
+  {
+    // Arrange, the concurrency token of a stale item would make the next update fail
+    var client = new RecordingDynamoDbClient();
+    var recorder = client;
+    var options = TestUtils.GetOptions(new() { Database = client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var item = new OpenIddictDynamoDbScope();
+    await scopeStore.CreateAsync(item, CancellationToken.None);
+    recorder.Requests.Clear();
+
+    // Act
+    var found = await scopeStore.FindByIdAsync(item.Id, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(found);
+    var reads = recorder.Requests
+      .Where(x => x is Amazon.DynamoDBv2.Model.GetItemRequest or Amazon.DynamoDBv2.Model.QueryRequest)
+      .ToList();
+    Assert.NotEmpty(reads);
+    Assert.All(reads, x => Assert.True(x switch
+    {
+      Amazon.DynamoDBv2.Model.GetItemRequest getItem => getItem.ConsistentRead,
+      Amazon.DynamoDBv2.Model.QueryRequest query => query.ConsistentRead,
+      _ => false,
+    }));
+  }
+
+  [Fact]
   public async Task Should_ReturnList_When_ListingScopes()
   {
     // Arrange
@@ -1319,9 +1476,61 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
 
     // Act & Assert
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await scopeStore.UpdateAsync(new OpenIddictDynamoDbScope(), CancellationToken.None));
-    Assert.Equal("scope", exception.ParamName);
+  }
+
+  [Fact]
+  public async Task Should_AllowOnlyOneUpdate_When_UpdatingScopeConcurrently()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var scope = new OpenIddictDynamoDbScope();
+    await scopeStore.CreateAsync(scope, CancellationToken.None);
+    var copies = new List<OpenIddictDynamoDbScope>();
+    for (var index = 0; index < 5; index++)
+    {
+      copies.Add((await scopeStore.FindByIdAsync(scope.Id, CancellationToken.None))!);
+    }
+
+    // Act
+    var results = await Task.WhenAll(copies.Select(async x =>
+    {
+      try
+      {
+        await scopeStore.UpdateAsync(x, CancellationToken.None);
+        return true;
+      }
+      catch (OpenIddictExceptions.ConcurrencyException)
+      {
+        return false;
+      }
+    }));
+
+    // Assert
+    Assert.Single(results, x => x);
+  }
+
+  [Fact]
+  public async Task Should_KeepConcurrencyToken_When_ScopeUpdateFails()
+  {
+    // Arrange
+    var options = TestUtils.GetOptions(new() { Database = _client });
+    var scopeStore = new OpenIddictDynamoDbScopeStore<OpenIddictDynamoDbScope>(options);
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
+    var scope = new OpenIddictDynamoDbScope();
+    await scopeStore.CreateAsync(scope, CancellationToken.None);
+    var staleConcurrencyToken = Guid.NewGuid().ToString();
+    scope.ConcurrencyToken = staleConcurrencyToken;
+
+    // Act
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
+      await scopeStore.UpdateAsync(scope, CancellationToken.None));
+
+    // Assert
+    Assert.Equal(staleConcurrencyToken, scope.ConcurrencyToken);
   }
 
   [Fact]
@@ -1336,9 +1545,8 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
 
     // Act & Assert
     scope.ConcurrencyToken = Guid.NewGuid().ToString();
-    var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+    await Assert.ThrowsAsync<OpenIddictExceptions.ConcurrencyException>(async () =>
       await scopeStore.UpdateAsync(scope, CancellationToken.None));
-    Assert.Equal("scope", exception.ParamName);
   }
 
   [Fact]

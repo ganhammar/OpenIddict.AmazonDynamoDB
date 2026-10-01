@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -20,6 +21,9 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 {
   private readonly IAmazonDynamoDB _client;
   private readonly DynamoDBContext _context;
+  private readonly string _tableName;
+  private const string PartitionKeyPrefix = "TOKEN#";
+  private const string SortKeyPrefix = "#TOKEN#";
 
   public OpenIddictDynamoDbTokenStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -39,6 +43,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     _context = new DynamoDBContextBuilder()
       .WithDynamoDBClient(() => _client)
       .Build();
+    _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
@@ -64,9 +69,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     }
     await _context.SaveAsync(token, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    var newCount = count + 1;
-    await _context.SaveAsync(new CountModel(CountType.Token, newCount), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, 1, cancellationToken);
+    await ExtendAuthorizationLifetime(token, cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TToken token, CancellationToken cancellationToken)
@@ -75,8 +79,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     await _context.DeleteAsync(token, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Token, count - 1), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, -1, cancellationToken);
   }
 
   private IAsyncEnumerable<TToken> FindBySubjectAndSearchKey(string subject, string searchKey, CancellationToken cancellationToken)
@@ -97,6 +100,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
             { ":searchKey", searchKey },
           }
         },
+        // Authorizations are also stored in the Subject-index
+        FilterExpression = DynamoDbUtils.GetPartitionKeyFilter(PartitionKeyPrefix),
       });
 
       var tokens = await search.GetRemainingAsync(cancellationToken);
@@ -112,24 +117,28 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     string? subject, string? client,
     string? status, string? type, CancellationToken cancellationToken)
   {
-    if (string.IsNullOrEmpty(subject))
-    {
-      return ListAsync(null, null, cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(client) && string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type))
-    {
-      return FindBySubjectAndSearchKey(subject, "APPLICATION#", cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(status) && string.IsNullOrEmpty(type))
-    {
-      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}", cancellationToken);
-    }
-    else if (string.IsNullOrEmpty(type))
-    {
-      return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}", cancellationToken);
-    }
+    return ExecuteAsync(cancellationToken);
 
-    return FindBySubjectAndSearchKey(subject, $"APPLICATION#{client}#STATUS#{status}#TYPE#{type}", cancellationToken);
+    async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+      // Query by the most selective parameter, the search key prefix can only be used for
+      // leading parameters, so the parameters are always matched exactly afterwards
+      var tokens = string.IsNullOrEmpty(subject) == false
+        ? FindBySubjectAndSearchKey(subject, DynamoDbUtils.GetSearchKeyPrefix(client, status, type), cancellationToken)
+        : string.IsNullOrEmpty(client) == false
+          ? FindByApplicationIdAsync(client, cancellationToken)
+          : ListAsync(null, null, cancellationToken);
+
+      await foreach (var token in tokens)
+      {
+        if (DynamoDbUtils.IsMatch(token.ApplicationId, client)
+          && DynamoDbUtils.IsMatch(token.Status, status)
+          && DynamoDbUtils.IsMatch(token.Type, type))
+        {
+          yield return token;
+        }
+      }
+    }
   }
 
   public IAsyncEnumerable<TToken> FindByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
@@ -145,10 +154,12 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
         IndexName = "ApplicationId-index",
         KeyExpression = new()
         {
-          ExpressionStatement = "ApplicationId = :applicationId",
+          // Authorizations and redirects are also stored in the ApplicationId-index
+          ExpressionStatement = "ApplicationId = :applicationId and begins_with(SortKey, :sortKey)",
           ExpressionAttributeValues = new()
           {
             { ":applicationId", identifier },
+            { ":sortKey", SortKeyPrefix },
           }
         },
       });
@@ -224,30 +235,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(subject);
 
-    return ExecuteAsync(cancellationToken);
-
-    async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-      var search = _context.FromQueryAsync<TToken>(new()
-      {
-        IndexName = "Subject-index",
-        KeyExpression = new()
-        {
-          ExpressionStatement = "Subject = :subject",
-          ExpressionAttributeValues = new()
-          {
-            { ":subject", subject },
-          }
-        },
-      });
-
-      var tokens = await search.GetRemainingAsync(cancellationToken);
-
-      foreach (var token in tokens)
-      {
-        yield return token;
-      }
-    }
+    return FindBySubjectAndSearchKey(subject, DynamoDbUtils.GetSearchKeyPrefix(null, null, null), cancellationToken);
   }
 
   public ValueTask<string?> GetApplicationIdAsync(TToken token, CancellationToken cancellationToken)
@@ -383,7 +371,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var (token, items) = await DynamoDbUtils.Paginate<TToken>(_client, count, initalToken, cancellationToken);
+      var (token, items) = await DynamoDbUtils.Paginate<TToken>(
+        _client, _tableName, PartitionKeyPrefix, SortKeyPrefix, count, initalToken, cancellationToken);
 
       if (count.HasValue)
       {
@@ -463,8 +452,7 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
 
     await batchDelete.ExecuteAsync(cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Token, count - deleteCount), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Token, -deleteCount, cancellationToken);
 
     return deleteCount;
   }
@@ -597,13 +585,8 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
   {
     ArgumentNullException.ThrowIfNull(token);
 
-    // Ensure no one else is updating
-    var databaseApplication = await GetByPartitionKey(token, cancellationToken);
-    if (databaseApplication == default || databaseApplication.ConcurrencyToken != token.ConcurrencyToken)
-    {
-      throw new ArgumentException("Given token is invalid", nameof(token));
-    }
-
+    var concurrencyToken = token.ConcurrencyToken;
+    var ttl = token.TTL;
     token.ConcurrencyToken = Guid.NewGuid().ToString();
 
     if (new[] { Statuses.Inactive, Statuses.Valid }.Contains(token.Status) == false)
@@ -615,31 +598,82 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
       token.TTL = token.ExpirationDate;
     }
 
-    // If token is set to be deleted, also mark the corresponding authorization for deletion
-    if (token.TTL != default)
+    try
     {
-      var authorization = new OpenIddictDynamoDbAuthorization
-      {
-        Id = token.AuthorizationId!,
-      };
-      authorization = await _context.LoadAsync<OpenIddictDynamoDbAuthorization>(
-        authorization.PartitionKey, authorization.SortKey, cancellationToken);
+      // Ensure no one else has updated the token since it was loaded, this is also what makes
+      // sure that authorization codes and refresh tokens can only be redeemed once
+      await _context.SaveAsync(token, GetSaveConfig(concurrencyToken), cancellationToken);
+    }
+    catch (ConditionalCheckFailedException exception)
+    {
+      token.ConcurrencyToken = concurrencyToken;
+      token.TTL = ttl;
 
-      if (authorization != default)
-      {
-        authorization.TTL = token.TTL;
-
-        await _context.SaveAsync(authorization, cancellationToken);
-      }
+      throw new OpenIddictExceptions.ConcurrencyException(
+        OpenIddictResources.GetResourceString(OpenIddictResources.ID0247), exception);
     }
 
-    await _context.SaveAsync(token, cancellationToken);
+    await ExtendAuthorizationLifetime(token, cancellationToken);
+  }
+
+  // Ad-hoc authorizations are only needed while their tokens can be used, so they are kept
+  // until the last of their tokens expires. Tokens never shorten the lifetime of an
+  // authorization, redeeming an authorization code must not remove the authorization that
+  // its refresh tokens belong to, and permanent authorizations are kept until revoked.
+  private async Task ExtendAuthorizationLifetime(TToken token, CancellationToken cancellationToken)
+  {
+    if (string.IsNullOrEmpty(token.AuthorizationId) || token.ExpirationDate is not { } expirationDate)
+    {
+      return;
+    }
+
+    var authorization = new OpenIddictDynamoDbAuthorization
+    {
+      Id = token.AuthorizationId,
+    };
+    var expiresAt = new DateTimeOffset(expirationDate.Kind == DateTimeKind.Local
+      ? expirationDate.ToUniversalTime()
+      : DateTime.SpecifyKind(expirationDate, DateTimeKind.Utc)).ToUnixTimeSeconds();
+
+    try
+    {
+      await _client.UpdateItemAsync(new UpdateItemRequest
+      {
+        TableName = _tableName,
+        Key = new()
+        {
+          { "PartitionKey", new AttributeValue { S = authorization.PartitionKey } },
+          { "SortKey", new AttributeValue { S = authorization.SortKey } },
+        },
+        UpdateExpression = "SET #ttl = :ttl",
+        ConditionExpression = "attribute_exists(PartitionKey) and #type = :adHoc and #status = :valid "
+          + "and (attribute_not_exists(#ttl) or #ttl < :ttl)",
+        ExpressionAttributeNames = new()
+        {
+          { "#ttl", "ttl" },
+          { "#type", "Type" },
+          { "#status", "Status" },
+        },
+        ExpressionAttributeValues = new()
+        {
+          { ":ttl", new AttributeValue { N = expiresAt.ToString(CultureInfo.InvariantCulture) } },
+          { ":adHoc", new AttributeValue { S = AuthorizationTypes.AdHoc } },
+          { ":valid", new AttributeValue { S = Statuses.Valid } },
+        },
+      }, cancellationToken);
+    }
+    catch (ConditionalCheckFailedException)
+    {
+      // The authorization is permanent, no longer valid, missing or already kept long enough
+    }
   }
 
   private async Task<TToken?> GetByPartitionKey(TToken token, CancellationToken cancellationToken)
   {
     var search = _context.FromQueryAsync<TToken>(new()
     {
+      // A stale token would fail to update, and could still look valid after being revoked
+      ConsistentRead = true,
       KeyExpression = new()
       {
         ExpressionStatement = "PartitionKey = :partitionKey",
@@ -715,5 +749,27 @@ public class OpenIddictDynamoDbTokenStore<TToken> : IOpenIddictTokenStore<TToken
     await batch.ExecuteAsync(cancellationToken);
 
     return result;
+  }
+
+  private static SaveConfig GetSaveConfig(string? concurrencyToken)
+  {
+    // Only save when the token exists and still has the concurrency token it was loaded with
+    var condition = new ContextExpression();
+
+    if (concurrencyToken == default)
+    {
+      condition.SetFilter<TToken>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && ContextExpression.AttributeNotExists(x.ConcurrencyToken));
+    }
+    else
+    {
+      condition.SetFilter<TToken>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && x.ConcurrencyToken == concurrencyToken);
+    }
+
+    return new()
+    {
+      ConditionalExpression = condition,
+    };
   }
 }

@@ -61,8 +61,7 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     await _context.SaveAsync(scope, cancellationToken);
     await SaveLookups(scope, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Scope, count + 1), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Scope, 1, cancellationToken);
   }
 
   public async ValueTask DeleteAsync(TScope scope, CancellationToken cancellationToken)
@@ -70,9 +69,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     ArgumentNullException.ThrowIfNull(scope);
 
     await _context.DeleteAsync(scope, cancellationToken);
+    await DeleteLookups(scope, cancellationToken);
 
-    var count = await CountAsync(cancellationToken);
-    await _context.SaveAsync(new CountModel(CountType.Scope, count - 1), cancellationToken);
+    await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Scope, -1, cancellationToken);
   }
 
   public async ValueTask<TScope?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
@@ -83,7 +82,9 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     {
       Id = identifier,
     };
-    scope = await _context.LoadAsync<TScope>(scope.PartitionKey, scope.SortKey, cancellationToken);
+    // A stale scope would fail to update
+    scope = await _context.LoadAsync<TScope>(
+      scope.PartitionKey, scope.SortKey, new LoadConfig { ConsistentRead = true }, cancellationToken);
 
     return scope;
   }
@@ -321,7 +322,8 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     async IAsyncEnumerable<TScope> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var (token, items) = await DynamoDbUtils.Paginate<TScope>(_client, count, initalToken, cancellationToken);
+      var (token, items) = await DynamoDbUtils.Paginate<TScope>(
+        _client, _tableName, "SCOPE#", "#SCOPE#", count, initalToken, cancellationToken);
 
       if (count.HasValue)
       {
@@ -456,23 +458,32 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
   {
     ArgumentNullException.ThrowIfNull(scope);
 
-    // Ensure no one else is updating
-    var databaseApplication = await _context.LoadAsync<TScope>(scope.PartitionKey, scope.SortKey, cancellationToken);
-    if (databaseApplication == default || databaseApplication.ConcurrencyToken != scope.ConcurrencyToken)
-    {
-      throw new ArgumentException("Given scope is invalid", nameof(scope));
-    }
-
+    var concurrencyToken = scope.ConcurrencyToken;
     scope.ConcurrencyToken = Guid.NewGuid().ToString();
 
-    await _context.SaveAsync(scope, cancellationToken);
+    try
+    {
+      // Ensure no one else has updated the scope since it was loaded
+      await _context.SaveAsync(scope, GetSaveConfig(concurrencyToken), cancellationToken);
+    }
+    catch (ConditionalCheckFailedException exception)
+    {
+      scope.ConcurrencyToken = concurrencyToken;
+
+      throw new OpenIddictExceptions.ConcurrencyException(
+        OpenIddictResources.GetResourceString(OpenIddictResources.ID0245), exception);
+    }
     await UpdateLookups(scope, cancellationToken);
   }
 
   private async Task UpdateLookups(TScope scope, CancellationToken cancellationToken)
   {
-    // Update scope lookups
-    // Fetch all lookups
+    await DeleteLookups(scope, cancellationToken);
+    await SaveLookups(scope, cancellationToken);
+  }
+
+  private async Task DeleteLookups(TScope scope, CancellationToken cancellationToken)
+  {
     var search = _context.FromQueryAsync<OpenIddictDynamoDbScopeLookup>(new()
     {
       IndexName = "ScopeId-index",
@@ -489,36 +500,11 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
 
     var lookups = await search.GetRemainingAsync(cancellationToken);
 
-    // Remove previously stored scope lookups
-    if (lookups?.Any() == true)
-    {
-      var writeRequests = lookups
-        .Select(x => new WriteRequest
-        {
-          DeleteRequest = new DeleteRequest
-          {
-            Key = new Dictionary<string, AttributeValue>
-            {
-              { "PartitionKey", new AttributeValue { S = x.PartitionKey } },
-              { "SortKey", new AttributeValue { S = x.SortKey } },
-            },
-          },
-        })
-        .ToList();
-
-      var request = new BatchWriteItemRequest
-      {
-        RequestItems = new Dictionary<string, List<WriteRequest>>
-        {
-          { _tableName, writeRequests },
-        },
-      };
-
-      await _client.BatchWriteItemAsync(request, cancellationToken);
-    }
-
-    // Save current redirects
-    await SaveLookups(scope, cancellationToken);
+    await DynamoDbUtils.BatchWriteAsync(
+      _client,
+      _tableName,
+      (lookups ?? new()).Select(x => DynamoDbUtils.ToDeleteRequest(x.PartitionKey, x.SortKey)),
+      cancellationToken);
   }
 
   private async Task SaveLookups(TScope scope, CancellationToken cancellationToken)
@@ -542,5 +528,27 @@ public class OpenIddictDynamoDbScopeStore<TScope> : IOpenIddictScopeStore<TScope
     });
 
     await batch.ExecuteAsync(cancellationToken);
+  }
+
+  private static SaveConfig GetSaveConfig(string? concurrencyToken)
+  {
+    // Only save when the scope exists and still has the concurrency token it was loaded with
+    var condition = new ContextExpression();
+
+    if (concurrencyToken == default)
+    {
+      condition.SetFilter<TScope>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && ContextExpression.AttributeNotExists(x.ConcurrencyToken));
+    }
+    else
+    {
+      condition.SetFilter<TScope>(x => ContextExpression.AttributeExists(x.PartitionKey)
+        && x.ConcurrencyToken == concurrencyToken);
+    }
+
+    return new()
+    {
+      ConditionalExpression = condition,
+    };
   }
 }

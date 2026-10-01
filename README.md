@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/ganhammar/OpenIddict.AmazonDynamoDB/actions/workflows/ci-cd.yml/badge.svg) [![codecov](https://codecov.io/gh/ganhammar/OpenIddict.AmazonDynamoDB/branch/main/graph/badge.svg?token=S4M1VCX8J6)](https://codecov.io/gh/ganhammar/OpenIddict.AmazonDynamoDB) [![NuGet](https://img.shields.io/nuget/v/Community.OpenIddict.AmazonDynamoDB)](https://www.nuget.org/packages/Community.OpenIddict.AmazonDynamoDB)
 
-A [DynamoDB](https://aws.amazon.com/dynamodb/) integration for [OpenIddict](https://github.com/openiddict/openiddict-core).
+A [DynamoDB](https://aws.amazon.com/dynamodb/) integration for [OpenIddict](https://github.com/openiddict/openiddict-core), targeting .NET 8, 9 and 10.
 
 ## Getting Started
 
@@ -27,7 +27,7 @@ services
                     ReadCapacityUnits = 5, // Default is 1
                     WriteCapacityUnits = 5, // Default is 1
                 };
-                options.UsersTableName = "CustomOpenIddictTable"; // Default is openiddict
+                options.DefaultTableName = "CustomOpenIddictTable"; // Default is openiddict
             });
     }); 
 ```
@@ -43,6 +43,20 @@ Or asynchronously:
 ```c#
 await OpenIddictDynamoDbSetup.EnsureInitializedAsync(serviceProvider);
 ```
+
+The table is created if it doesn't exist, and time to live is enabled on the `ttl` attribute so that expired and revoked tokens and authorizations are removed. If the table already exists, any global secondary index that is missing from it is added (and the `Resource-index` from tables created before scopes were stored with lookups is replaced by `ScopeId-index`), and the call waits until the indexes are active. New indexes use provisioned throughput from the options when the existing table is provisioned, and on-demand capacity otherwise. It's safe to call from several instances at the same time.
+
+The call needs the `dynamodb:DescribeTable` and `dynamodb:DescribeTimeToLive` permissions on the table, plus `dynamodb:CreateTable` to create it, `dynamodb:UpdateTable` to change its indexes and `dynamodb:UpdateTimeToLive` to enable time to live. Without `dynamodb:DescribeTable` it falls back to `dynamodb:ListTables` and only checks that the table exists. If an index or time to live can't be changed because a permission is missing, a warning is logged instead of failing.
+
+The `IServiceProvider` overloads log progress and warnings through the registered `ILoggerFactory`.
+
+## Concurrency
+
+Updates to applications, authorizations, scopes and tokens only succeed if the item hasn't been changed since it was loaded, otherwise an `OpenIddictExceptions.ConcurrencyException` is thrown, as with the Entity Framework Core stores. This is what makes sure that authorization codes and refresh tokens can only be redeemed once when several requests redeem them at the same time.
+
+## Lifetime
+
+Tokens and authorizations are removed by DynamoDB's time to live. Tokens are kept until they expire, and until five minutes after they have been redeemed or revoked. Ad-hoc authorizations are kept until the last of their tokens expires, and permanent authorizations until they are revoked. DynamoDB usually removes expired items within a few days.
 
 
 ## Tests

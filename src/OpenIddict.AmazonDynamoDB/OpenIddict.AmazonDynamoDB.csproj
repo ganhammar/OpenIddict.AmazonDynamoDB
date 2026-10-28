@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>3.2.0</Version>
+    <Version>4.0.0</Version>
+    <IsAotCompatible>true</IsAotCompatible>
     <Authors>Anton Ganhammar</Authors>
     <RepositoryUrl>https://github.com/ganhammar/OpenIddict.AmazonDynamoDB</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -17,6 +18,7 @@
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="OpenIddict.AmazonDynamoDB.Tests" />
   </ItemGroup>
 
   <ItemGroup>

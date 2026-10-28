@@ -224,16 +224,27 @@ public class OpenIddictDynamoDbScopeStoreTests(DatabaseFixture fixture)
     Assert.All(scope.Resources, x => Assert.Contains(lookups, y => y["PartitionKey"].S == $"SCOPELOOKUP#{x}"));
   }
 
+  // The lookups that point at a scope, found by scanning since no index lists them
   private async Task<List<Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>>> GetLookups(OpenIddictDynamoDbScope scope)
   {
-    var response = await _client.QueryAsync(new()
+    var items = new List<Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>>();
+    Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>? exclusiveStartKey = default;
+
+    do
     {
-      TableName = DatabaseFixture.TableName,
-      IndexName = "ScopeId-index",
-      KeyConditionExpression = "ScopeId = :scopeId",
-      ExpressionAttributeValues = new() { { ":scopeId", new(scope.Id) } },
-    });
-    return response.Items ?? [];
+      var response = await _client.ScanAsync(new()
+      {
+        TableName = DatabaseFixture.TableName,
+        FilterExpression = "begins_with(PartitionKey, :prefix) and ScopeId = :scopeId",
+        ExpressionAttributeValues = new() { { ":prefix", new("SCOPELOOKUP#") }, { ":scopeId", new(scope.Id) } },
+        ExclusiveStartKey = exclusiveStartKey,
+        ConsistentRead = true,
+      });
+      items.AddRange(response.Items ?? []);
+      exclusiveStartKey = response.LastEvaluatedKey;
+    } while (exclusiveStartKey?.Count > 0);
+
+    return items;
   }
 
   [Fact]

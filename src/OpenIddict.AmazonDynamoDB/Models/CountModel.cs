@@ -1,9 +1,10 @@
 ﻿using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 
 namespace OpenIddict.AmazonDynamoDB;
 
 [DynamoDBTable(Constants.DefaultTableName)]
-internal class CountModel
+internal class CountModel : IDynamoDbItem
 {
   public CountModel() { }
   public CountModel(CountType type, long? count = default)
@@ -27,4 +28,18 @@ internal class CountModel
 
   public CountType Type { get; set; }
   public long Count { get; set; }
+
+  void IDynamoDbItem.Write(Dictionary<string, AttributeValue> item)
+  {
+    item.Set("PartitionKey", PartitionKey);
+    item.Set("SortKey", SortKey);
+    item.Set("Type", (long)Type);
+    item.Set("Count", Count);
+  }
+
+  void IDynamoDbItem.Read(Dictionary<string, AttributeValue> item)
+  {
+    Type = (CountType)item.GetInt32("Type");
+    Count = item.GetInt64("Count");
+  }
 }

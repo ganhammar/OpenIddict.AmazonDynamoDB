@@ -108,9 +108,9 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
   }
 
   [Fact]
-  public async Task Should_ReplaceResourceIndex_When_TableHasTheLayoutFromBeforeScopeLookups()
+  public async Task Should_WarnAndKeepIt_When_TableHasTheResourceIndexFromBeforeScopeLookups()
   {
-    // Arrange
+    // Arrange, the index is removed by RemoveLegacyIndexesAsync with the other legacy indexes
     var tableName = Guid.NewGuid().ToString();
     var options = TestUtils.GetOptions(new()
     {
@@ -118,7 +118,6 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       DefaultTableName = tableName,
     });
     await OpenIddictDynamoDbSetup.EnsureInitializedAsync(options);
-    await RemoveIndex(tableName, "ScopeId-index");
     await _client.UpdateTableAsync(new UpdateTableRequest
     {
       TableName = tableName,
@@ -137,18 +136,24 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       ],
     });
     await WaitForActiveTable(tableName);
+    var loggerProvider = new TestLoggerProvider();
+    var services = new ServiceCollection();
+    services.AddLogging(x => x.AddProvider(loggerProvider));
+    services.AddOpenIddict().AddCore().UseDynamoDb().UseDatabase(_client).SetDefaultTableName(tableName);
 
     try
     {
       // Act
-      await Task.WhenAll(Enumerable.Range(0, 3)
-        .Select(_ => OpenIddictDynamoDbSetup.EnsureInitializedAsync(options)));
+      await OpenIddictDynamoDbSetup.EnsureInitializedAsync(services.BuildServiceProvider());
 
       // Assert
       var table = await _client.DescribeTableAsync(tableName);
-      Assert.DoesNotContain(table.Table.GlobalSecondaryIndexes, x => x.IndexName == "Resource-index");
-      var index = Assert.Single(table.Table.GlobalSecondaryIndexes, x => x.IndexName == "ScopeId-index");
-      Assert.Equal(IndexStatus.ACTIVE, index.IndexStatus);
+      Assert.Contains(table.Table.GlobalSecondaryIndexes, x => x.IndexName == "Resource-index");
+      Assert.Contains(loggerProvider.Entries, x => x.Level == LogLevel.Warning && x.Message.Contains("Resource-index"));
+
+      await OpenIddictDynamoDbSetup.RemoveLegacyIndexesAsync(services.BuildServiceProvider());
+      table = await _client.DescribeTableAsync(tableName);
+      Assert.Equal(2, table.Table.GlobalSecondaryIndexes.Count);
     }
     finally
     {
@@ -167,7 +172,7 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       DefaultTableName = tableName,
       BillingMode = BillingMode.PROVISIONED,
     }));
-    await RemoveIndex(tableName, "ReferenceId-index");
+    await RemoveIndex(tableName, "Subject-index");
 
     try
     {
@@ -179,7 +184,7 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       }));
 
       // Assert
-      var index = await GetIndex(tableName, "ReferenceId-index");
+      var index = await GetIndex(tableName, "Subject-index");
       Assert.Equal(IndexStatus.ACTIVE, index.IndexStatus);
       Assert.Equal(1, index.ProvisionedThroughput.ReadCapacityUnits);
       Assert.Equal(1, index.ProvisionedThroughput.WriteCapacityUnits);
@@ -200,7 +205,7 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       Database = _client,
       DefaultTableName = tableName,
     }));
-    await RemoveIndex(tableName, "ReferenceId-index");
+    await RemoveIndex(tableName, "Subject-index");
 
     try
     {
@@ -213,7 +218,7 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       }));
 
       // Assert
-      var index = await GetIndex(tableName, "ReferenceId-index");
+      var index = await GetIndex(tableName, "Subject-index");
       Assert.Equal(IndexStatus.ACTIVE, index.IndexStatus);
       Assert.Equal(0, index.ProvisionedThroughput?.ReadCapacityUnits ?? 0);
     }
@@ -243,7 +248,8 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
       // Assert
       var table = await _client.DescribeTableAsync(tableName);
       Assert.Equal(TableStatus.ACTIVE, table.Table.TableStatus);
-      Assert.Equal(8, table.Table.GlobalSecondaryIndexes.Count);
+      Assert.Equal(2, table.Table.GlobalSecondaryIndexes.Count);
+      Assert.Equal(5, table.Table.AttributeDefinitions.Count);
       var timeToLive = await _client.DescribeTimeToLiveAsync(tableName);
       Assert.Equal(TimeToLiveStatus.ENABLED, timeToLive.TimeToLiveDescription.TimeToLiveStatus);
       Assert.Equal("ttl", timeToLive.TimeToLiveDescription.AttributeName);
@@ -367,7 +373,7 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
     var database = new Mock<IAmazonDynamoDB>();
     database
       .Setup(x => x.DescribeTableAsync(It.IsAny<DescribeTableRequest>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(CreateDescribeTableResponse(TableStatus.ACTIVE, IndexNames.Where(x => x != "ScopeId-index")));
+      .ReturnsAsync(CreateDescribeTableResponse(TableStatus.ACTIVE, IndexNames.Where(x => x != "Subject-index")));
     database
       .Setup(x => x.UpdateTableAsync(It.IsAny<UpdateTableRequest>(), It.IsAny<CancellationToken>()))
       .ThrowsAsync(new AmazonDynamoDBException("Access denied") { ErrorCode = "AccessDeniedException" });
@@ -379,10 +385,10 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
 
     // Assert
     database.Verify(x => x.UpdateTableAsync(
-      It.Is<UpdateTableRequest>(y => y.GlobalSecondaryIndexUpdates[0].Create.IndexName == "ScopeId-index"),
+      It.Is<UpdateTableRequest>(y => y.GlobalSecondaryIndexUpdates[0].Create.IndexName == "Subject-index"),
       It.IsAny<CancellationToken>()), Times.Once);
     Assert.Contains(loggerProvider.Entries, x =>
-      x.Level == LogLevel.Warning && x.Message.Contains("Unable to add global secondary index ScopeId-index"));
+      x.Level == LogLevel.Warning && x.Message.Contains("Unable to add global secondary index Subject-index"));
   }
 
   [Fact]
@@ -413,13 +419,46 @@ public class OpenIddictDynamoDbSetupTests(DatabaseFixture fixture)
   [
     "ApplicationId-index",
     "Subject-index",
-    "ClientId-index",
-    "RedirectUri-RedirectType-index",
-    "Name-index",
-    "ScopeId-index",
-    "AuthorizationId-index",
-    "ReferenceId-index",
   ];
+
+  [Fact]
+  public async Task Should_LogWarning_When_TableHasLegacyIndexes()
+  {
+    // Arrange
+    var database = new Mock<IAmazonDynamoDB>();
+    database
+      .Setup(x => x.DescribeTableAsync(It.IsAny<DescribeTableRequest>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(CreateDescribeTableResponse(TableStatus.ACTIVE, IndexNames.Concat(DynamoDbTableSetup.LegacyIndexNames)));
+    SetupTimeToLive(database);
+    var loggerProvider = new TestLoggerProvider();
+
+    // Act
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(CreateServiceProvider(database.Object, loggerProvider));
+
+    // Assert
+    database.Verify(x => x.UpdateTableAsync(It.IsAny<UpdateTableRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    database.Verify(x => x.ScanAsync(It.IsAny<ScanRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    Assert.Contains(loggerProvider.Entries, x =>
+      x.Level == LogLevel.Warning && x.Message.Contains("indexes of version 3") && x.Message.Contains("ClientId-index"));
+  }
+
+  [Fact]
+  public async Task Should_NotLogWarning_When_TableHasOnlyTheCurrentIndexes()
+  {
+    // Arrange
+    var database = new Mock<IAmazonDynamoDB>();
+    database
+      .Setup(x => x.DescribeTableAsync(It.IsAny<DescribeTableRequest>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(CreateDescribeTableResponse(TableStatus.ACTIVE, IndexNames));
+    SetupTimeToLive(database);
+    var loggerProvider = new TestLoggerProvider();
+
+    // Act
+    await OpenIddictDynamoDbSetup.EnsureInitializedAsync(CreateServiceProvider(database.Object, loggerProvider));
+
+    // Assert
+    Assert.DoesNotContain(loggerProvider.Entries, x => x.Level == LogLevel.Warning);
+  }
 
   private static DescribeTableResponse CreateDescribeTableResponse(
     TableStatus tableStatus, IEnumerable<string> indexNames) => new()

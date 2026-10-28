@@ -1,4 +1,5 @@
-﻿using Amazon.DynamoDBv2;
+﻿using Amazon;
+using Amazon.DynamoDBv2;
 using Amazon.Runtime;
 
 namespace OpenIddict.AmazonDynamoDB.Tests;
@@ -16,6 +17,9 @@ public class DatabaseFixture : IDisposable
 
   public DatabaseFixture()
   {
+    // The tests seed and verify items through the SDK's object persistence model, whose models
+    // name the default table; the alias points it at the test table
+    AWSConfigsDynamoDB.Context.TableAliases["openiddict"] = TableName;
     CreateTable().GetAwaiter().GetResult();
   }
 

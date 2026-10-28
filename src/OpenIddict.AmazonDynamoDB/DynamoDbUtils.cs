@@ -1,8 +1,7 @@
 ﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +11,13 @@ internal class DynamoDbUtils
 {
   private const int MaxBatchWriteSize = 25;
   private const int MaxBatchWriteRetries = 8;
+
+  /// <summary>
+  /// A filter on the partition key's prefix, for the indexes several entity types share; the
+  /// query puts the prefix in <see cref="PartitionKeyPrefixValue"/>.
+  /// </summary>
+  public const string PartitionKeyPrefixFilter = "begins_with(PartitionKey, :partitionKeyPrefix)";
+  public const string PartitionKeyPrefixValue = ":partitionKeyPrefix";
 
   public static async Task WaitForActiveTableAsync(
     IAmazonDynamoDB client, string tableName, ILogger logger, CancellationToken cancellationToken = default)
@@ -37,14 +43,23 @@ internal class DynamoDbUtils
     } while (!active);
   }
 
-  // BatchWriteItem accepts at most 25 requests and can leave some of them unprocessed
+  // BatchWriteItem accepts at most 25 requests, none of them for the same key, and can leave some
+  // of them unprocessed. Of several requests for one key the last is written.
   public static async Task BatchWriteAsync(
     IAmazonDynamoDB client,
     string tableName,
     IEnumerable<WriteRequest> requests,
     CancellationToken cancellationToken = default)
   {
-    foreach (var chunk in requests.Chunk(MaxBatchWriteSize))
+    var distinct = new Dictionary<(string, string?), WriteRequest>();
+
+    foreach (var request in requests)
+    {
+      var key = request.PutRequest?.Item ?? request.DeleteRequest?.Key ?? throw new ArgumentException("A write request puts or deletes an item", nameof(requests));
+      distinct[(key["PartitionKey"].S, key.GetValueOrDefault("SortKey")?.S)] = request;
+    }
+
+    foreach (var chunk in distinct.Values.Chunk(MaxBatchWriteSize))
     {
       var unprocessed = chunk.ToList();
 
@@ -86,11 +101,7 @@ internal class DynamoDbUtils
     return client.UpdateItemAsync(new UpdateItemRequest
     {
       TableName = tableName,
-      Key = new()
-      {
-        { "PartitionKey", new AttributeValue { S = count.PartitionKey } },
-        { "SortKey", new AttributeValue { S = count.SortKey } },
-      },
+      Key = DynamoDbItems.Key(count),
       UpdateExpression = "SET #type = :type ADD #count :change",
       ExpressionAttributeNames = new()
       {
@@ -103,6 +114,18 @@ internal class DynamoDbUtils
         { ":change", new AttributeValue { N = change.ToString(CultureInfo.InvariantCulture) } },
       },
     }, cancellationToken);
+  }
+
+  public static async Task<long> GetCountAsync(
+    IAmazonDynamoDB client,
+    string tableName,
+    CountType type,
+    CancellationToken cancellationToken)
+  {
+    var count = new CountModel(type);
+    var stored = await DynamoDbItems.GetAsync<CountModel>(client, tableName, count.PartitionKey, count.SortKey, cancellationToken);
+
+    return stored?.Count ?? 0;
   }
 
   public static async Task<List<WriteRequest>> GetDeleteRequestsForPartitionAsync(
@@ -143,11 +166,7 @@ internal class DynamoDbUtils
   {
     DeleteRequest = new DeleteRequest
     {
-      Key = new Dictionary<string, AttributeValue>
-      {
-        { "PartitionKey", new AttributeValue { S = partitionKey } },
-        { "SortKey", new AttributeValue { S = sortKey } },
-      },
+      Key = DynamoDbItems.Key(partitionKey, sortKey),
     },
   };
 
@@ -164,17 +183,10 @@ internal class DynamoDbUtils
     int? size = default,
     string? token = default,
     CancellationToken cancellationToken = default)
+    where T : IDynamoDbItem, new()
   {
-    var context = new DynamoDBContextBuilder()
-      .WithDynamoDBClient(() => client)
-      .Build();
-    // The target table converts attributes such as epoch dates the same way the context does
-    var table = context.GetTargetTable<T>();
     var items = new List<T>();
-    var exclusiveStartKey = token == default
-      ? default
-      : JsonSerializer.Deserialize<Dictionary<string, string>>(token)!
-        .ToDictionary(x => x.Key, x => new AttributeValue { S = x.Value });
+    var exclusiveStartKey = token == default ? default : ParseToken(token);
 
     if (size <= 0)
     {
@@ -197,15 +209,11 @@ internal class DynamoDbUtils
 
       foreach (var item in response.Items ?? new())
       {
-        items.Add(context.FromDocument<T>(table.FromAttributeMap(item)));
+        items.Add(DynamoDbItems.FromItem<T>(item));
 
         if (items.Count == size)
         {
-          return (JsonSerializer.Serialize(new Dictionary<string, string>
-          {
-            { "PartitionKey", item["PartitionKey"].S },
-            { "SortKey", item["SortKey"].S },
-          }), items);
+          return (CreateToken(item["PartitionKey"].S, item["SortKey"].S), items);
         }
       }
 
@@ -213,6 +221,29 @@ internal class DynamoDbUtils
     } while (exclusiveStartKey?.Count > 0);
 
     return (default, items);
+  }
+
+  // The pagination token is the key of the last returned item as a JSON object
+  private static string CreateToken(string partitionKey, string sortKey)
+  {
+    using var stream = new MemoryStream();
+    using (var writer = new Utf8JsonWriter(stream))
+    {
+      writer.WriteStartObject();
+      writer.WriteString("PartitionKey", partitionKey);
+      writer.WriteString("SortKey", sortKey);
+      writer.WriteEndObject();
+    }
+
+    return Encoding.UTF8.GetString(stream.ToArray());
+  }
+
+  private static Dictionary<string, AttributeValue> ParseToken(string token)
+  {
+    using var document = JsonDocument.Parse(token);
+
+    return document.RootElement.EnumerateObject()
+      .ToDictionary(x => x.Name, x => new AttributeValue { S = x.Value.GetString() });
   }
 
   // SearchKey is APPLICATION#{ApplicationId}#STATUS#{Status}#TYPE#{Type}, only leading values
@@ -237,14 +268,4 @@ internal class DynamoDbUtils
 
   public static bool IsMatch(string? value, string? filter)
     => string.IsNullOrEmpty(filter) || string.Equals(value, filter, StringComparison.Ordinal);
-
-  public static Expression GetPartitionKeyFilter(string partitionKeyPrefix) => new()
-  {
-    ExpressionStatement = "begins_with(PartitionKey, :partitionKeyPrefix)",
-    ExpressionAttributeValues = new()
-    {
-      { ":partitionKeyPrefix", partitionKeyPrefix },
-    },
-  };
-
 }

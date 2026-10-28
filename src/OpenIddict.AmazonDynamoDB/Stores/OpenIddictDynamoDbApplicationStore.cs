@@ -6,8 +6,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,8 +17,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
   where TApplication : OpenIddictDynamoDbApplication, new()
 {
   private readonly IAmazonDynamoDB _client;
-  private readonly DynamoDBContext _context;
   private readonly string _tableName;
+  private const string RedirectSortKeyPrefix = "REDIRECT#";
 
   public OpenIddictDynamoDbApplicationStore(
     IOptionsMonitor<OpenIddictDynamoDbOptions> optionsMonitor,
@@ -29,7 +27,6 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     ArgumentNullException.ThrowIfNull(optionsMonitor);
 
     var options = optionsMonitor.CurrentValue;
-    DynamoDbTableSetup.EnsureAliasCreated(options);
 
     if (database == default)
     {
@@ -37,79 +34,115 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     }
 
     _client = database ?? options.Database!;
-    _context = new DynamoDBContextBuilder()
-      .WithDynamoDBClient(() => _client)
-      .Build();
     _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
-  {
-    var count = new CountModel(CountType.Application);
-    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
-
-    return count?.Count ?? 0;
-  }
+    => await DynamoDbUtils.GetCountAsync(_client, _tableName, CountType.Application, cancellationToken);
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TApplication>, IQueryable<TResult>> query, CancellationToken cancellationToken)
   {
     throw new NotSupportedException();
   }
 
+  // The application and the lookup of its client id are written together, so a client id that
+  // another application holds fails the whole write
   public async ValueTask CreateAsync(TApplication application, CancellationToken cancellationToken)
   {
     ArgumentNullException.ThrowIfNull(application);
 
-    await _context.SaveAsync(application, cancellationToken);
+    var items = new List<TransactWriteItem>
+    {
+      DynamoDbItems.TransactPut(_tableName, application, "attribute_not_exists(PartitionKey)"),
+    };
+
+    if (application.ClientId is { } clientId)
+    {
+      items.Add(DynamoDbItems.TransactPut(
+        _tableName, new LookupItem(Lookups.ClientId(clientId), application.Id), "attribute_not_exists(PartitionKey)"));
+    }
+
+    try
+    {
+      await DynamoDbItems.TransactWriteAsync(_client, items, cancellationToken);
+    }
+    catch (TransactionCanceledException exception)
+    {
+      throw DynamoDbItems.FailedConditions(exception).Contains(1)
+        ? DuplicateClientId(exception)
+        : new InvalidOperationException($"An application with the id {application.Id} already exists", exception);
+    }
+
+    application.StoredClientId = application.ClientId;
     await SaveRedirectUris(application, cancellationToken);
 
     await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Application, 1, cancellationToken);
   }
 
-  private async Task SaveRedirectUris(TApplication application, CancellationToken cancellationToken)
+  private static OpenIddictExceptions.ValidationException DuplicateClientId(Exception exception)
   {
-    var batch = _context.CreateBatchWrite<OpenIddictDynamoDbApplicationRedirect>();
-
-    if (application.RedirectUris?.Any() == true)
-    {
-      foreach (var redirectUri in application.RedirectUris)
-      {
-        var applicationRedirect = new OpenIddictDynamoDbApplicationRedirect
-        {
-          RedirectUri = redirectUri,
-          RedirectType = RedirectType.RedirectUri,
-          ApplicationId = application.Id,
-        };
-
-        batch.AddPutItem(applicationRedirect);
-      }
-    }
-
-    if (application.PostLogoutRedirectUris?.Any() == true)
-    {
-      foreach (var redirectUri in application.PostLogoutRedirectUris)
-      {
-        var applicationRedirect = new OpenIddictDynamoDbApplicationRedirect
-        {
-          RedirectUri = redirectUri,
-          RedirectType = RedirectType.PostLogoutRedirectUri,
-          ApplicationId = application.Id,
-        };
-
-        batch.AddPutItem(applicationRedirect);
-      }
-    }
-
-    await batch.ExecuteAsync(cancellationToken);
+    var message = OpenIddictResources.GetResourceString(OpenIddictResources.ID2111);
+    return new OpenIddictExceptions.ValidationException(message, [new System.ComponentModel.DataAnnotations.ValidationResult(message)], exception);
   }
 
+  // An application is listed under each of its redirect URIs, which is how it is found by one
+  private static MemberItem Member(OpenIddictDynamoDbApplicationRedirect redirect) => new(
+    Lookups.Redirect(redirect.RedirectType, redirect.RedirectUri!), Lookups.ApplicationMember(redirect.ApplicationId!), redirect.ApplicationId!);
+
+  private static IEnumerable<OpenIddictDynamoDbApplicationRedirect> Redirects(TApplication application)
+  {
+    foreach (var redirectUri in application.RedirectUris ?? [])
+    {
+      yield return new OpenIddictDynamoDbApplicationRedirect
+      {
+        RedirectUri = redirectUri,
+        RedirectType = RedirectType.RedirectUri,
+        ApplicationId = application.Id,
+      };
+    }
+
+    foreach (var redirectUri in application.PostLogoutRedirectUris ?? [])
+    {
+      yield return new OpenIddictDynamoDbApplicationRedirect
+      {
+        RedirectUri = redirectUri,
+        RedirectType = RedirectType.PostLogoutRedirectUri,
+        ApplicationId = application.Id,
+      };
+    }
+  }
+
+  private Task SaveRedirectUris(TApplication application, CancellationToken cancellationToken)
+    => DynamoDbUtils.BatchWriteAsync(
+      _client,
+      _tableName,
+      Redirects(application).SelectMany(x => new IDynamoDbItem[] { x, Member(x) }).Select(DynamoDbItems.Put),
+      cancellationToken);
+
+  // Removes the application together with its redirects, which share its partition, and the
+  // lookups that point into it
   public async ValueTask DeleteAsync(TApplication application, CancellationToken cancellationToken)
   {
     ArgumentNullException.ThrowIfNull(application);
 
-    // Removes the application together with its redirects, which share its partition
-    var requests = await DynamoDbUtils.GetDeleteRequestsForPartitionAsync(
-      _client, _tableName, application.PartitionKey, cancellationToken);
+    var requests = new List<WriteRequest>();
+
+    foreach (var item in await DynamoDbItems.QueryPartitionAsync<RawItem>(_client, _tableName, application.PartitionKey, default, cancellationToken, consistentRead: true))
+    {
+      var sortKey = item.SortKey ?? "";
+
+      if (sortKey.StartsWith(RedirectSortKeyPrefix, StringComparison.Ordinal))
+      {
+        requests.Add(DynamoDbItems.Delete(Member(DynamoDbItems.FromItem<OpenIddictDynamoDbApplicationRedirect>(item.Attributes))));
+      }
+      else if (item.Attributes.GetString("ClientId") is { } clientId)
+      {
+        requests.Add(new WriteRequest(new DeleteRequest(DynamoDbItems.Key(Lookups.ClientId(clientId), Lookups.SortKey))));
+      }
+
+      requests.Add(new WriteRequest(new DeleteRequest(DynamoDbItems.Key(item.PartitionKey, item.SortKey))));
+    }
+
     await DynamoDbUtils.BatchWriteAsync(_client, _tableName, requests, cancellationToken);
 
     await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Application, -1, cancellationToken);
@@ -119,23 +152,10 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    var search = _context.FromQueryAsync<TApplication>(new()
-    {
-      IndexName = "ClientId-index",
-      KeyExpression = new Expression
-      {
-        ExpressionStatement = "ClientId = :clientId",
-        ExpressionAttributeValues = new()
-        {
-          { ":clientId", identifier },
-        }
-      },
-      Limit = 1,
-    });
-    var applications = await search.GetRemainingAsync(cancellationToken);
-    var application = applications?.FirstOrDefault();
+    var lookup = await DynamoDbItems.GetAsync<LookupItem>(
+      _client, _tableName, Lookups.ClientId(identifier), Lookups.SortKey, cancellationToken, consistentRead: true);
 
-    return application;
+    return lookup is null ? default : await FindByIdAsync(lookup.Id, cancellationToken);
   }
 
   public async ValueTask<TApplication?> FindByIdAsync(
@@ -148,10 +168,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       Id = identifier,
     };
     // A stale application would fail to update
-    application = await _context.LoadAsync<TApplication>(
-      application.PartitionKey, application.SortKey, new LoadConfig { ConsistentRead = true }, cancellationToken);
-
-    return application;
+    return await DynamoDbItems.GetAsync<TApplication>(
+      _client, _tableName, application.PartitionKey, application.SortKey, cancellationToken, consistentRead: true);
   }
 
   public IAsyncEnumerable<TApplication> FindByPostLogoutRedirectUriAsync(string address, CancellationToken cancellationToken)
@@ -181,39 +199,18 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
 
     async IAsyncEnumerable<TApplication> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new()
-      {
-        IndexName = "RedirectUri-RedirectType-index",
-        KeyExpression = new()
-        {
-          ExpressionStatement = "RedirectUri = :redirectUri and RedirectType = :redirectType",
-          ExpressionAttributeValues = new()
-          {
-            { ":redirectUri", address },
-            { ":redirectType", (int)redirectType },
-          }
-        },
-      });
-      var applicationRedirects = await search.GetRemainingAsync(cancellationToken);
+      var members = await DynamoDbItems.QueryPartitionAsync<MemberItem>(
+        _client, _tableName, Lookups.Redirect(redirectType, address), default, cancellationToken, consistentRead: true);
 
-      if (applicationRedirects.Any())
-      {
-        var applicationIds = applicationRedirects.Select(x => x.ApplicationId);
-        var batch = _context.CreateBatchGet<TApplication>();
-        foreach (var applicationId in applicationIds)
-        {
-          var scope = new TApplication
-          {
-            Id = applicationId!,
-          };
-          batch.AddKey(scope.PartitionKey, scope.SortKey);
-        }
-        await batch.ExecuteAsync(cancellationToken);
+      var keys = members
+        .Select(x => x.Id)
+        .Distinct()
+        .Select(x => new TApplication { Id = x })
+        .Select(DynamoDbItems.Key);
 
-        foreach (var application in batch.Results)
-        {
-          yield return application;
-        }
+      foreach (var application in await DynamoDbItems.BatchGetAsync<TApplication>(_client, _tableName, keys, cancellationToken))
+      {
+        yield return application;
       }
     }
   }
@@ -384,17 +381,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
   }
 
   public ValueTask<TApplication> InstantiateAsync(CancellationToken cancellationToken)
-  {
-    try
-    {
-      return new(Activator.CreateInstance<TApplication>());
-    }
-    catch (MemberAccessException exception)
-    {
-      return new(Task.FromException<TApplication>(
-        new InvalidOperationException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0240), exception)));
-    }
-  }
+    => new(new TApplication());
 
   public ConcurrentDictionary<int, string?> ListCursors { get; set; } = new ConcurrentDictionary<int, string?>();
   public IAsyncEnumerable<TApplication> ListAsync(int? count, int? offset, CancellationToken cancellationToken)
@@ -609,7 +596,8 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       throw new ArgumentNullException(nameof(application));
     }
 
-    application.JsonWebKeySet = set is not null ? JsonSerializer.Serialize(set) : null;
+    // OpenIddict's source-generated context, which needs no reflection
+    application.JsonWebKeySet = set is not null ? JsonSerializer.Serialize(set, OpenIddictSerializer.Default.JsonWebKeySet) : null;
 
     return default;
   }
@@ -628,7 +616,7 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
       return default;
     }
 
-    application.Settings = settings.ToDictionary(x => x.Key, x => x.Value); ;
+    application.Settings = settings.ToDictionary(x => x.Key, x => x.Value);
 
     return default;
   }
@@ -640,66 +628,72 @@ public class OpenIddictDynamoDbApplicationStore<TApplication> : IOpenIddictAppli
     var concurrencyToken = application.ConcurrencyToken;
     application.ConcurrencyToken = Guid.NewGuid().ToString();
 
+    // The application is written only when it still has the concurrency token it was loaded with,
+    // and the lookup of its client id moves with a changed one in the same transaction
+    var items = new List<TransactWriteItem>
+    {
+      DynamoDbItems.TransactPut(
+        _tableName,
+        application,
+        concurrencyToken is null
+          ? "attribute_exists(PartitionKey) and attribute_not_exists(ConcurrencyToken)"
+          : "attribute_exists(PartitionKey) and ConcurrencyToken = :concurrencyToken",
+        concurrencyToken is null ? default : new() { { ":concurrencyToken", new AttributeValue { S = concurrencyToken } } }),
+    };
+    var lookupIndex = -1;
+
+    if (application.StoredClientId != application.ClientId)
+    {
+      if (application.StoredClientId is { } previousClientId)
+      {
+        items.Add(DynamoDbItems.TransactDelete(
+          _tableName, Lookups.ClientId(previousClientId), Lookups.SortKey,
+          "attribute_not_exists(PartitionKey) or Id = :id", new() { { ":id", new AttributeValue { S = application.Id } } }));
+      }
+
+      if (application.ClientId is { } clientId)
+      {
+        lookupIndex = items.Count;
+        items.Add(DynamoDbItems.TransactPut(
+          _tableName, new LookupItem(Lookups.ClientId(clientId), application.Id),
+          "attribute_not_exists(PartitionKey) or Id = :id", new() { { ":id", new AttributeValue { S = application.Id } } }));
+      }
+    }
+
     try
     {
-      // Ensure no one else has updated the application since it was loaded
-      await _context.SaveAsync(application, GetSaveConfig(concurrencyToken), cancellationToken);
+      await DynamoDbItems.TransactWriteAsync(_client, items, cancellationToken);
     }
-    catch (ConditionalCheckFailedException exception)
+    catch (TransactionCanceledException exception)
     {
-      application.ConcurrencyToken = concurrencyToken;
+      application.ConcurrencyToken = concurrencyToken!;
+      var failed = DynamoDbItems.FailedConditions(exception);
 
-      throw new OpenIddictExceptions.ConcurrencyException(
-        OpenIddictResources.GetResourceString(OpenIddictResources.ID0239), exception);
+      throw failed.Contains(lookupIndex) && !failed.Contains(0)
+        ? DuplicateClientId(exception)
+        : new OpenIddictExceptions.ConcurrencyException(OpenIddictResources.GetResourceString(OpenIddictResources.ID0239), exception);
     }
 
-    // Update application redirects
-    // Fetch all redirects
-    var applicationId = application.Id;
-    var search = _context.FromQueryAsync<OpenIddictDynamoDbApplicationRedirect>(new()
+    application.StoredClientId = application.ClientId;
+
+    // Replace the stored redirects, and the listings under their URIs, with the application's current ones
+    var applicationRedirects = await DynamoDbItems.QueryAsync<OpenIddictDynamoDbApplicationRedirect>(_client, new QueryRequest
     {
-      KeyExpression = new()
+      TableName = _tableName,
+      KeyConditionExpression = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
+      ExpressionAttributeValues = new()
       {
-        ExpressionStatement = "PartitionKey = :partitionKey and begins_with(SortKey, :sortKey)",
-        ExpressionAttributeValues = new()
-        {
-          { ":partitionKey", application.PartitionKey },
-          { ":sortKey", "REDIRECT#" },
-        }
+        { ":partitionKey", new AttributeValue { S = application.PartitionKey } },
+        { ":sortKey", new AttributeValue { S = RedirectSortKeyPrefix } },
       },
-    });
-    var applicationRedirects = await search.GetRemainingAsync(cancellationToken);
+    }, cancellationToken);
 
-    // Remove previously stored redirects
     await DynamoDbUtils.BatchWriteAsync(
       _client,
       _tableName,
-      applicationRedirects.Select(x => DynamoDbUtils.ToDeleteRequest(x.PartitionKey, x.SortKey)),
+      applicationRedirects.SelectMany(x => new IDynamoDbItem[] { x, Member(x) }).Select(DynamoDbItems.Delete),
       cancellationToken);
 
-    // Save current redirects
     await SaveRedirectUris(application, cancellationToken);
-  }
-
-  private static SaveConfig GetSaveConfig(string? concurrencyToken)
-  {
-    // Only save when the application exists and still has the concurrency token it was loaded with
-    var condition = new ContextExpression();
-
-    if (concurrencyToken == default)
-    {
-      condition.SetFilter<TApplication>(x => ContextExpression.AttributeExists(x.PartitionKey)
-        && ContextExpression.AttributeNotExists(x.ConcurrencyToken));
-    }
-    else
-    {
-      condition.SetFilter<TApplication>(x => ContextExpression.AttributeExists(x.PartitionKey)
-        && x.ConcurrencyToken == concurrencyToken);
-    }
-
-    return new()
-    {
-      ConditionalExpression = condition,
-    };
   }
 }

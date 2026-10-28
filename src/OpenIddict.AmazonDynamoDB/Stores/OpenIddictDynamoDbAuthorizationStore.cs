@@ -5,8 +5,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
@@ -18,7 +16,6 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     where TAuthorization : OpenIddictDynamoDbAuthorization, new()
 {
   private readonly IAmazonDynamoDB _client;
-  private readonly DynamoDBContext _context;
   private readonly string _tableName;
   private const string PartitionKeyPrefix = "AUTHORIZATION#";
   private const string SortKeyPrefix = "#AUTHORIZATION#";
@@ -30,7 +27,6 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     ArgumentNullException.ThrowIfNull(optionsMonitor);
 
     var options = optionsMonitor.CurrentValue;
-    DynamoDbTableSetup.EnsureAliasCreated(options);
 
     if (database == default)
     {
@@ -38,19 +34,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     }
 
     _client = database ?? options.Database!;
-    _context = new DynamoDBContextBuilder()
-      .WithDynamoDBClient(() => _client)
-      .Build();
     _tableName = options.DefaultTableName ?? Constants.DefaultTableName;
   }
 
   public async ValueTask<long> CountAsync(CancellationToken cancellationToken)
-  {
-    var count = new CountModel(CountType.Authorization);
-    count = await _context.LoadAsync<CountModel>(count.PartitionKey, count.SortKey, cancellationToken);
-
-    return count?.Count ?? 0;
-  }
+    => await DynamoDbUtils.GetCountAsync(_client, _tableName, CountType.Authorization, cancellationToken);
 
   public ValueTask<long> CountAsync<TResult>(Func<IQueryable<TAuthorization>, IQueryable<TResult>> query, CancellationToken cancellationToken)
   {
@@ -61,7 +49,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     ArgumentNullException.ThrowIfNull(authorization);
 
-    await _context.SaveAsync(authorization, cancellationToken);
+    await _client.PutItemAsync(new PutItemRequest
+    {
+      TableName = _tableName,
+      Item = DynamoDbItems.ToItem(authorization),
+    }, cancellationToken);
 
     await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Authorization, 1, cancellationToken);
   }
@@ -70,7 +62,11 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     ArgumentNullException.ThrowIfNull(authorization);
 
-    await _context.DeleteAsync(authorization, cancellationToken);
+    await _client.DeleteItemAsync(new DeleteItemRequest
+    {
+      TableName = _tableName,
+      Key = DynamoDbItems.Key(authorization),
+    }, cancellationToken);
 
     await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Authorization, -1, cancellationToken);
   }
@@ -81,23 +77,20 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TAuthorization>(new()
+      var authorizations = await DynamoDbItems.QueryAsync<TAuthorization>(_client, new QueryRequest
       {
+        TableName = _tableName,
         IndexName = "Subject-index",
-        KeyExpression = new()
-        {
-          ExpressionStatement = "Subject = :subject and begins_with(SearchKey, :searchKey)",
-          ExpressionAttributeValues = new()
-          {
-            { ":subject", subject },
-            { ":searchKey", searchKey },
-          }
-        },
+        KeyConditionExpression = "Subject = :subject and begins_with(SearchKey, :searchKey)",
         // Tokens are also stored in the Subject-index
-        FilterExpression = DynamoDbUtils.GetPartitionKeyFilter(PartitionKeyPrefix),
-      });
-
-      var authorizations = await search.GetRemainingAsync(cancellationToken);
+        FilterExpression = DynamoDbUtils.PartitionKeyPrefixFilter,
+        ExpressionAttributeValues = new()
+        {
+          { ":subject", new AttributeValue { S = subject } },
+          { ":searchKey", new AttributeValue { S = searchKey } },
+          { DynamoDbUtils.PartitionKeyPrefixValue, new AttributeValue { S = PartitionKeyPrefix } },
+        },
+      }, cancellationToken);
 
       foreach (var authorization in authorizations)
       {
@@ -144,22 +137,18 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
     async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-      var search = _context.FromQueryAsync<TAuthorization>(new()
+      var authorizations = await DynamoDbItems.QueryAsync<TAuthorization>(_client, new QueryRequest
       {
+        TableName = _tableName,
         IndexName = "ApplicationId-index",
-        KeyExpression = new()
+        // Tokens and redirects are also stored in the ApplicationId-index
+        KeyConditionExpression = "ApplicationId = :applicationId and begins_with(SortKey, :sortKey)",
+        ExpressionAttributeValues = new()
         {
-          // Tokens and redirects are also stored in the ApplicationId-index
-          ExpressionStatement = "ApplicationId = :applicationId and begins_with(SortKey, :sortKey)",
-          ExpressionAttributeValues = new()
-          {
-            { ":applicationId", identifier },
-            { ":sortKey", SortKeyPrefix },
-          }
+          { ":applicationId", new AttributeValue { S = identifier } },
+          { ":sortKey", new AttributeValue { S = SortKeyPrefix } },
         },
-      });
-
-      var authorizations = await search.GetRemainingAsync(cancellationToken);
+      }, cancellationToken);
 
       foreach (var authorization in authorizations)
       {
@@ -172,7 +161,10 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     ArgumentNullException.ThrowIfNull(identifier);
 
-    return await GetByPartitionKey(new() { Id = identifier }, cancellationToken);
+    var authorization = new TAuthorization { Id = identifier };
+    // A stale authorization would fail to update, and could still look valid after being revoked
+    return await DynamoDbItems.GetAsync<TAuthorization>(
+      _client, _tableName, authorization.PartitionKey, authorization.SortKey, cancellationToken, consistentRead: true);
   }
 
   public IAsyncEnumerable<TAuthorization> FindBySubjectAsync(string subject, CancellationToken cancellationToken)
@@ -267,18 +259,7 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
   public ValueTask<TAuthorization> InstantiateAsync(
     CancellationToken cancellationToken)
-  {
-    try
-    {
-      return new(Activator.CreateInstance<TAuthorization>());
-    }
-    catch (MemberAccessException exception)
-    {
-      return new(Task.FromException<TAuthorization>(
-          new InvalidOperationException(OpenIddictResources
-            .GetResourceString(OpenIddictResources.ID0240), exception)));
-    }
-  }
+    => new(new TAuthorization());
 
   public ConcurrentDictionary<int, string?> ListCursors { get; set; }
     = new ConcurrentDictionary<int, string?>();
@@ -328,26 +309,25 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
   {
     var deleteCount = 0;
     // Get all authorizations which is older than threshold
-    var filter = new ScanFilter();
-    filter.AddCondition("CreationDate", ScanOperator.LessThan, new List<AttributeValue>
+    var authorizations = await DynamoDbItems.ScanAsync<TAuthorization>(_client, new ScanRequest
     {
-      new(threshold.UtcDateTime.ToString("o")),
-    });
-    var search = _context.FromScanAsync<TAuthorization>(new ScanOperationConfig
-    {
-      Filter = filter,
-    });
-    var authorizations = await search.GetRemainingAsync(cancellationToken);
+      TableName = _tableName,
+      FilterExpression = "begins_with(PartitionKey, :partitionKey) and CreationDate < :threshold",
+      ExpressionAttributeValues = new()
+      {
+        { ":partitionKey", new AttributeValue { S = PartitionKeyPrefix } },
+        { ":threshold", new AttributeValue { S = AttributeValues.ToDateString(threshold.UtcDateTime) } },
+      },
+    }, cancellationToken);
     var remainingAdHocAuthorizations = new List<TAuthorization>();
-
-    var batchDelete = _context.CreateBatchWrite<TAuthorization>();
+    var toBeDeleted = new List<WriteRequest>();
 
     foreach (var authorization in authorizations)
     {
       // Add authorizations which is not Valid
       if (authorization.Status != Statuses.Valid)
       {
-        batchDelete.AddDeleteItem(authorization);
+        toBeDeleted.Add(DynamoDbItems.Delete(authorization));
         deleteCount++;
       }
       else if (authorization.Type == AuthorizationTypes.AdHoc)
@@ -356,31 +336,22 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       }
     }
 
-    // Add authorizations which is ad hoc and has no tokens
+    // Add authorizations which is ad hoc and has no tokens, which are listed in the authorization's partition
     foreach (var authorization in remainingAdHocAuthorizations)
     {
-      var tokensQuery = _context.FromQueryAsync<OpenIddictDynamoDbToken>(new()
-      {
-        IndexName = "AuthorizationId-index",
-        KeyExpression = new()
-        {
-          ExpressionStatement = "AuthorizationId = :authorizationId",
-          ExpressionAttributeValues = new()
-          {
-            { ":authorizationId", authorization.Id },
-          }
-        },
-      });
-      var tokens = await tokensQuery.GetRemainingAsync(cancellationToken);
+      var members = await DynamoDbItems.QueryPartitionAsync<MemberItem>(
+        _client, _tableName, authorization.PartitionKey, Lookups.TokenMemberPrefix, cancellationToken, consistentRead: true);
+      var tokens = await DynamoDbItems.BatchGetAsync<OpenIddictDynamoDbToken>(
+        _client, _tableName, members.Select(x => new OpenIddictDynamoDbToken { Id = x.Id }).Select(DynamoDbItems.Key), cancellationToken);
 
-      if (tokens.Count != 0 == false)
+      if (tokens.Count == 0)
       {
-        batchDelete.AddDeleteItem(authorization);
+        toBeDeleted.Add(DynamoDbItems.Delete(authorization));
         deleteCount++;
       }
     }
 
-    await batchDelete.ExecuteAsync(cancellationToken);
+    await DynamoDbUtils.BatchWriteAsync(_client, _tableName, toBeDeleted, cancellationToken);
 
     await DynamoDbUtils.UpdateCountAsync(_client, _tableName, CountType.Authorization, -deleteCount, cancellationToken);
 
@@ -507,7 +478,8 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
     try
     {
       // Ensure no one else has updated the authorization since it was loaded
-      await _context.SaveAsync(authorization, GetSaveConfig(concurrencyToken), cancellationToken);
+      await DynamoDbItems.PutIfUnchangedAsync(
+        _client, _tableName, DynamoDbItems.ToItem(authorization), "ConcurrencyToken", concurrencyToken, cancellationToken);
     }
     catch (ConditionalCheckFailedException exception)
     {
@@ -517,27 +489,6 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
       throw new OpenIddictExceptions.ConcurrencyException(
         OpenIddictResources.GetResourceString(OpenIddictResources.ID0241), exception);
     }
-  }
-
-  private async Task<TAuthorization?> GetByPartitionKey(TAuthorization token, CancellationToken cancellationToken)
-  {
-    var search = _context.FromQueryAsync<TAuthorization>(new()
-    {
-      // A stale authorization would fail to update, and could still look valid after being revoked
-      ConsistentRead = true,
-      KeyExpression = new()
-      {
-        ExpressionStatement = "PartitionKey = :partitionKey",
-        ExpressionAttributeValues = new()
-        {
-          { ":partitionKey", token.PartitionKey },
-        }
-      },
-      Limit = 1,
-    });
-    var result = await search.GetNextSetAsync(cancellationToken);
-
-    return result.Count != 0 ? result.First() : default;
   }
 
   public ValueTask<long> RevokeAsync(string? subject, string? client, string? status, string? type, CancellationToken cancellationToken)
@@ -560,42 +511,18 @@ public class OpenIddictDynamoDbAuthorizationStore<TAuthorization> : IOpenIddictA
 
   private async ValueTask<long> RevokeAsync(IAsyncEnumerable<TAuthorization> authorizations, CancellationToken cancellationToken)
   {
-    var result = 0L;
-    var batch = _context.CreateBatchWrite<TAuthorization>();
+    var requests = new List<WriteRequest>();
 
     await foreach (var authorization in authorizations)
     {
       authorization.Status = Statuses.Revoked;
       authorization.TTL = DateTime.UtcNow.AddMinutes(5);
 
-      batch.AddPutItem(authorization);
-      result++;
+      requests.Add(DynamoDbItems.Put(authorization));
     }
 
-    await batch.ExecuteAsync(cancellationToken);
+    await DynamoDbUtils.BatchWriteAsync(_client, _tableName, requests, cancellationToken);
 
-    return result;
-  }
-
-  private static SaveConfig GetSaveConfig(string? concurrencyToken)
-  {
-    // Only save when the authorization exists and still has the concurrency token it was loaded with
-    var condition = new ContextExpression();
-
-    if (concurrencyToken == default)
-    {
-      condition.SetFilter<TAuthorization>(x => ContextExpression.AttributeExists(x.PartitionKey)
-        && ContextExpression.AttributeNotExists(x.ConcurrencyToken));
-    }
-    else
-    {
-      condition.SetFilter<TAuthorization>(x => ContextExpression.AttributeExists(x.PartitionKey)
-        && x.ConcurrencyToken == concurrencyToken);
-    }
-
-    return new()
-    {
-      ConditionalExpression = condition,
-    };
+    return requests.Count;
   }
 }

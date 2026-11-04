@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Fills a table through the last published version 3 of the package, so that the upgrade tests
-    migrate data that version 3 really wrote rather than data shaped like it.
+    Fills a table through the latest published version of the package, which Dependabot keeps
+    current, so that the upgrade tests migrate data that release really wrote rather than data
+    shaped like it.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Community.OpenIddict.AmazonDynamoDB" Version="3.2.0" />
+    <PackageReference Include="Community.OpenIddict.AmazonDynamoDB" Version="4.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.14" />
   </ItemGroup>
 

@@ -8,8 +8,8 @@ using Xunit;
 
 namespace OpenIddict.AmazonDynamoDB.UpgradeTests;
 
-// Runs the seeder built against version 3 to fill a table, then migrates it with this version:
-// EnsureInitialized (whose warning is kept), MigrateAsync twice and RemoveLegacyIndexesAsync
+// Runs the seeder built against the latest published version to fill a table, then migrates it with
+// this version: EnsureInitialized (whose log is kept), MigrateAsync twice and RemoveLegacyIndexesAsync
 public sealed class LegacyTableFixture : IAsyncLifetime
 {
   public string TableName { get; } = $"upgrade-{Guid.NewGuid()}";

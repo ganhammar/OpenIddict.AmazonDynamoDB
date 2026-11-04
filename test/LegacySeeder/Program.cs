@@ -6,8 +6,8 @@ using OpenIddict.Abstractions;
 using OpenIddict.AmazonDynamoDB;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-// Usage: LegacySeeder <table name>. Creates the table with version 3 and fills it through version 3's
-// stores and OpenIddict's managers, then prints what it wrote as JSON on the last line.
+// Usage: LegacySeeder <table name>. Creates the table with the published package and fills it through
+// its stores and OpenIddict's managers, then prints what it wrote as JSON on the last line.
 var tableName = args.Length > 0 ? args[0] : throw new ArgumentException("Pass the table name");
 var endpoint = Environment.GetEnvironmentVariable("DYNAMODB_ENDPOINT") ?? "http://localhost:8000";
 using var client = new AmazonDynamoDBClient(

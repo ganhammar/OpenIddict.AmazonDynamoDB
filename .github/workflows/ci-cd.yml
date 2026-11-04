@@ -57,7 +57,7 @@ jobs:
       - name: Test (PR)
         if: env.is_pull_request == 'true'
         run: dotnet test ./test/OpenIddict.AmazonDynamoDB.Tests --no-build
-      # Fills a table through the published 3.x package and migrates it with this version
+      # Fills a table through the latest published package and migrates it with this version
       - name: Upgrade tests
         run: dotnet test ./test/OpenIddict.AmazonDynamoDB.UpgradeTests --no-build
       # Fails on any trim or AOT warning, then runs the stores as native code against DynamoDB Local

@@ -20,10 +20,10 @@ public class UpgradeTests(LegacyTableFixture fixture) : IClassFixture<LegacyTabl
   private IEnumerable<SeedApplication> UntouchedApplications => fixture.Seed.Applications.SkipLast(1);
 
   [Fact]
-  public void Should_WarnAboutLegacyIndexes_When_SettingUpTheLegacyTable()
+  public void Should_SetUpWithoutWarnings_When_UpgradingFromTheLatestRelease()
   {
-    Assert.Contains(fixture.SetupLog, x => x.Level == LogLevel.Warning && x.Message.Contains("indexes of version 3"));
-    Assert.Equal(8, fixture.IndexCountBeforeRemoval);
+    Assert.DoesNotContain(fixture.SetupLog, x => x.Level >= LogLevel.Warning);
+    Assert.Equal(2, fixture.IndexCountBeforeRemoval);
   }
 
   [Fact]

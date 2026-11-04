@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Migrates a table that the published version 3 filled (see test/LegacySeeder) and reads it
+    Migrates a table that the latest published version filled (see test/LegacySeeder) and reads it
     back through this version's stores and OpenIddict's managers.
   -->
   <PropertyGroup>

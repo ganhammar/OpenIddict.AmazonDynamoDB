@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Community.OpenIddict.AmazonDynamoDB" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.15" />
   </ItemGroup>
 
 </Project>
